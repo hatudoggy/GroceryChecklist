@@ -11,8 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.grocerychecklist.data.AppDatabase
+import com.example.grocerychecklist.ui.screen.Dashboard
+import com.example.grocerychecklist.ui.screen.dashboardDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
 
 class MainActivity : ComponentActivity() {
@@ -26,6 +30,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GroceryChecklistTheme {
+                val navController = rememberNavController()
+                Scaffold { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = Dashboard,
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        dashboardDestination()
+                    }
+                }
 
             }
         }
