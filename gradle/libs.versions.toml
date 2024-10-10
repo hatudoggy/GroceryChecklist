@@ -10,11 +10,13 @@ kotlinxSerializationJson = "1.5.0"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.2"
 composeBom = "2023.08.00"
+materialIconsExtended = "1.7.3"
 navVersion = "2.8.2"
 roomRuntime = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
