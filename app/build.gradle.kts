@@ -79,4 +79,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     testImplementation(libs.androidx.room.testing)
 
+    //Compose Charts
+    implementation(libs.charts)
 }
