@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.ChecklistComponent
 import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
 import com.example.grocerychecklist.ui.component.RoundedTextField
+import com.example.grocerychecklist.ui.component.TopBarComponent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -54,7 +55,7 @@ fun ChecklistMainScreen() {
                 Icon(Icons.Filled.Add, "Add FAB")
             }
         },
-//        topBar = { TopBarComponent(title = "Checklist") },
+        topBar = { TopBarComponent(title = "Checklist") },
     ) { innerPadding ->
         Column(
             modifier = Modifier
