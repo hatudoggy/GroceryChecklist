@@ -1,5 +1,8 @@
 package com.example.grocerychecklist.ui.component
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,16 +12,22 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,17 +53,19 @@ fun ChecklistComponent(
     date: String,
     description: String? = null,
     expense: Double? = null,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    isClicked: Boolean? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(8.dp, 0.dp).heightIn(min = 60.dp, max = 60.dp),
+            .padding(8.dp, 0.dp)
+            .heightIn(min = 60.dp, max = 60.dp),
         verticalAlignment = Alignment.CenterVertically,
 
-    ) {
+        ) {
         ChecklistIconComponent(
             color = iconColor,
             icon = icon
@@ -107,12 +118,19 @@ fun ChecklistComponent(
                 }
 
                 ChecklistComponentVariant.History -> {
-                    Text(
-                        date,
-                        color = Color.Gray,
-                        modifier = Modifier.fillMaxWidth(0.78f),
-                        maxLines = 2,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            date,
+                            color = Color.Gray,
+                            modifier = Modifier.fillMaxWidth(0.78f),
+                            maxLines = 2,
+                        )
+                        if (isClicked != null)
+                            RotatingArrowIconComponent(iconColor, isClicked)
+                    }
                 }
             }
         }
@@ -127,8 +145,9 @@ fun ChecklistComponentPreview() {
         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
         icon = Icons.Filled.Android,
         iconColor = MaterialTheme.colorScheme.primary,
-        variant = ChecklistComponentVariant.Checklist,
+        variant = ChecklistComponentVariant.History,
         description = "A checklist of the main groceries for the month. All the essentials...",
-        expense = 400.00
+        expense = 400.00,
+        isClicked = true
     )
 }
