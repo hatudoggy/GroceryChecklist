@@ -24,7 +24,7 @@ class ChecklistItemRepository(
     private val itemDAO: ItemDAO
 ) {
 
-    suspend fun addChecklistItem(checklistId: Int, checklistItemInput: ChecklistItemInput) {
+    suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput) {
         val currentDateTime = DateUtility.getCurrentDateTime()
 
         val item = Item(
@@ -51,7 +51,7 @@ class ChecklistItemRepository(
         checklistItemDAO.insert(checklistItem)
     }
 
-    suspend fun updateChecklistItem(checklistItemId: Int, checklistItemInput: ChecklistItemInput) {
+    suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput) {
         val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId)
         val currentDateTime = DateUtility.getCurrentDateTime()
 
@@ -73,7 +73,7 @@ class ChecklistItemRepository(
         checklistItemDAO.update(updatedChecklistItem)
     }
 
-    suspend fun changeChecklistOrder(checklistId: Int, checklistItemId: Int, newOrder: Int) {
+    suspend fun changeChecklistOrder(checklistId: Long, checklistItemId: Long, newOrder: Int) {
         val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId).flattenToList()
 
         if (newOrder < 0 || newOrder >= checklistItems.size) {
@@ -107,11 +107,11 @@ class ChecklistItemRepository(
         }
     }
 
-    suspend fun getChecklistItem(id: Int): ChecklistItemFull {
+    suspend fun getChecklistItem(id: Long): ChecklistItemFull {
         return checklistItemDAO.getChecklistItemById(id)
     }
 
-    fun getChecklistItems(checklistId: Int, orderBy: ChecklistItemOrder): Flow<List<ChecklistItemFull>> {
+    fun getChecklistItems(checklistId: Long, orderBy: ChecklistItemOrder): Flow<List<ChecklistItemFull>> {
         return when (orderBy) {
             ChecklistItemOrder.Order ->
                 checklistItemDAO.getAllChecklistItemsOrderedByOrder(checklistId)
@@ -125,15 +125,15 @@ class ChecklistItemRepository(
         }
     }
 
-    fun searchChecklistItems(checklistId: Int, searchQuery: String): Flow<List<ChecklistItemFull>> {
+    fun searchChecklistItems(checklistId: Long, searchQuery: String): Flow<List<ChecklistItemFull>> {
         return checklistItemDAO.getAllChecklistItemsByName(checklistId,searchQuery)
     }
 
-    suspend fun getTotalChecklistItems(checklistId: Int): Int {
+    suspend fun getTotalChecklistItems(checklistId: Long): Int {
         return checklistItemDAO.aggregateTotalChecklistItems(checklistId)
     }
 
-    suspend fun getTotalChecklistItemPrice(checklistId: Int): Double {
+    suspend fun getTotalChecklistItemPrice(checklistId: Long): Double {
         return checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId) ?: 0.00
     }
 

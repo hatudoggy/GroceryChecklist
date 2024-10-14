@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ChecklistDAO: BaseDAO<Checklist> {
 
     @Query("SELECT * FROM checklist WHERE id = :checklistId LIMIT 1")
-    suspend fun getChecklistById(checklistId: Int): Checklist
+    suspend fun getChecklistById(checklistId: Long): Checklist
 
     @Query("SELECT * FROM checklist ORDER BY lastOpenedAt")
     fun getAllChecklistsOrderedByLastOpenedAt(): Flow<List<Checklist>>

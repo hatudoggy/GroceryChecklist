@@ -13,11 +13,11 @@ class HistoryItemRepository(
         historyItemDAO.insertBatch(checklistItems)
     }
 
-    suspend fun getHistoryItem(id: Int): HistoryItem {
+    suspend fun getHistoryItem(id: Long): HistoryItem {
         return historyItemDAO.getHistoryItemById(id)
     }
 
-    fun getHistoryItems(historyId: Int, groupBy: ChecklistItemOrder): Flow<List<HistoryItem>> {
+    fun getHistoryItems(historyId: Long, groupBy: ChecklistItemOrder): Flow<List<HistoryItem>> {
         return when (groupBy) {
             ChecklistItemOrder.Order ->
                 historyItemDAO.getAllHistoryItemsOrderedByOrder(historyId)
@@ -31,11 +31,11 @@ class HistoryItemRepository(
         }
     }
 
-    suspend fun getTotalHistoryItems(historyId: Int): Int {
+    suspend fun getTotalHistoryItems(historyId: Long): Int {
         return historyItemDAO.aggregateTotalHistoryItems(historyId)
     }
 
-    suspend fun getTotalHistoryItemPrice(historyId: Int): Double {
+    suspend fun getTotalHistoryItemPrice(historyId: Long): Double {
         return historyItemDAO.aggregateTotalHistoryItemPrice(historyId) ?: 0.00
     }
 }

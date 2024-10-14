@@ -13,7 +13,7 @@ interface HistoryDAO {
     suspend fun insert(history: History): Long
 
     @Query("SELECT * FROM history WHERE id = :historyId LIMIT 1")
-    suspend fun getHistoryById(historyId: Int): History
+    suspend fun getHistoryById(historyId: Long): History
 
     @Query("SELECT * FROM history ORDER BY createdAt")
     fun getAllHistoriesOrderedByCreatedAt(): Flow<List<History>>

@@ -23,7 +23,7 @@ class HistoryRepository(
         historyDAO.insert(history)
     }
 
-    suspend fun getHistory(id: Int): History {
+    suspend fun getHistory(id: Long): History {
         return historyDAO.getHistoryById(id)
     }
 

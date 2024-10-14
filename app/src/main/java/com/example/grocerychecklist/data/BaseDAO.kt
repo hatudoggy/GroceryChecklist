@@ -7,10 +7,10 @@ import androidx.room.Update
 interface BaseDAO<T> {
 
     @Insert
-    suspend fun insert(vararg obj: T): Int
+    suspend fun insert(obj: T): Long
 
     @Update
-    suspend fun update(vararg obj: T): Int
+    suspend fun update(obj: T)
 
     @Delete
     suspend fun delete(vararg obj: T)

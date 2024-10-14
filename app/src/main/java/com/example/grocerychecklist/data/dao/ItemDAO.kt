@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ItemDAO: BaseDAO<Item> {
 
     @Query("SELECT * FROM item where id = :itemId LIMIT 1")
-    suspend fun getItemById(itemId: Int): Item
+    suspend fun getItemById(itemId: Long): Item
 
     @Query("SELECT * FROM item")
     fun getAllItems(): Flow<List<Item>>
@@ -30,5 +30,5 @@ interface ItemDAO: BaseDAO<Item> {
     @Query("SELECT * FROM item WHERE category = :category")
     fun getAllItemsByCategory(category: String): Flow<List<Item>>
 
-    fun aggregateTotalItems(): Int
+    //fun aggregateTotalItems(): Int
 }

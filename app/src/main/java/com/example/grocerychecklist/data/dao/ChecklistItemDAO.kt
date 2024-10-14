@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.data.dao
 
+import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import com.example.grocerychecklist.data.BaseDAO
@@ -7,19 +8,23 @@ import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
 
+    @Transaction
     @Query("SELECT * FROM checklistitem WHERE id = :checklistItemId LIMIT 1")
-    suspend fun getChecklistItemById(checklistItemId: Int): ChecklistItemFull
+    suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull
 
+    @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId")
-    fun getAllChecklistItems(checklistId: Int): Flow<List<ChecklistItemFull>>
+    fun getAllChecklistItems(checklistId: Long): Flow<List<ChecklistItemFull>>
+
+    @Transaction
+    @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId ORDER BY `order`")
+    fun getAllChecklistItemsOrderedByOrder(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId ORDER BY `order`")
-    fun getAllChecklistItemsOrderedByOrder(checklistId: Int): Flow<List<ChecklistItemFull>>
-
-    @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId ORDER BY `order`")
-    fun getAllChecklistItemsBaseOrderedByOrder(checklistId: Int): Flow<List<ChecklistItem>>
+    fun getAllChecklistItemsBaseOrderedByOrder(checklistId: Long): Flow<List<ChecklistItem>>
 
     @Transaction
     @Query("""
@@ -28,10 +33,11 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
         WHERE checklistItem.id = :checklistId
         ORDER BY item.name
     """)
-    fun getAllChecklistItemsOrderedByName(checklistId: Int): Flow<List<ChecklistItemFull>>
+    fun getAllChecklistItemsOrderedByName(checklistId: Long): Flow<List<ChecklistItemFull>>
 
+    @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId")
-    fun getAllChecklistItemsOrderedByPrice(checklistId: Int): Flow<List<ChecklistItemFull>>
+    fun getAllChecklistItemsOrderedByPrice(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("""
@@ -40,7 +46,7 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
         WHERE checklistItem.id = :checklistId
         AND item.name = :qName
     """)
-    fun getAllChecklistItemsByName(checklistId: Int, qName: String): Flow<List<ChecklistItemFull>>
+    fun getAllChecklistItemsByName(checklistId: Long, qName: String): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("""
@@ -49,13 +55,13 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
         WHERE checklistItem.id = :checklistId
         AND item.category = :category
     """)
-    fun getAllChecklistItemsByCategory(checklistId: Int, category: String): Flow<List<ChecklistItemFull>>
+    fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>
 
     @Query("SELECT MAX(`order`) FROM checklistitem WHERE checklistId = :checklistId")
-    suspend fun getChecklistItemMaxOrder(checklistId: Int): Int
+    suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
 
     @Query("SELECT COUNT(*) FROM checklistitem WHERE checklistId = :checklistId")
-    suspend fun aggregateTotalChecklistItems(checklistId: Int): Int
+    suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
 
     @Query("""
         SELECT SUM(item.price)
@@ -63,5 +69,5 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
         JOIN item on checklistitem.itemId = item.id
         WHERE checklistitem.checklistId = :checklistId
     """)
-    suspend fun aggregateTotalChecklistItemPrice(checklistId: Int): Double?
+    suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double?
 }

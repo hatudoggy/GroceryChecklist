@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -21,9 +22,11 @@ import java.time.LocalDateTime
 )
 data class HistoryItem(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val historyId: Int,
-    val checklistItemId: Int,
+    val id: Long = 0,
+    @ColumnInfo(index = true)
+    val historyId: Long,
+    @ColumnInfo(index = true)
+    val checklistItemId: Long,
     val name: String,
     val price: Double,
     val category: String,
