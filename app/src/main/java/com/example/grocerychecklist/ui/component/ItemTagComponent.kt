@@ -22,8 +22,8 @@ fun ItemTagComponent(category: ItemCategory){
     Row(
         modifier = Modifier
             .height(20.dp)
-            .background(color = category.color, shape = RoundedCornerShape(size = 12.dp))
-            .padding(start = 12.dp, top = 4.dp, end = 12.dp, bottom = 4.dp),
+            .background(color = category.color, shape = RoundedCornerShape(size = 5.dp))
+            .padding(start = 5.dp, top = 1.dp, end = 5.dp, bottom = 1.dp),
 
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
