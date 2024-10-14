@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 fun ItemTagComponent(category: ItemCategory){
     Row(
         modifier = Modifier
-            .height(20.dp)
             .background(color = category.color, shape = RoundedCornerShape(size = 5.dp))
             .padding(start = 5.dp, top = 1.dp, end = 5.dp, bottom = 1.dp),
 
@@ -32,7 +31,7 @@ fun ItemTagComponent(category: ItemCategory){
             text = category.text,
 
             style = TextStyle(
-                fontSize = 10.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight(400),
                 color = Color(WHITE)
             )
