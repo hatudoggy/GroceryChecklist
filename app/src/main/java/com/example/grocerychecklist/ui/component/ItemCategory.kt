@@ -12,5 +12,6 @@ enum class ItemCategory(val color: Color, val text: String) {
     MEDICINE(Maroon, "Medicine"),
     VEGETABLE(Color(0xFF5BCBE3), "Vegetable"),
     SANITARY(Color(0xFF8FE35B), "Sanitary"),
-    CLEANING(Color(0xFFF255A0), "Cleaning")
+    CLEANING(Color(0xFFF255A0), "Cleaning"),
+    ALL(Color(0xFF6FA539), "All")
 }

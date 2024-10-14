@@ -54,7 +54,7 @@ fun ChecklistComponent(
             .padding(8.dp, 0.dp).heightIn(min = 60.dp, max = 60.dp),
         verticalAlignment = Alignment.CenterVertically,
 
-        ) {
+    ) {
         ChecklistIconComponent(
             color = iconColor,
             icon = icon
@@ -116,7 +116,6 @@ fun ChecklistComponent(
                 }
             }
         }
-
     }
 }
 
