@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.HistoryChipComponent
+import com.example.grocerychecklist.ui.component.ItemCategory
 import com.example.grocerychecklist.ui.component.TopBarComponent
 
 @Composable
