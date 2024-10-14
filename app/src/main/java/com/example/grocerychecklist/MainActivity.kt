@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = Routes.DashboardMain,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        dashboardDestination()
+                        dashboardDestination(navController)
                         checklistDestination()
                         itemDestination()
                         historyDestination()
