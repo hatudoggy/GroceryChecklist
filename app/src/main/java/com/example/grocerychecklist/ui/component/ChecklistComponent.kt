@@ -129,7 +129,7 @@ fun ChecklistComponent(
                             maxLines = 2,
                         )
                         if (isClicked != null)
-                            RotatingArrowIconComponent(iconColor, isClicked)
+                            RotatingArrowIconComponent(Color.Black, isClicked)
                     }
                 }
             }

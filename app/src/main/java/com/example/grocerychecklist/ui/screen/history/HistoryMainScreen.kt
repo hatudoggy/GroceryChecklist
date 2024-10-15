@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
@@ -61,6 +62,7 @@ import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.ui.theme.Typography
 import java.util.Date
 
@@ -90,8 +92,20 @@ val historyData = listOf(
             )
         )
     ), HistoryData(
-        id = 2,
+        id = 1,
         title = "Second Grocery",
+        date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
+        expense = 400.0,
+        details = listOf(
+            HistoryDataDetails(
+                detailsTitle = "Poultry", detailsExpense = 250.0
+            ), HistoryDataDetails(
+                detailsTitle = "Medicine", detailsExpense = 150.0
+            )
+        )
+    ), HistoryData(
+        id = 2,
+        title = "Third Grocery",
         date = LocalDate.now().minusMonths(2).format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
         expense = 450.0,
         details = listOf(
@@ -103,7 +117,7 @@ val historyData = listOf(
         )
     ), HistoryData(
         id = 3,
-        title = "Third Grocery",
+        title = "Fourth Grocery",
         date = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
         expense = 450.0,
         details = listOf(
@@ -157,7 +171,6 @@ fun HistoryMainScreen(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
 
             monthsList.forEach { month ->
@@ -168,6 +181,7 @@ fun HistoryMainScreen(navController: NavController) {
                         text = displayMonth, color = Color.Gray,
                         fontWeight = FontWeight.SemiBold
                     )
+                    Spacer(modifier = Modifier.height(2.5.dp))
                 }
 
                 items(historyData) { data ->
@@ -181,8 +195,8 @@ fun HistoryMainScreen(navController: NavController) {
                                     name = data.title,
                                     expense = data.expense,
                                     date = data.date,
-                                    icon = Icons.Filled.Android,
-                                    iconColor = MaterialTheme.colorScheme.primary,
+                                    icon = Icons.Filled.Fastfood,
+                                    iconColor = SkyGreen,
                                     variant = ChecklistComponentVariant.History,
                                     onClick = {
                                         cardStates[data.id] = !isCardClicked
