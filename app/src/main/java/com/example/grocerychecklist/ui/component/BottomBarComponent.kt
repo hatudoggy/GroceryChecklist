@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -30,12 +29,12 @@ fun BottomBarComponent(
     onNavigateClick: (route: Routes) -> Unit = {},
 ) {
     val mainRoutes = listOf(
-            MainRoute(Routes.DashboardMain, Icons.Filled.Dashboard),
-            MainRoute(Routes.ChecklistMain, Icons.Filled.Checklist),
-            MainRoute(Routes.ItemMain, Icons.Filled.Fastfood),
-            MainRoute(Routes.HistoryMain, Icons.Filled.History),
-            MainRoute(Routes.SettingsMain, Icons.Filled.Settings),
-        )
+        MainRoute(Routes.DashboardMain, Icons.Filled.Dashboard),
+        MainRoute(Routes.ItemMain, Icons.Filled.Fastfood),
+        MainRoute(Routes.ChecklistMain, Icons.Filled.Checklist),
+        MainRoute(Routes.HistoryMain, Icons.Filled.History),
+        MainRoute(Routes.SettingsMain, Icons.Filled.Settings),
+    )
 
     BottomAppBar(
         actions = {

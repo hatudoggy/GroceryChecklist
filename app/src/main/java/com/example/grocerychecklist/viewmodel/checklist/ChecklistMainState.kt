@@ -1,5 +1,10 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
-sealed class ChecklistMainState {
+import androidx.compose.runtime.Stable
 
-}
+@Stable
+data class ChecklistMainState(
+    val isAddingChecklist: Boolean = false,
+    val checklistName: String = "",
+    val checklistDescription: String = ""
+)
