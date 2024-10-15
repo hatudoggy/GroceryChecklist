@@ -208,11 +208,12 @@ fun HistoryMainScreen(navController: NavController) {
                                 HistoryCollapsedComponent(data, converter, navController)
                             }
                         )
+                        Spacer(modifier = Modifier.height(5.dp))
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(5.dp))
                 }
 
             }
