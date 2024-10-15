@@ -165,7 +165,8 @@ fun HistoryMainScreen(navController: NavController) {
 
                 item {
                     Text(
-                        text = displayMonth, color = Color.Gray
+                        text = displayMonth, color = Color.Gray,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
