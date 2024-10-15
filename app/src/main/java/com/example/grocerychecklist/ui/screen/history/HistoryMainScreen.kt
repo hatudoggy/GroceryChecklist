@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,9 +48,12 @@ import  androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
+import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.Typography
 import java.util.Date
 
@@ -107,7 +111,7 @@ val historyData = listOf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HistoryMainScreen() {
+fun HistoryMainScreen(navController: NavController) {
     val cardStates = remember { mutableStateMapOf<Int, Boolean>() }
     val monthsList = remember { mutableListOf<String>() }
     val converter = ConvertNumToCurrency()
@@ -179,7 +183,7 @@ fun HistoryMainScreen() {
                                 )
                             },
                             collapsedComponent = {
-                                HistoryCollapsedComponent(data, converter)
+                                HistoryCollapsedComponent(data, converter, navController)
                             }
                         )
                     }
@@ -195,7 +199,7 @@ fun HistoryMainScreen() {
 }
 
 @Composable
-fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency) {
+fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency, navController: NavController) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Row {
@@ -221,7 +225,9 @@ fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency
         }
 
         OutlinedButton(onClick = {}) {
-            Text("See More")
+            Text("See More", modifier = Modifier.clickable(onClick = {
+                navController.navigate(Routes.HistoryDetail)
+            }))
         }
 
     }
@@ -231,5 +237,5 @@ fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency
 @Preview(showBackground = true)
 @Composable
 fun HistoryMainScreenPreview() {
-    HistoryMainScreen()
+    HistoryMainScreen(navController = rememberNavController())
 }
