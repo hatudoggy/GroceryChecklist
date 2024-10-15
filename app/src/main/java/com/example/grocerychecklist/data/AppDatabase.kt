@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.dao.ChecklistItemDAO
+import com.example.grocerychecklist.data.dao.DatabaseDao
 import com.example.grocerychecklist.data.dao.HistoryDAO
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.dao.ItemDAO
@@ -25,6 +26,7 @@ import com.example.grocerychecklist.data.model.Item
 ], version = 1, exportSchema = false)
 @TypeConverters(Converter::class)
 abstract class AppDatabase : RoomDatabase(){
+    abstract fun databaseDAO(): DatabaseDao
     abstract fun checklistDAO(): ChecklistDAO
     abstract fun checklistItemDAO(): ChecklistItemDAO
     abstract fun itemDAO(): ItemDAO
@@ -40,7 +42,7 @@ abstract class AppDatabase : RoomDatabase(){
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "grocery_app_database"
+                    "grocery-app-database"
                 ).build()
                 INSTANCE = instance
                 instance

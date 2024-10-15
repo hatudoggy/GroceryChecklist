@@ -1,5 +1,8 @@
 package com.example.grocerychecklist.viewmodel.dashboard
 
-sealed class DashboardMainState {
+import com.example.grocerychecklist.data.model.Checklist
 
-}
+data class DashboardMainState (
+    val checklists: List<Checklist> = emptyList(),
+    val name: String = ""
+)
