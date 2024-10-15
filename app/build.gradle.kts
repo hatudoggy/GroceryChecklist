@@ -85,7 +85,7 @@ dependencies {
 
     //Compose Charts
     implementation(libs.charts)
-    implementation("io.github.ehsannarmani:compose-charts:0.0.14")
+    implementation(libs.compose.charts)
 
     //Material Icons
     implementation(libs.androidx.material.icons.extended)
