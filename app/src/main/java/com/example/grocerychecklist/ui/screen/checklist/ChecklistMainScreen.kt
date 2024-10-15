@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.ChecklistComponent
 import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
 import com.example.grocerychecklist.ui.component.RoundedTextField
@@ -88,7 +89,7 @@ fun ChecklistMainScreen() {
                     description = "A checklist of the main groceries for the month. All the essentials...",
                     date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                     icon = Icons.Default.Fastfood,
-                    iconColor = ItemCategory.MAIN.color,
+                    iconColor = ChecklistCategory.MAIN_GROCERY.color,
                     variant = ChecklistComponentVariant.Checklist,
                 )
                 ChecklistComponent(
@@ -96,7 +97,7 @@ fun ChecklistMainScreen() {
                     description = "Important to buy it weekly",
                     date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                     icon = Icons.Default.Medication,
-                    iconColor = ItemCategory.MEDICINE.color,
+                    iconColor = ChecklistCategory.MEDICINE.color,
                     variant = ChecklistComponentVariant.Checklist,
                 )
             }
