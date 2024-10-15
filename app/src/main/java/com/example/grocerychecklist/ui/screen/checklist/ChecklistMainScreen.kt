@@ -1,6 +1,5 @@
 package com.example.grocerychecklist.ui.screen.checklist
 
-import com.example.grocerychecklist.ui.component.ItemCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
