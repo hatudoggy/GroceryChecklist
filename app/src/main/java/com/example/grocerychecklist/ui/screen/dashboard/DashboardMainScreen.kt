@@ -21,11 +21,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.ChecklistComponent
 import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Routes
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
@@ -33,7 +36,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DashboardMainScreen() {
+fun DashboardMainScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
@@ -69,7 +72,9 @@ fun DashboardMainScreen() {
                     Text(
                         "View More >",
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable {  }
+                        modifier = Modifier.clickable(onClick = {
+                            navController.navigate(Routes.DashboardBreakdown)
+                        })
                     )
                 }
             }
@@ -97,5 +102,5 @@ fun DashboardMainScreen() {
 @Preview(showBackground = true)
 @Composable
 fun DashboardMainScreenPreview() {
-    DashboardMainScreen()
+    DashboardMainScreen(navController = rememberNavController())
 }
