@@ -1,11 +1,14 @@
 package com.example.grocerychecklist.ui.screen.history
 
+import ItemCategory
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.Button
@@ -46,7 +50,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import  androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -77,9 +84,9 @@ val historyData = listOf(
         expense = 400.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Groceries", detailsExpense = 250.0
+                detailsTitle = "Poultry", detailsExpense = 250.0
             ), HistoryDataDetails(
-                detailsTitle = "Fruits", detailsExpense = 150.0
+                detailsTitle = "Medicine", detailsExpense = 150.0
             )
         )
     ), HistoryData(
@@ -89,9 +96,9 @@ val historyData = listOf(
         expense = 450.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Vegetables", detailsExpense = 200.0
+                detailsTitle = "Vegetable", detailsExpense = 200.0
             ), HistoryDataDetails(
-                detailsTitle = "Dairy Products", detailsExpense = 250.0
+                detailsTitle = "Meat", detailsExpense = 250.0
             )
         )
     ), HistoryData(
@@ -101,9 +108,9 @@ val historyData = listOf(
         expense = 450.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Vegetables", detailsExpense = 200.0
+                detailsTitle = "Sanitary", detailsExpense = 200.0
             ), HistoryDataDetails(
-                detailsTitle = "Dairy Products", detailsExpense = 250.0
+                detailsTitle = "Cleaning", detailsExpense = 250.0
             )
         )
     )
@@ -199,7 +206,11 @@ fun HistoryMainScreen(navController: NavController) {
 }
 
 @Composable
-fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency, navController: NavController) {
+fun HistoryCollapsedComponent(
+    data: HistoryData,
+    converter: ConvertNumToCurrency,
+    navController: NavController
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Row {
@@ -207,13 +218,22 @@ fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency
             Column {
                 data.details.forEach { details ->
                     ListItem(headlineContent = {
-                        Text(details.detailsTitle, color = Color.Gray)
+                        Text(
+                            details.detailsTitle,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(ItemCategory.valueOf(details.detailsTitle.uppercase()).color)
+                                .padding(vertical = 5.dp, horizontal = 10.dp)
+                        )
                     }, trailingContent = {
                         Text(
                             converter(
                                 Currency.PHP,
                                 details.detailsExpense
-                            )
+                            ),
+                            fontSize = 13.sp,
                         )
                     })
 
@@ -224,12 +244,11 @@ fun HistoryCollapsedComponent(data: HistoryData, converter: ConvertNumToCurrency
             }
         }
 
-        OutlinedButton(onClick = {}) {
+        TextButton(onClick = {}) {
             Text("See More", modifier = Modifier.clickable(onClick = {
                 navController.navigate(Routes.HistoryDetail)
             }))
         }
-
     }
 }
 
