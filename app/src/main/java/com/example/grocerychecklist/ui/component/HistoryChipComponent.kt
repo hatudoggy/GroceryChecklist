@@ -3,11 +3,9 @@ package com.example.grocerychecklist.ui.component
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SelectableChipBorder
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -18,32 +16,55 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryChipComponent(category: ItemCategory) {
-    var selected by remember { mutableStateOf(false) }
+fun HistoryChipGroup(
+    categories: List<ItemCategory>,
+    onCategorySelected: (ItemCategory) -> Unit
+) {
+    var selectedCategory by remember { mutableStateOf<ItemCategory?>(null) }
 
+    categories.forEach { category ->
+        HistoryChipComponent(
+            category = category,
+            isSelected = category == selectedCategory,
+            onSelected = {
+                selectedCategory = category
+                onCategorySelected(category)
+            }
+        )
+    }
+}
+
+@Composable
+fun HistoryChipComponent(
+    category: ItemCategory,
+    isSelected: Boolean,
+    onSelected: () -> Unit
+) {
     FilterChip(
-        onClick = { selected = !selected },
+        onClick = onSelected,
         label = {
             Text(category.text)
         },
-        selected = selected,
+        selected = isSelected,
         colors = FilterChipDefaults.filterChipColors(
             containerColor = Color(0xFFE7FFC0),
             labelColor = Color(0xFF6FA539),
+            selectedContainerColor = category.color,
+            selectedLabelColor = Color.White
         ),
         border = FilterChipDefaults.filterChipBorder(
-            borderColor =  Color(0xFF6FA539),
+            enabled = true,
+            selected = isSelected,
+            borderColor = category.color
         ),
-
-        leadingIcon = if (selected) {
+        leadingIcon = if (isSelected) {
             {
                 Icon(
                     imageVector = Icons.Filled.Done,
-                    contentDescription = "",
+                    contentDescription = "Selected",
+                    tint = Color.White,
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
             }
@@ -56,5 +77,5 @@ fun HistoryChipComponent(category: ItemCategory) {
 @Preview
 @Composable
 private fun HistoryChipPreview(){
-    HistoryChipComponent(ItemCategory.ALL)
+    HistoryChipComponent(ItemCategory.ALL, isSelected = true, onSelected = {})
 }

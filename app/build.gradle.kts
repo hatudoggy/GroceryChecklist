@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.dautovicharis.charts)
+    implementation(libs.androidx.graphics.shapes.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,6 +83,7 @@ dependencies {
 
     //Compose Charts
     implementation(libs.charts)
+    implementation("io.github.ehsannarmani:compose-charts:0.0.14")
 
     //Material Icons
     implementation(libs.androidx.material.icons.extended)
