@@ -26,6 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,23 +40,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.ChecklistComponent
 import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
+import com.example.grocerychecklist.ui.component.ChecklistDialogComponent
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun ChecklistMainScreen() {
+    val viewModel: ChecklistMainViewModel = viewModel()
+    val dialogState by viewModel.dialogState.collectAsState()
+
+    if (dialogState.isAddingChecklist) {
+        ChecklistDialogComponent()
+    }
+
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
-                onClick = {}
+                onClick = {
+                    viewModel.openDialog()
+                }
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
             }
