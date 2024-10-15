@@ -10,13 +10,15 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 
-enum class ChecklistItemOrder {
-    Order,
-    Name,
-    Price,
+enum class ChecklistItemOrder(val order: String) {
+    Order("order"),
+    Name("name"),
+    Price("price"),
 }
 
 class ChecklistItemRepository(
@@ -24,7 +26,7 @@ class ChecklistItemRepository(
     private val itemDAO: ItemDAO
 ) {
 
-    suspend fun addChecklistItem(checklistId: Int, checklistItemInput: ChecklistItemInput) {
+    suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput): Long {
         val currentDateTime = DateUtility.getCurrentDateTime()
 
         val item = Item(
@@ -48,10 +50,11 @@ class ChecklistItemRepository(
             createdAt = currentDateTime,
             updatedAt = currentDateTime
         )
-        checklistItemDAO.insert(checklistItem)
+
+        return checklistItemDAO.insert(checklistItem)
     }
 
-    suspend fun updateChecklistItem(checklistItemId: Int, checklistItemInput: ChecklistItemInput) {
+    suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput) {
         val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId)
         val currentDateTime = DateUtility.getCurrentDateTime()
 
@@ -73,8 +76,8 @@ class ChecklistItemRepository(
         checklistItemDAO.update(updatedChecklistItem)
     }
 
-    suspend fun changeChecklistOrder(checklistId: Int, checklistItemId: Int, newOrder: Int) {
-        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId).flattenToList()
+    suspend fun changeChecklistOrder(checklistId: Long, checklistItemId: Long, newOrder: Int) {
+        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId).take(1).first()
 
         if (newOrder < 0 || newOrder >= checklistItems.size) {
             throw IllegalArgumentException("New order is out of bounds")
@@ -83,17 +86,12 @@ class ChecklistItemRepository(
         val checklistItemOrder = checklistItems.find { it.id == checklistItemId } ?: return
         val updatedList = checklistItems.toMutableList()
         updatedList.remove(checklistItemOrder)
+        updatedList.add(newOrder - 1, checklistItemOrder)
 
         val adjustedItems = updatedList.mapIndexed { index, checklistItem ->
-            if (index >= newOrder) {
-                checklistItem.copy(order = index + 1)
-            } else {
-                checklistItem
-            }
+            checklistItem.copy(order = index + 1)
         }.toMutableList()
 
-        val updatedChecklistItemOrder = checklistItemOrder.copy(order = newOrder + 1)
-        adjustedItems.add(newOrder, updatedChecklistItemOrder)
         adjustedItems.forEach { checklistItemDAO.update(it) }
     }
 
@@ -101,17 +99,17 @@ class ChecklistItemRepository(
         checklistItemDAO.delete(checklistItem)
 
         val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistItem.checklistId)
-        checklistItems.flattenToList().forEachIndexed { index, item ->
+        checklistItems.take(1).first().forEachIndexed { index, item ->
             val updatedItem = item.copy(order = index + 1)
             checklistItemDAO.update(updatedItem)
         }
     }
 
-    suspend fun getChecklistItem(id: Int): ChecklistItemFull {
+    suspend fun getChecklistItem(id: Long): ChecklistItemFull {
         return checklistItemDAO.getChecklistItemById(id)
     }
 
-    fun getChecklistItems(checklistId: Int, orderBy: ChecklistItemOrder): Flow<List<ChecklistItemFull>> {
+    fun getChecklistItems(checklistId: Long, orderBy: ChecklistItemOrder): Flow<List<ChecklistItemFull>> {
         return when (orderBy) {
             ChecklistItemOrder.Order ->
                 checklistItemDAO.getAllChecklistItemsOrderedByOrder(checklistId)
@@ -125,20 +123,16 @@ class ChecklistItemRepository(
         }
     }
 
-    fun searchChecklistItems(checklistId: Int, searchQuery: String): Flow<List<ChecklistItemFull>> {
+    fun searchChecklistItems(checklistId: Long, searchQuery: String): Flow<List<ChecklistItemFull>> {
         return checklistItemDAO.getAllChecklistItemsByName(checklistId,searchQuery)
     }
 
-    suspend fun getTotalChecklistItems(checklistId: Int): Int {
+    suspend fun getTotalChecklistItems(checklistId: Long): Int {
         return checklistItemDAO.aggregateTotalChecklistItems(checklistId)
     }
 
-    suspend fun getTotalChecklistItemPrice(checklistId: Int): Double {
+    suspend fun getTotalChecklistItemPrice(checklistId: Long): Double {
         return checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId) ?: 0.00
     }
 
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private suspend fun <T> Flow<List<T>>.flattenToList() =
-        flatMapConcat { it.asFlow() }.toList()
 }

@@ -19,6 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.data.model.Checklist
+import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -36,7 +42,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DashboardMainScreen(navController: NavController) {
+fun DashboardMainScreen(
+    state: DashboardMainState,
+    onEvent: (DashboardMainEvent) -> Unit
+) {
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
@@ -73,7 +82,7 @@ fun DashboardMainScreen(navController: NavController) {
                         "View More >",
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable(onClick = {
-                            navController.navigate(Routes.DashboardBreakdown)
+
                         })
                     )
                 }
@@ -102,5 +111,25 @@ fun DashboardMainScreen(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun DashboardMainScreenPreview() {
-    DashboardMainScreen(navController = rememberNavController())
+    val currentDateTime = DateUtility.getCurrentDateTime()
+    val mockState = DashboardMainState(
+        checklists = listOf(
+            Checklist(
+                name = "Dog",
+                description = "",
+                icon = IconOption.Home,
+                iconColor = ColorOption.White,
+                createdAt = currentDateTime,
+                updatedAt = currentDateTime,
+                lastOpenedAt = currentDateTime,
+                lastShopAt = currentDateTime
+            )
+        )
+    )
+    val mockOnEvent: (DashboardMainEvent) -> Unit = {}
+
+    DashboardMainScreen(
+        state = mockState,
+        onEvent = mockOnEvent
+    )
 }

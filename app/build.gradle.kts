@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     kotlin("plugin.serialization") version "2.0.20"
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -77,13 +79,13 @@ dependencies {
 
     //Room
     implementation(libs.androidx.room.runtime)
-    annotationProcessor(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     testImplementation(libs.androidx.room.testing)
 
     //Compose Charts
     implementation(libs.charts)
-    implementation("io.github.ehsannarmani:compose-charts:0.0.14")
+    implementation(libs.compose.charts)
 
     //Material Icons
     implementation(libs.androidx.material.icons.extended)
