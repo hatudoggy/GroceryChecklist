@@ -16,7 +16,7 @@ class ItemRepository(
     private val itemDAO: ItemDAO
 ) {
 
-    suspend fun addItem(itemInput: ItemInput) {
+    suspend fun addItem(itemInput: ItemInput): Long {
         val currentDateTime = DateUtility.getCurrentDateTime()
 
         val item = Item(
@@ -30,7 +30,7 @@ class ItemRepository(
             updatedAt = currentDateTime
         )
 
-        itemDAO.insert(item)
+        return itemDAO.insert(item)
     }
 
     suspend fun updateItem(id: Long, itemInput: ItemInput) {

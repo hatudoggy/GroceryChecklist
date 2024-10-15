@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.grocerychecklist.data.model.HistoryItem
+import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import kotlinx.coroutines.flow.Flow
 import java.util.Locale.Category
 
@@ -20,14 +21,11 @@ interface HistoryItemDAO {
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId")
     fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>>
 
-    @Query("SELECT * FROM historyitem WHERE historyId = :historyId ORDER BY name")
-    fun getAllHistoryItemsOrderedByName(historyId: Long): Flow<List<HistoryItem>>
+    @Query("SELECT * FROM historyitem WHERE historyId = :historyId ORDER BY :order")
+    fun getAllHistoryItemsOrderFilter(historyId: Long, order: ChecklistItemOrder): Flow<List<HistoryItem>>
 
-    @Query("SELECT * FROM historyitem WHERE historyId = :historyId ORDER BY price")
-    fun getAllHistoryItemsOrderedByPrice(historyId: Long): Flow<List<HistoryItem>>
-
-    @Query("SELECT * FROM historyitem WHERE historyId = :historyId ORDER BY `order`")
-    fun getAllHistoryItemsOrderedByOrder(historyId: Long): Flow<List<HistoryItem>>
+    @Query("SELECT * FROM historyitem WHERE historyId = :historyId AND isChecked = :isChecked ORDER BY :order")
+    fun getAllHistoryItemsOrderAndCheckedFilter(historyId: Long, order: ChecklistItemOrder, isChecked: Boolean): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId AND name = :qName")
     fun getAllHistoryItemsByName(historyId: Long, qName: String): Flow<List<HistoryItem>>

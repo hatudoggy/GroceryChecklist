@@ -30,7 +30,7 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
     @Query("""
         SELECT * FROM checklistitem
         INNER JOIN item ON checklistItem.itemId = item.id
-        WHERE checklistItem.id = :checklistId
+        WHERE checklistItem.checklistId = :checklistId
         ORDER BY item.name
     """)
     fun getAllChecklistItemsOrderedByName(checklistId: Long): Flow<List<ChecklistItemFull>>
@@ -43,7 +43,7 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
     @Query("""
         SELECT * FROM checklistitem
         INNER JOIN item ON checklistItem.itemId = item.id
-        WHERE checklistItem.id = :checklistId
+        WHERE checklistItem.checklistId = :checklistId
         AND item.name = :qName
     """)
     fun getAllChecklistItemsByName(checklistId: Long, qName: String): Flow<List<ChecklistItemFull>>
@@ -52,7 +52,7 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
     @Query("""
         SELECT * FROM checklistitem
         INNER JOIN item ON checklistItem.itemId = item.id
-        WHERE checklistItem.id = :checklistId
+        WHERE checklistItem.checklistId = :checklistId
         AND item.category = :category
     """)
     fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>

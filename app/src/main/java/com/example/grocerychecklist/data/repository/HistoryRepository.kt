@@ -10,17 +10,19 @@ class HistoryRepository(
     private val historyDAO: HistoryDAO
 ) {
 
-    suspend fun addHistory(checklist: Checklist) {
+    suspend fun addHistory(checklist: Checklist): Long {
         val currentDateTime = DateUtility.getCurrentDateTime()
 
         val history = History(
             checklistId = checklist.id,
             name = checklist.name,
             description = checklist.description,
+            icon = checklist.icon,
+            iconColor = checklist.iconColor,
             createdAt = currentDateTime
         )
 
-        historyDAO.insert(history)
+        return historyDAO.insert(history)
     }
 
     suspend fun getHistory(id: Long): History {
