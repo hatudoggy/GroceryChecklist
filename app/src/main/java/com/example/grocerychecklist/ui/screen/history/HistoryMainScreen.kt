@@ -52,10 +52,12 @@ import java.time.format.DateTimeFormatter
 import  androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
@@ -64,6 +66,8 @@ import com.example.grocerychecklist.ui.component.CollapsibleComponent
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.ui.theme.Typography
+import com.example.grocerychecklist.viewmodel.history.HistoryMainState
+import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
 import java.util.Date
 
 data class HistoryData(
@@ -132,34 +136,15 @@ val historyData = listOf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HistoryMainScreen(navController: NavController) {
-    val cardStates = remember { mutableStateMapOf<Int, Boolean>() }
-    val monthsList = remember { mutableListOf<String>() }
-    val converter = ConvertNumToCurrency()
+fun HistoryMainScreen(
+    navController: NavController,
+    viewModel: HistoryMainViewModel,
+    historyMainState: HistoryMainState,
+) {
+    val (cardStates, monthsList) = historyMainState
+    val converter = viewModel.converter
 
-    fun isCurrentMonth(date: String): Boolean {
-        val formattedDate = "$date 01"
-        val inputDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("MMM yyyy dd"))
-        val currentDate = LocalDate.now()
-
-        return inputDate.month == currentDate.month && inputDate.year == currentDate.year
-    }
-
-    fun areDatesMatching(dateFromList: String, dateFromBackend: String): Boolean {
-        return dateFromList == dateFromBackend.split(" ")[0] + " " + dateFromBackend.split(" ")[2]
-    }
-
-    val sortedHistoryData = historyData.sortedByDescending {
-        LocalDate.parse(it.date, DateTimeFormatter.ofPattern("MMM dd yyyy"))
-    }
-
-    sortedHistoryData.forEach { data ->
-        val month = data.date.split(" ")[0] + " " + data.date.split(" ")[2]
-
-        if (!monthsList.contains(month)) {
-            monthsList.add(month)
-        }
-    }
+    viewModel.sortHistoryData(historyData)
 
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -174,7 +159,7 @@ fun HistoryMainScreen(navController: NavController) {
         ) {
 
             monthsList.forEach { month ->
-                val displayMonth = if (isCurrentMonth(month)) "This Month" else month
+                val displayMonth = if (viewModel.isCurrentMonth(month)) "This Month" else month
 
                 item {
                     Text(
@@ -187,7 +172,7 @@ fun HistoryMainScreen(navController: NavController) {
                 items(historyData) { data ->
                     val isCardClicked = cardStates[data.id] ?: false
 
-                    if (areDatesMatching(month, data.date)) {
+                    if (viewModel.areDatesMatching(month, data.date)) {
                         CollapsibleComponent(
                             isCardClicked,
                             cardComponent = {
@@ -272,5 +257,12 @@ fun HistoryCollapsedComponent(
 @Preview(showBackground = true)
 @Composable
 fun HistoryMainScreenPreview() {
-    HistoryMainScreen(navController = rememberNavController())
+    val viewModel: HistoryMainViewModel = viewModel()
+    val historyMainState by viewModel.historyMainState.collectAsState()
+
+    HistoryMainScreen(
+        navController = rememberNavController(),
+        viewModel,
+        historyMainState
+    )
 }
