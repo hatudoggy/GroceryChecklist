@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 val SkyGreen = Color(0xFF60E2CB)
 val Maroon = Color(0xFFE26860)
+val PrimaryDarkGreen = Color(0xFF6FA539)

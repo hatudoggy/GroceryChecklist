@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,9 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
-import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.ui.screen.history.HistoryData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -46,12 +42,12 @@ fun CollapsibleComponentPreview() {
     CollapsibleComponent(
         isCardClicked = false,
         cardComponent = {
-            ChecklistComponent(
+            ButtonCardComponent(
                 name = "Main Grocery",
                 date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                 icon = Icons.Filled.Android,
-                iconColor = MaterialTheme.colorScheme.primary,
-                variant = ChecklistComponentVariant.History,
+                iconBackgroundColor = MaterialTheme.colorScheme.primary,
+                variant = ButtonCardComponentVariant.History,
                 onClick = {},
                 isClicked = true
             )

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.MaterialTheme
@@ -27,14 +26,11 @@ import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.ui.component.ChecklistComponent
-import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
+import com.example.grocerychecklist.ui.component.ButtonCardComponent
+import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Routes
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
@@ -94,13 +90,13 @@ fun DashboardMainScreen(
             ) {
                 Text("History", fontSize = 18.sp)
                 repeat(5) {
-                    ChecklistComponent(
+                    ButtonCardComponent(
                         name = "Main Grocery",
                         expense = 400.00,
                         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                         icon = Icons.Filled.Android,
-                        iconColor = MaterialTheme.colorScheme.primary,
-                        variant = ChecklistComponentVariant.History,
+                        iconBackgroundColor = MaterialTheme.colorScheme.primary,
+                        variant = ButtonCardComponentVariant.History,
                     )
                 }
             }
