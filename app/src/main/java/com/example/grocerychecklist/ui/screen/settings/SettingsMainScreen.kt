@@ -9,20 +9,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.CurrencyYen
 import androidx.compose.material.icons.outlined.LightMode
-import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,8 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.grocerychecklist.ui.component.ButtonCardComponent
-import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
+import com.example.grocerychecklist.ui.component.BottomModalComponent
+import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
 
@@ -73,12 +74,18 @@ fun SettingsMainScreen() {
                     SettingsButtonCard(
                         icon = Icons.Outlined.LightMode,
                         title = "Color Scheme",
-                        subTitle = "Light"
+                        subTitle = "Light",
+                        bottomModalContent = {
+                            ColorSchemeBottomModalContentComponent()
+                        }
                     )
                     SettingsButtonCard(
                         icon = Icons.Outlined.AttachMoney,
                         title = "Currency",
-                        subTitle = "Peso"
+                        subTitle = "Peso",
+                        bottomModalContent = {
+                            CurrencyBottomModalContentComponent()
+                        }
                     )
                 }
             }
@@ -87,12 +94,26 @@ fun SettingsMainScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsButtonCard(
     icon: ImageVector,
     title: String,
-    subTitle: String
+    subTitle: String,
+    bottomModalContent: @Composable () -> Unit,
 ) {
+    val openBottomSheet = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val bottomSheetState = rememberModalBottomSheetState()
+
+    if (openBottomSheet.value) {
+        BottomModalComponent(bottomSheetState, {
+            openBottomSheet.value = false
+        }, content = {
+            bottomModalContent()
+        })
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -100,9 +121,9 @@ fun SettingsButtonCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable(
-                onClick = {}
-            )
+            .clickable(onClick = {
+                openBottomSheet.value = true
+            })
             .padding(10.dp)
 
     ) {
@@ -125,6 +146,21 @@ fun SettingsButtonCard(
                     letterSpacing = 0.5.sp
                 ), color = Color.Gray
             )
+        }
+    }
+}
+
+@Composable
+fun ColorSchemeBottomModalContentComponent() {
+    BottomModalButtonComponent(onClick = {}, title = "Light")
+    BottomModalButtonComponent(onClick = {}, title = "Dark")
+}
+
+@Composable
+fun CurrencyBottomModalContentComponent() {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(10) {
+            BottomModalButtonComponent(title = "Philippine Peso", subTitle = "P")
         }
     }
 }
