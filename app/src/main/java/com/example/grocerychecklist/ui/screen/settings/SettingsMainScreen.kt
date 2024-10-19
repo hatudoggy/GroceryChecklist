@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +39,7 @@ import com.example.grocerychecklist.ui.component.BottomModalComponent
 import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,7 +114,7 @@ fun SettingsButtonCard(
             openBottomSheet.value = false
         }, content = {
             bottomModalContent()
-        })
+        }, contentTitle = "Select ${title.lowercase()}")
     }
 
     Row(
@@ -152,7 +154,7 @@ fun SettingsButtonCard(
 
 @Composable
 fun ColorSchemeBottomModalContentComponent() {
-    BottomModalButtonComponent(onClick = {}, title = "Light")
+    BottomModalButtonComponent(onClick = {}, title = "Light", isActive = true)
     BottomModalButtonComponent(onClick = {}, title = "Dark")
 }
 
@@ -160,7 +162,11 @@ fun ColorSchemeBottomModalContentComponent() {
 fun CurrencyBottomModalContentComponent() {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(10) {
-            BottomModalButtonComponent(title = "Philippine Peso", subTitle = "P")
+            BottomModalButtonComponent(
+                title = "Philippine Peso",
+                subTitle = "P",
+                isActive = it == 0
+            )
         }
     }
 }
