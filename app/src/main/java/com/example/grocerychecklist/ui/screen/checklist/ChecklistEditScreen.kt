@@ -113,24 +113,24 @@ fun ChecklistDialogContentComponent(
             modifier = Modifier
                 .padding(horizontal = 0.dp)
         ) {
-            Text("Product", fontSize = 18.sp)
+            Text("Item", fontSize = 18.sp)
         }
         OutlinedTextField(
             value = dialogState.checklistName,
             onValueChange = { it -> viewModel.updateChecklistName(it) },
-            label = { Text("Tender Juicy Hotdog") },
+            label = { Text("Hotdog") },
             modifier = Modifier.fillMaxWidth()
         )
         Column(
             modifier = Modifier
                 .padding(horizontal = 0.dp)
         ) {
-            Text("Date", fontSize = 18.sp)
+            Text("Category", fontSize = 18.sp)
         }
         OutlinedTextField(
             value = dialogState.checklistName,
             onValueChange = { it -> viewModel.updateChecklistName(it) },
-            label = { Text("10/22/2024") },
+            label = { Text("Meat") },
             modifier = Modifier.fillMaxWidth()
         )
         Column(
@@ -143,6 +143,18 @@ fun ChecklistDialogContentComponent(
             value = dialogState.checklistName,
             onValueChange = { it -> viewModel.updateChecklistName(it) },
             label = { Text("250") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 0.dp)
+        ) {
+            Text("Price per 1 item", fontSize = 18.sp)
+        }
+        OutlinedTextField(
+            value = dialogState.checklistName,
+            onValueChange = { it -> viewModel.updateChecklistName(it) },
+            label = { Text("25") },
             modifier = Modifier.fillMaxWidth()
         )
     }
