@@ -37,18 +37,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
+import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.ChecklistDialogComponent
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ChecklistMainScreen() {
+fun ChecklistMainScreen(
+    //state: DashboardBreakdownState,
+    onEvent: (ChecklistMainEvent) -> Unit,
+) {
     val viewModel: ChecklistMainViewModel = viewModel()
     val dialogState by viewModel.dialogState.collectAsState()
 
@@ -64,7 +69,8 @@ fun ChecklistMainScreen() {
                 shape = CircleShape,
                 onClick = {
                     viewModel.openDialog()
-                }
+                },
+                containerColor = PrimaryGreenSurface
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
             }
@@ -104,6 +110,7 @@ fun ChecklistMainScreen() {
                     icon = Icons.Default.Fastfood,
                     iconBackgroundColor = ChecklistCategory.MAIN_GROCERY.color,
                     variant = ButtonCardComponentVariant.Checklist,
+                    onClick = {viewModel.onEvent(ChecklistMainEvent.NavigateChecklist)}
                 )
                 ButtonCardComponent(
                     name = "Grandpa's Meds",
@@ -112,6 +119,7 @@ fun ChecklistMainScreen() {
                     icon = Icons.Default.Medication,
                     iconBackgroundColor = ChecklistCategory.MEDICINE.color,
                     variant = ButtonCardComponentVariant.Checklist,
+                    onClick = {onEvent(ChecklistMainEvent.NavigateChecklist)}
                 )
             }
         }
@@ -121,7 +129,9 @@ fun ChecklistMainScreen() {
 @Preview(showBackground = true)
 @Composable
 fun ChecklistMainScreenPreview() {
-    ChecklistMainScreen()
+    ChecklistMainScreen(
+        onEvent = {}
+    )
 }
 
 @Composable

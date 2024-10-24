@@ -7,9 +7,11 @@ import com.example.grocerychecklist.data.repository.DatabaseRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.ItemRepository
+import com.example.grocerychecklist.ui.screen.Navigator
 
 interface AppModule {
     val db: AppDatabase
+    val navigator: Navigator
     val databaseRepository: DatabaseRepository
     val checklistRepository: ChecklistRepository
     val checklistItemRepository: ChecklistItemRepository

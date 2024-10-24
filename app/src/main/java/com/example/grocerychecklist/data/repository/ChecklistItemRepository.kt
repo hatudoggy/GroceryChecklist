@@ -7,13 +7,9 @@ import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.domain.utility.DateUtility
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
 
 enum class ChecklistItemOrder(val order: String) {
     Order("order"),

@@ -21,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -31,15 +30,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.grocerychecklist.ui.component.BottomModalComponent
 import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
+import com.example.grocerychecklist.ui.component.BottomModalComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

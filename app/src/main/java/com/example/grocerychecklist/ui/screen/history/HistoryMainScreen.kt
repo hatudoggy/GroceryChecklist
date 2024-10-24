@@ -20,33 +20,33 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.grocerychecklist.ui.component.ButtonCardComponent
-import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
-import com.example.grocerychecklist.ui.component.TopBarComponent
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
+import com.example.grocerychecklist.ui.component.ButtonCardComponent
+import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
+import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.viewmodel.history.HistoryMainState
 import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class HistoryData(
     val id: Int,
