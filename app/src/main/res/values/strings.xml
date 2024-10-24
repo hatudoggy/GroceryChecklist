@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">GroceryChecklist</string>
+    <string name="checklist_title">Main Grocery</string>
+    <string name="checklist_description">A checklist of the main groceries for the month. Essentials like food, medicine, and toiletries.</string>
 </resources>

@@ -3,28 +3,17 @@ package com.example.grocerychecklist.ui.screen.dashboard
 import ItemCategory
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -43,44 +32,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.graphics.shapes.RoundedPolygon
-import com.example.grocerychecklist.R
-import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
-import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.ui.component.ChecklistComponent
-import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.github.tehras.charts.bar.BarChart
-import com.github.tehras.charts.bar.BarChartData
-import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
-import ir.ehsannarmani.compose_charts.models.LabelProperties
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardBreakdownScreen() {
+fun DashboardBreakdownScreen(
+    //state: DashboardBreakdownState,
+    onEvent: (DashboardBreakdownEvent) -> Unit,
+) {
     Scaffold(
-        topBar = { TopBarComponent(title = "Dashboard") },
+        topBar = { TopBarComponent(
+            title = "Dashboard",
+            onNavigateBackClick = {onEvent(DashboardBreakdownEvent.NavigateBack)})
+         },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -329,5 +308,5 @@ fun DashboardCategoryBreakDownComponent(category: ItemCategory, percent: Float, 
 @Preview(showBackground = true)
 @Composable
 fun DashboardBreakdownPreview() {
-    DashboardBreakdownScreen()
+    DashboardBreakdownScreen(onEvent = {})
 }

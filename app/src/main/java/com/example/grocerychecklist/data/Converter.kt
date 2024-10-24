@@ -4,10 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
-import androidx.core.graphics.drawable.IconCompat.IconType
 import androidx.room.TypeConverter
 import java.time.LocalDateTime
 import java.time.ZoneOffset

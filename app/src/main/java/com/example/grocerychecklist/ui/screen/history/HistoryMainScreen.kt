@@ -1,70 +1,52 @@
 package com.example.grocerychecklist.ui.screen.history
 
 import ItemCategory
-import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.grocerychecklist.ui.component.ChecklistComponent
-import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
-import com.example.grocerychecklist.ui.component.TopBarComponent
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import  androidx.compose.material3.ListItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
+import com.example.grocerychecklist.ui.component.ButtonCardComponent
+import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
+import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.SkyGreen
-import com.example.grocerychecklist.ui.theme.Typography
-import java.util.Date
+import com.example.grocerychecklist.viewmodel.history.HistoryMainState
+import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class HistoryData(
     val id: Int,
@@ -132,34 +114,15 @@ val historyData = listOf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HistoryMainScreen(navController: NavController) {
-    val cardStates = remember { mutableStateMapOf<Int, Boolean>() }
-    val monthsList = remember { mutableListOf<String>() }
-    val converter = ConvertNumToCurrency()
+fun HistoryMainScreen(
+    navController: NavController,
+    viewModel: HistoryMainViewModel,
+    historyMainState: HistoryMainState,
+) {
+    val (cardStates, monthsList) = historyMainState
+    val converter = viewModel.converter
 
-    fun isCurrentMonth(date: String): Boolean {
-        val formattedDate = "$date 01"
-        val inputDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("MMM yyyy dd"))
-        val currentDate = LocalDate.now()
-
-        return inputDate.month == currentDate.month && inputDate.year == currentDate.year
-    }
-
-    fun areDatesMatching(dateFromList: String, dateFromBackend: String): Boolean {
-        return dateFromList == dateFromBackend.split(" ")[0] + " " + dateFromBackend.split(" ")[2]
-    }
-
-    val sortedHistoryData = historyData.sortedByDescending {
-        LocalDate.parse(it.date, DateTimeFormatter.ofPattern("MMM dd yyyy"))
-    }
-
-    sortedHistoryData.forEach { data ->
-        val month = data.date.split(" ")[0] + " " + data.date.split(" ")[2]
-
-        if (!monthsList.contains(month)) {
-            monthsList.add(month)
-        }
-    }
+    viewModel.sortHistoryData(historyData)
 
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -174,7 +137,7 @@ fun HistoryMainScreen(navController: NavController) {
         ) {
 
             monthsList.forEach { month ->
-                val displayMonth = if (isCurrentMonth(month)) "This Month" else month
+                val displayMonth = if (viewModel.isCurrentMonth(month)) "This Month" else month
 
                 item {
                     Text(
@@ -187,17 +150,17 @@ fun HistoryMainScreen(navController: NavController) {
                 items(historyData) { data ->
                     val isCardClicked = cardStates[data.id] ?: false
 
-                    if (areDatesMatching(month, data.date)) {
+                    if (viewModel.areDatesMatching(month, data.date)) {
                         CollapsibleComponent(
                             isCardClicked,
                             cardComponent = {
-                                ChecklistComponent(
+                                ButtonCardComponent(
                                     name = data.title,
                                     expense = data.expense,
                                     date = data.date,
                                     icon = Icons.Filled.Fastfood,
-                                    iconColor = SkyGreen,
-                                    variant = ChecklistComponentVariant.History,
+                                    iconBackgroundColor = SkyGreen,
+                                    variant = ButtonCardComponentVariant.History,
                                     onClick = {
                                         cardStates[data.id] = !isCardClicked
                                     },
@@ -272,5 +235,12 @@ fun HistoryCollapsedComponent(
 @Preview(showBackground = true)
 @Composable
 fun HistoryMainScreenPreview() {
-    HistoryMainScreen(navController = rememberNavController())
+    val viewModel: HistoryMainViewModel = viewModel()
+    val historyMainState by viewModel.historyMainState.collectAsState()
+
+    HistoryMainScreen(
+        navController = rememberNavController(),
+        viewModel,
+        historyMainState
+    )
 }

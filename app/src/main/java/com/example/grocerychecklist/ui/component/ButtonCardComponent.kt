@@ -1,33 +1,23 @@
 package com.example.grocerychecklist.ui.component
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,22 +29,23 @@ import com.example.grocerychecklist.ui.theme.Typography
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-enum class ChecklistComponentVariant {
+enum class ButtonCardComponentVariant {
     Checklist,
     History,
 }
 
 @Composable
-fun ChecklistComponent(
+fun ButtonCardComponent(
     name: String,
     icon: ImageVector,
-    iconColor: Color,
-    variant: ChecklistComponentVariant,
+    iconBackgroundColor: Color,
+    iconColor: Color = Color.White,
+    variant: ButtonCardComponentVariant,
     date: String,
     description: String? = null,
     expense: Double? = null,
     onClick: () -> Unit = {},
-    isClicked: Boolean? = null
+    isClicked: Boolean? = null,
 ) {
     Row(
         modifier = Modifier
@@ -66,8 +57,9 @@ fun ChecklistComponent(
         verticalAlignment = Alignment.CenterVertically,
 
         ) {
-        ChecklistIconComponent(
-            color = iconColor,
+        ButtonCardIconComponent(
+            backgroundColor = iconBackgroundColor,
+            iconColor = iconColor,
             icon = icon
         )
         Spacer(
@@ -84,7 +76,7 @@ fun ChecklistComponent(
                 )
 
                 when (variant) {
-                    ChecklistComponentVariant.Checklist -> {
+                    ButtonCardComponentVariant.Checklist -> {
                         Text(
                             date,
                             color = Color.Gray,
@@ -92,7 +84,7 @@ fun ChecklistComponent(
                         )
                     }
 
-                    ChecklistComponentVariant.History -> {
+                    ButtonCardComponentVariant.History -> {
                         if (expense != null) {
                             val converter = ConvertNumToCurrency()
                             Text(
@@ -105,7 +97,7 @@ fun ChecklistComponent(
                 }
             }
             when (variant) {
-                ChecklistComponentVariant.Checklist -> {
+                ButtonCardComponentVariant.Checklist -> {
                     if (description != null) {
                         Text(
                             description,
@@ -117,7 +109,7 @@ fun ChecklistComponent(
                     }
                 }
 
-                ChecklistComponentVariant.History -> {
+                ButtonCardComponentVariant.History -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -140,12 +132,12 @@ fun ChecklistComponent(
 @Preview(showBackground = true)
 @Composable
 fun ChecklistComponentPreview() {
-    ChecklistComponent(
+    ButtonCardComponent(
         name = "Main Grocery",
         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
         icon = Icons.Filled.Android,
-        iconColor = MaterialTheme.colorScheme.primary,
-        variant = ChecklistComponentVariant.History,
+        iconBackgroundColor = MaterialTheme.colorScheme.primary,
+        variant = ButtonCardComponentVariant.History,
         description = "A checklist of the main groceries for the month. All the essentials...",
         expense = 400.00,
         isClicked = true

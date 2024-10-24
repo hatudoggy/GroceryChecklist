@@ -27,9 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,18 +37,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.grocerychecklist.ui.component.ButtonCardComponent
+import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ChecklistCategory
-import com.example.grocerychecklist.ui.component.ChecklistComponent
-import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
 import com.example.grocerychecklist.ui.component.ChecklistDialogComponent
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ChecklistMainScreen() {
+fun ChecklistMainScreen(
+    //state: DashboardBreakdownState,
+    onEvent: (ChecklistMainEvent) -> Unit,
+) {
     val viewModel: ChecklistMainViewModel = viewModel()
     val dialogState by viewModel.dialogState.collectAsState()
 
@@ -67,7 +69,8 @@ fun ChecklistMainScreen() {
                 shape = CircleShape,
                 onClick = {
                     viewModel.openDialog()
-                }
+                },
+                containerColor = PrimaryGreenSurface
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
             }
@@ -100,21 +103,23 @@ fun ChecklistMainScreen() {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                ChecklistComponent(
+                ButtonCardComponent(
                     name = "Main Grocery",
                     description = "A checklist of the main groceries for the month. All the essentials...",
                     date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                     icon = Icons.Default.Fastfood,
-                    iconColor = ChecklistCategory.MAIN_GROCERY.color,
-                    variant = ChecklistComponentVariant.Checklist,
+                    iconBackgroundColor = ChecklistCategory.MAIN_GROCERY.color,
+                    variant = ButtonCardComponentVariant.Checklist,
+                    onClick = {viewModel.onEvent(ChecklistMainEvent.NavigateChecklist)}
                 )
-                ChecklistComponent(
+                ButtonCardComponent(
                     name = "Grandpa's Meds",
                     description = "Important to buy it weekly",
                     date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                     icon = Icons.Default.Medication,
-                    iconColor = ChecklistCategory.MEDICINE.color,
-                    variant = ChecklistComponentVariant.Checklist,
+                    iconBackgroundColor = ChecklistCategory.MEDICINE.color,
+                    variant = ButtonCardComponentVariant.Checklist,
+                    onClick = {onEvent(ChecklistMainEvent.NavigateChecklist)}
                 )
             }
         }
@@ -124,7 +129,9 @@ fun ChecklistMainScreen() {
 @Preview(showBackground = true)
 @Composable
 fun ChecklistMainScreenPreview() {
-    ChecklistMainScreen()
+    ChecklistMainScreen(
+        onEvent = {}
+    )
 }
 
 @Composable

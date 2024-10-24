@@ -1,5 +1,9 @@
 package com.example.grocerychecklist.viewmodel.history
 
-sealed class HistoryMainState {
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 
-}
+data class HistoryMainState (
+    val cardStates: MutableMap<Int, Boolean> = mutableStateMapOf(),
+    val monthsList: MutableList<String> = mutableStateListOf(),
+)

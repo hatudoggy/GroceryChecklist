@@ -6,19 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.ui.component.BottomBarComponent
-import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.screen.checklist.checklistDestination
 import com.example.grocerychecklist.ui.screen.dashboard.dashboardDestination
@@ -26,10 +23,12 @@ import com.example.grocerychecklist.ui.screen.history.historyDestination
 import com.example.grocerychecklist.ui.screen.item.itemDestination
 import com.example.grocerychecklist.ui.screen.settings.settingsDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+
+    private lateinit var navigator: Navigator
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,20 +43,46 @@ class MainActivity : ComponentActivity() {
         setContent {
             GroceryChecklistTheme {
                 val navController = rememberNavController()
+
+                DisposableEffect(key1 = navController) {
+                    navigator = GroceryChecklistApp.appModule.navigator
+                    navigator.setController(navController)
+                    onDispose {
+                        navigator.clear()
+                    }
+                }
+
+                val bottomNavRoutes = listOf(
+                    Routes.DashboardMain::class.qualifiedName,
+                    Routes.ChecklistMain::class.qualifiedName,
+                    Routes.ItemMain::class.qualifiedName,
+                    Routes.HistoryMain::class.qualifiedName,
+                    Routes.SettingsMain::class.qualifiedName
+                )
+
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                println(currentRoute)
+                println(bottomNavRoutes)
+
                 Scaffold (
                     bottomBar = {
-                        BottomBarComponent(
-                            onNavigateClick = { route -> navController.navigate(route)}
-                        )
+                        if(currentRoute in bottomNavRoutes) {
+                            BottomBarComponent(
+                                activeButton = currentRoute,
+                                onNavigateClick = { route -> navController.navigate(route) }
+                            )
+                        }
                     },
-                    contentWindowInsets = WindowInsets(0.dp),
+                    contentWindowInsets = WindowInsets(0.dp)
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = Routes.DashboardMain,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        dashboardDestination(navController)
+                        dashboardDestination()
                         checklistDestination()
                         itemDestination()
                         historyDestination(navController)

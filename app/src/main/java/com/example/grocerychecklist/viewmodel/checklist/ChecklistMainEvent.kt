@@ -7,4 +7,5 @@ sealed interface ChecklistMainEvent {
     data class DialogState(
         val visible: Boolean = false
     )
+    data object NavigateChecklist: ChecklistMainEvent
 }

@@ -20,18 +20,19 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun ChecklistIconComponent(
-    color: Color,
+fun ButtonCardIconComponent(
+    backgroundColor: Color,
+    iconColor: Color = Color.White,
     icon: ImageVector
 ) {
-    val luminance = color.luminance()
-    val iconColor = if (luminance > 0.65f) Color.Black else Color.White
+    val luminance = backgroundColor.luminance()
+    val iconColor = if (luminance > 0.65f && iconColor == Color.White) Color.Black else iconColor
 
     Box(
         modifier = Modifier
             .size(42.5.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(color),
+            .background(backgroundColor),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -45,9 +46,9 @@ fun ChecklistIconComponent(
 
 @Preview(showBackground = true)
 @Composable
-fun ChecklistIconComponentPreview() {
-    ChecklistIconComponent(
-        color = MaterialTheme.colorScheme.primary,
+fun ButtonCardIconComponentPreview() {
+    ButtonCardIconComponent(
+        backgroundColor = MaterialTheme.colorScheme.primary,
         icon = Icons.Filled.Android
     )
 }

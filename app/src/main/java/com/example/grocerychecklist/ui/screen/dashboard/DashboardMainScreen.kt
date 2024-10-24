@@ -1,16 +1,26 @@
 package com.example.grocerychecklist.ui.screen.dashboard
 
+import ItemCategory
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,32 +29,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
 import com.example.grocerychecklist.data.model.Checklist
-import com.example.grocerychecklist.domain.utility.DateUtility
-import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
-import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.ui.component.ChecklistComponent
-import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
+import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.ui.component.ButtonCardComponent
+import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DashboardMainScreen(
     state: DashboardMainState,
-    onEvent: (DashboardMainEvent) -> Unit
+    onEvent: (DashboardMainEvent) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -56,6 +64,9 @@ fun DashboardMainScreen(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val category = ItemCategory.entries
+
+
             Box(
                 modifier = Modifier
                     .padding(vertical = 28.dp)
@@ -65,9 +76,9 @@ fun DashboardMainScreen(
             ) {
                 PieChart(
                     pieChartData = PieChartData(listOf(
-                        PieChartData.Slice(5F, Color(0xff90e0ef)),
-                        PieChartData.Slice(2F, Color(0xff00b4d8)),
-                        PieChartData.Slice(3F, Color(0xff0077b6)),
+                        PieChartData.Slice(5F, category[1].color),
+                        PieChartData.Slice(2F, category[2].color),
+                        PieChartData.Slice(3F, category[3].color),
                     )),
                     modifier = Modifier.fillMaxWidth(),
                     sliceDrawer = SimpleSliceDrawer(18F)
@@ -82,31 +93,68 @@ fun DashboardMainScreen(
                         "View More >",
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable(onClick = {
-
+                            onEvent(DashboardMainEvent.ViewMoreBtn)
                         })
                     )
                 }
             }
+
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                ChartLegendComponent(
+                    category[1].text,
+                    category[1].color
+                )
+                ChartLegendComponent(
+                    category[2].text,
+                    category[2].color
+                )
+                ChartLegendComponent(
+                    category[3].text,
+                    category[3].color
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
             ) {
                 Text("History", fontSize = 18.sp)
-                repeat(5) {
-                    ChecklistComponent(
+                repeat(4) {
+                    ButtonCardComponent(
                         name = "Main Grocery",
                         expense = 400.00,
                         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
                         icon = Icons.Filled.Android,
-                        iconColor = MaterialTheme.colorScheme.primary,
-                        variant = ChecklistComponentVariant.History,
+                        iconBackgroundColor = MaterialTheme.colorScheme.primary,
+                        variant = ButtonCardComponentVariant.History,
                     )
                 }
             }
         }
     }
 }
+
+
+@Composable
+fun ChartLegendComponent(
+    label: String,
+    color: Color
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            Icons.Filled.Circle,
+            modifier = Modifier
+                .size(12.dp),
+            tint = color,
+            contentDescription = "Legend Color"
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(label)
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
