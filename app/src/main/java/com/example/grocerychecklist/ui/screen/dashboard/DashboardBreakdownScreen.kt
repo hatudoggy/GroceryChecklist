@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
@@ -50,9 +51,15 @@ import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardBreakdownScreen() {
+fun DashboardBreakdownScreen(
+    //state: DashboardBreakdownState,
+    onEvent: (DashboardBreakdownEvent) -> Unit,
+) {
     Scaffold(
-        topBar = { TopBarComponent(title = "Dashboard") },
+        topBar = { TopBarComponent(
+            title = "Dashboard",
+            onNavigateBackClick = {onEvent(DashboardBreakdownEvent.NavigateBack)})
+         },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -301,5 +308,5 @@ fun DashboardCategoryBreakDownComponent(category: ItemCategory, percent: Float, 
 @Preview(showBackground = true)
 @Composable
 fun DashboardBreakdownPreview() {
-    DashboardBreakdownScreen()
+    DashboardBreakdownScreen(onEvent = {})
 }

@@ -1,11 +1,28 @@
 package com.example.grocerychecklist.ui.screen.checklist
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,10 +40,22 @@ import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.R
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.LightGray
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailEvent
 
 @Composable
-fun ChecklistDetailScreen() {
-    Scaffold(topBar = { TopBarComponent(title = "Checklist") }) { innerPadding ->
+fun ChecklistDetailScreen(
+    //state: DashboardBreakdownState,
+    onEvent: (ChecklistDetailEvent) -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopBarComponent(
+                title = "Checklist",
+                onNavigateBackClick = { onEvent(ChecklistDetailEvent.NavigateBack) }
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -47,7 +76,9 @@ fun ChecklistDetailScreen() {
                 lastShop = "Aug 20"
             )
 
-            CheckListButtons()
+            CheckListButtons(
+                onEvent = onEvent
+            )
         }
     }
 }
@@ -126,7 +157,10 @@ fun CheckListStatColumn(
 }
 
 @Composable
-fun CheckListButtons(modifier: Modifier = Modifier) {
+fun CheckListButtons(
+    modifier: Modifier = Modifier,
+    onEvent: (ChecklistDetailEvent) -> Unit
+) {
     Column(
         modifier = modifier.padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -139,25 +173,28 @@ fun CheckListButtons(modifier: Modifier = Modifier) {
         CheckListButton(
             text = "View Checklist",
             icon = Icons.Default.Visibility,
-            backgroundColor = Color(0xFFF0F0F0),
+            backgroundColor = LightGray,
             textColor = Color.Black,
-            modifier = buttonModifier
+            modifier = buttonModifier,
+            onClick = { onEvent(ChecklistDetailEvent.NavigateViewMode) }
         )
 
         CheckListButton(
             text = "Edit Checklist",
             icon = Icons.Default.Edit,
-            backgroundColor = Color(0xFFF0F0F0),
+            backgroundColor = LightGray,
             textColor = Color.Black,
-            modifier = buttonModifier
+            modifier = buttonModifier,
+            onClick = { onEvent(ChecklistDetailEvent.NavigateEditMode) }
         )
 
         CheckListButton(
             text = "Start Shopping",
             icon = Icons.Default.ShoppingCart,
-            backgroundColor = Color(0xFF6FA539),
+            backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = Color.White,
-            modifier = buttonModifier
+            modifier = buttonModifier,
+            onClick = { onEvent(ChecklistDetailEvent.NavigateStartMode) }
         )
     }
 }
@@ -168,10 +205,11 @@ fun CheckListButton(
     icon: ImageVector,
     backgroundColor: Color,
     textColor: Color,
-    modifier: Modifier
+    modifier: Modifier,
+    onClick: () -> Unit = {}
 ) {
     Button(
-        onClick = {},
+        onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
@@ -209,5 +247,7 @@ fun CheckListIcon(
 @Preview(showBackground = true)
 @Composable
 fun ChecklistDetailScreenPreview() {
-    ChecklistDetailScreen()
+    ChecklistDetailScreen(
+        onEvent = {}
+    )
 }

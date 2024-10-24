@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.viewmodel.item
 
-sealed class ItemMainState {
+data class ItemMainState (
+    val isAddingItem: Boolean = false
 
-}
+)

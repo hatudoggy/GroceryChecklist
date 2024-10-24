@@ -1,7 +1,5 @@
 package com.example.grocerychecklist.data.model
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.grocerychecklist.data.ColorOption

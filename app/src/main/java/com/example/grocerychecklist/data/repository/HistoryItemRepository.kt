@@ -1,7 +1,6 @@
 package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
-import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility

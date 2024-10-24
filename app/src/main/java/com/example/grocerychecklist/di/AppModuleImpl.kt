@@ -8,6 +8,7 @@ import com.example.grocerychecklist.data.repository.DatabaseRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.ItemRepository
+import com.example.grocerychecklist.ui.screen.Navigator
 
 
 class AppModuleImpl(
@@ -16,6 +17,9 @@ class AppModuleImpl(
 
     override val db: AppDatabase by lazy {
         AppDatabase.getDatabase(appContext)
+    }
+    override val navigator: Navigator by lazy {
+        Navigator()
     }
 
     override val databaseRepository: DatabaseRepository by lazy {

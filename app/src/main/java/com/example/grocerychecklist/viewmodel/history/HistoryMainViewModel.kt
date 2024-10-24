@@ -1,11 +1,8 @@
 package com.example.grocerychecklist.viewmodel.history
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.ui.screen.history.HistoryData
-import com.example.grocerychecklist.ui.screen.history.historyData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate

@@ -3,7 +3,6 @@ package com.example.grocerychecklist.ui.component
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -14,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun RotatingArrowIconComponent(iconColor: Color, isClicked: Boolean) {
