@@ -2,55 +2,61 @@
 
 DashboardMainScreen
 
-- This is where the uses log in and view an overview of their grocery list.
+- The first page that the user will visit. It contains a summary of expenses for the current month and the last five transactions in the History Screen.
 
-![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/DashboardMainScreen.PNG)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/DashboardMainScreen(app).PNG)
 
 DashboardBreakdownScreen
 
--It is an detailed/in-depth description of the overview of the user's grocery checklist and how much is spent.
+-Contains a summary of expenditures over the months and transaction history, presented using graphs and charts.
 
 ![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/DashboardBreakdownScreen.PNG)
 
 HistoryMainScreen
 
-- It shows the user's list history and tracks how much they spent on each month from their grocery list
+- The history screen contains a view-only list of past shopping transactions that the user has completed.
 
-![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/HistoryMainScreen.PNG)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/HistoryMainScreen(app).PNG)
 
 HistoryDetailScreen
 
-- A detailed list of items/products that have been purchased for each month and even shows how much and their category.
+- This screen contains a view-only list of items from the checklist that was saved in history. The checked/unchecked state of the items and the total price are retained.
 
-![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/HistoryDetailScreen.PNG)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/HistoryDetailScreen(app).PNG)
 
 ChecklistMainScreen
 
-- Basically a checklist of the groceries that can be tracked and checked by the user if they were able to obtain the product/item on their list
+- The main page for the checklist. It shows a list of all checklists that the user has created.
 
-(insert picture here)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistMainScreen(app).PNG)
 
 ChecklistViewScreen
 
-- This is where the user can search and view a sepcified item and can check it from their checklist annd has a detailed description of each item from the list.
+- A view-only list of checklist items. The user can scroll through the screen and click individual items to see their full details.
 
 ![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistViewScreen.PNG)
 
 ChecklistEditScreen
 
-- It is where the user can edit their checklist with ease and update the information of their list to use for later
+- This screen allows the user to add, edit, rearrange, and delete items in the checklist. It includes all the functions of the Checklist View screen but with CRUD operations.
 
 ![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistEditScreen.PNG)
 
 ItemMainScreen
 
-- This is where the user can search and view specific items/products they want to look from their grocery list.
+- Contains all items that the user has added to their checklists. This screen allows the user to view, add, edit, and delete items.
 
-![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ItemMainScreen.PNG)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ItemMainScreen(app).PNG)
+
+ItemEditScreen
+
+- This screen allows the user to add, edit, rearrange, and delete the selected item in the checklist.
+
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ItemEditScreen(app).PNG)
 
 SettingsMainScreen
 
-- This is where the user can adjust their settings on theapp and their edit their preference like color scheme and currency they like to see when using the app.
+- This screen allows the user to view and edit app settings. Currently, there are only two settings available: color theme and currency preference.
 
-![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/SettingsMainScreen.PNG)
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/SettingsMainScreen(app).PNG)
 
