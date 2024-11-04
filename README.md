@@ -35,6 +35,17 @@
 
 ![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistEditScreen.PNG)
 
+### ChecklistStartScreen
+
+- This screen is for users currently shopping for groceries. It allows users to check/uncheck items and see the total price of checked items. All functions from the Checklist Edit screen apply here as well.
+
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistStartScreen(app).PNG)
+
+### ChecklistDetailScreen
+
+- Contains the details of the checklist and the main actions the user can take.
+
+![alt text](https://github.com/hatudoggy/GroceryChecklist/blob/master/Screenshots/ChecklistDetailScreen(app).PNG)
 
 ## Item
 
