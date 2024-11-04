@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,6 +41,7 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
 import com.github.tehras.charts.piechart.PieChart
@@ -126,8 +128,8 @@ fun DashboardMainScreen(
                         name = "Main Grocery",
                         expense = 400.00,
                         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-                        icon = Icons.Filled.Android,
-                        iconBackgroundColor = MaterialTheme.colorScheme.primary,
+                        icon = Icons.Filled.Fastfood,
+                        iconBackgroundColor = SkyGreen,
                         variant = ButtonCardComponentVariant.History,
                     )
                 }
