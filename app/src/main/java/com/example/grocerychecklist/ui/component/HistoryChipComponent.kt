@@ -22,7 +22,7 @@ fun HistoryChipGroup(
     categories: List<ItemCategory>,
     onCategorySelected: (ItemCategory) -> Unit
 ) {
-    var selectedCategory by remember { mutableStateOf<ItemCategory?>(null) }
+    var selectedCategory by remember { mutableStateOf(ItemCategory.ALL) }
 
     categories.forEach { category ->
         HistoryChipComponent(
@@ -36,6 +36,15 @@ fun HistoryChipGroup(
     }
 }
 
+//@Preview
+//@Composable
+//fun HistoryChipGroupPreview() {
+//    HistoryChipGroup(
+//        categories = ItemCategory.values().toList(),
+//        onCategorySelected = {}
+//    )
+//}
+
 @Composable
 fun HistoryChipComponent(
     category: ItemCategory,
@@ -44,20 +53,20 @@ fun HistoryChipComponent(
 ) {
     FilterChip(
         onClick = onSelected,
-        label = {
-            Text(category.text)
-        },
+        label = { Text(category.text) },
         selected = isSelected,
         colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color(0xFFE7FFC0),
-            labelColor = Color(0xFF6FA539),
+            containerColor = if (isSelected) category.color else Color(0xFFE5E5EA),
+            labelColor = if (isSelected) Color.White else Color(0xFFA5A5A5),
             selectedContainerColor = category.color,
-            selectedLabelColor = Color.White
+            selectedLabelColor = Color.White,
+            disabledContainerColor = Color(0xFFF0F0F0),
+            disabledLabelColor = Color(0xFFA5A5A5)
         ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = isSelected,
-            borderColor = category.color
+            borderColor = if (isSelected) category.color else Color(0xFFE5E5EA)
         ),
         leadingIcon = if (isSelected) {
             {
