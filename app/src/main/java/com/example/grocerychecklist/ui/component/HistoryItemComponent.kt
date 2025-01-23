@@ -20,9 +20,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.ui.component.Measurement
+import com.example.grocerychecklist.ui.component.getText
+import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
 
 @Composable
-fun HistoryItemComponent() {
+fun HistoryItemComponent(historyItem: HistoryDataDetails) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -46,7 +49,7 @@ fun HistoryItemComponent() {
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = "Chicken Eggs",
+                text = historyItem.name,
                 style = TextStyle(
                     fontSize = 20.sp, // Increased font size
                     fontWeight = FontWeight.Medium,
@@ -54,7 +57,7 @@ fun HistoryItemComponent() {
                 )
             )
 
-            ItemTagComponent(ItemCategory.POULTRY)
+            ItemTagComponent(historyItem.category)
         }
 
         // Right Column
@@ -64,8 +67,10 @@ fun HistoryItemComponent() {
                 .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.End
         ) {
+
+            // Price per unit
             Text(
-                text = "₱ 20 / dozen",
+                text = "₱ " + historyItem.price + " / " + historyItem.measurement.singularText,
                 style = TextStyle(
                     fontSize = 14.sp, // Increased font size
                     fontWeight = FontWeight.Normal,
@@ -74,9 +79,10 @@ fun HistoryItemComponent() {
                 textAlign = TextAlign.Right
             )
 
+            // Total Price
             Text(
                 modifier = Modifier.padding(top = 4.dp),
-                text = "₱ 20",
+                text = "₱ " + historyItem.totalPrice,
                 style = TextStyle(
                     fontSize = 24.sp, // Increased font size
                     fontWeight = FontWeight.Bold,
@@ -86,7 +92,7 @@ fun HistoryItemComponent() {
             )
 
             Text(
-                text = "x 1 dozen",
+                text = "x " + historyItem.quantity + " " + historyItem.measurement.getText(quantity = historyItem.quantity),
                 style = TextStyle(
                     fontSize = 12.sp, // Increased font size
                     fontWeight = FontWeight.Light,
@@ -101,5 +107,13 @@ fun HistoryItemComponent() {
 @Preview
 @Composable
 fun HistoryItemPreview(){
-    HistoryItemComponent()
+    HistoryItemComponent(historyItem =
+        HistoryDataDetails(
+            name = "Paracetamol",
+            category = ItemCategory.MEDICINE,
+            price = 120.0,
+            quantity = 1.0,
+            measurement = Measurement.PACK
+        )
+    )
 }

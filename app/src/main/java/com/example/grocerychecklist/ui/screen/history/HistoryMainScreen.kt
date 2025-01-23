@@ -40,6 +40,7 @@ import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
+import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.SkyGreen
@@ -52,61 +53,101 @@ data class HistoryData(
     val id: Int,
     val title: String,
     val date: String,
-    val expense: Double,
     val details: List<HistoryDataDetails>
-)
+) {
+    val totalExpenses: Double = calculateExpense(details)
+}
+
+private fun calculateExpense(details: List<HistoryDataDetails>): Double {
+    var expense = 0.0
+
+    for (detail in details) {
+        expense += detail.totalPrice
+    }
+    return expense
+}
 
 data class HistoryDataDetails(
-    val detailsTitle: String, val detailsExpense: Double
-)
+    val name: String, val category: ItemCategory, val price: Double, val quantity: Double, val measurement: Measurement
+){
+    val totalPrice: Double = price * quantity
+}
 
 val historyData = listOf(
     HistoryData(
         id = 0,
         title = "Main Grocery",
         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-        expense = 400.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Poultry", detailsExpense = 250.0
+                name = "Eggs",
+                category = ItemCategory.POULTRY,
+                price = 120.0,
+                quantity = 1.00,
+                measurement = Measurement.DOZEN
             ), HistoryDataDetails(
-                detailsTitle = "Medicine", detailsExpense = 150.0
+                name = "Tomatoes",
+                category = ItemCategory.VEGETABLE,
+                price = 20.0,
+                quantity = 1.00,
+                measurement = Measurement.KILOGRAM
             )
         )
     ), HistoryData(
         id = 1,
         title = "Second Grocery",
         date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-        expense = 400.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Poultry", detailsExpense = 250.0
+                name = "Paracetamol",
+                category = ItemCategory.MEDICINE,
+                price = 120.0,
+                quantity = 1.0,
+                measurement = Measurement.PACK
             ), HistoryDataDetails(
-                detailsTitle = "Medicine", detailsExpense = 150.0
+                name = "Eggplant",
+                category = ItemCategory.VEGETABLE,
+                price = 35.0,
+                quantity = 2.5,
+                measurement = Measurement.KILOGRAM
             )
         )
     ), HistoryData(
         id = 2,
         title = "Third Grocery",
         date = LocalDate.now().minusMonths(2).format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-        expense = 450.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Vegetable", detailsExpense = 200.0
+                name = "Hot dog",
+                category = ItemCategory.MEAT,
+                price = 120.0,
+                quantity = 1.0,
+                measurement = Measurement.PACK
             ), HistoryDataDetails(
-                detailsTitle = "Meat", detailsExpense = 250.0
+                name = "Potatoes",
+                category = ItemCategory.VEGETABLE,
+                price = 20.0,
+                quantity = 1.5,
+                measurement = Measurement.KILOGRAM
             )
         )
     ), HistoryData(
         id = 3,
         title = "Fourth Grocery",
         date = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-        expense = 450.0,
         details = listOf(
             HistoryDataDetails(
-                detailsTitle = "Sanitary", detailsExpense = 200.0
+                name = "Pineapple",
+                category = ItemCategory.FRUIT,
+                price = 120.0,
+                quantity = 1.0,
+                measurement = Measurement.KILOGRAM
             ), HistoryDataDetails(
-                detailsTitle = "Cleaning", detailsExpense = 250.0
+                name = "Joy Dishwashing",
+                category = ItemCategory.CLEANING,
+                price = 20.0,
+                quantity = 1.0,
+                measurement = Measurement.PACK
             )
         )
     )
@@ -156,7 +197,7 @@ fun HistoryMainScreen(
                             cardComponent = {
                                 ButtonCardComponent(
                                     name = data.title,
-                                    expense = data.expense,
+                                    expense = data.totalExpenses,
                                     date = data.date,
                                     icon = Icons.Filled.Fastfood,
                                     iconBackgroundColor = SkyGreen,
@@ -198,19 +239,19 @@ fun HistoryCollapsedComponent(
                 data.details.forEach { details ->
                     ListItem(headlineContent = {
                         Text(
-                            details.detailsTitle,
+                            details.category.text,
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(ItemCategory.valueOf(details.detailsTitle.uppercase()).color)
+                                .background(details.category.color)
                                 .padding(vertical = 5.dp, horizontal = 10.dp)
                         )
                     }, trailingContent = {
                         Text(
                             converter(
                                 Currency.PHP,
-                                details.detailsExpense
+                                details.totalPrice
                             ),
                             fontSize = 13.sp,
                         )
