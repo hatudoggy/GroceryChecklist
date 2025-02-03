@@ -22,7 +22,9 @@ fun NavGraphBuilder.checklistDestination() {
                 ChecklistMainViewModel(GroceryChecklistApp.appModule.navigator)
             }
         )
+        val state by checklistMainViewModel.state.collectAsState()
         ChecklistMainScreen(
+            state = state,
             onEvent = checklistMainViewModel::onEvent
         )
     }

@@ -100,8 +100,8 @@ fun ChecklistItemComponent(
                     color = if (isChecked == true)
                         MaterialTheme.colorScheme.primary else Color.Black,
                 )
+                Spacer(Modifier.height(4.dp))
                 Row {
-                    Spacer(Modifier.width(2.dp))
                     ItemTagComponent(category)
                 }
             }
