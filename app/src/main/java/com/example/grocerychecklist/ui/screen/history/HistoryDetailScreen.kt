@@ -64,7 +64,6 @@ fun HistoryDetailScreen(
                 .padding(innerPadding)
         ) {
             HistoryListHeader(title = "Main Grocery", date = "August 25, 2024")
-            val filteredItems = categorySelector(currentState.historyItems)
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -147,34 +146,6 @@ fun TotalSection(total: Double) {
     }
 }
 
-@Composable
-fun categorySelector(historyItems: List<HistoryDataDetails>): List<HistoryDataDetails> {
-    var selectedCategories by remember {
-        mutableStateOf(setOf(ItemCategory.ALL)) // Start with ALL selected
-    }
-
-    val filteredItems = remember(selectedCategories, historyItems) {
-        filterItemsByCategory(historyItems, selectedCategories)
-    }
-
-    LazyRow(
-        modifier = Modifier.padding(start = 12.dp, top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        items(ItemCategory.entries) { category ->
-            HistoryChipComponent(
-                category = category,
-                isSelected = selectedCategories.contains(category),
-                onSelected = {
-                    selectedCategories = updateSelectedCategories(category, selectedCategories)
-                }
-            )
-        }
-    }
-
-    return filteredItems
-}
 
 private fun updateSelectedCategories(
     category: ItemCategory,

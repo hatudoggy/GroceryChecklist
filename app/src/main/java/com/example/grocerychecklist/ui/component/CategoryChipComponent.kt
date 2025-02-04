@@ -9,44 +9,12 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun HistoryChipGroup(
-    categories: List<ItemCategory>,
-    onCategorySelected: (ItemCategory) -> Unit
-) {
-    var selectedCategory by remember { mutableStateOf(ItemCategory.ALL) }
-
-    categories.forEach { category ->
-        HistoryChipComponent(
-            category = category,
-            isSelected = category == selectedCategory,
-            onSelected = {
-                selectedCategory = category
-                onCategorySelected(category)
-            }
-        )
-    }
-}
-
-//@Preview
-//@Composable
-//fun HistoryChipGroupPreview() {
-//    HistoryChipGroup(
-//        categories = ItemCategory.values().toList(),
-//        onCategorySelected = {}
-//    )
-//}
-
-@Composable
-fun HistoryChipComponent(
+fun CategoryChipComponent(
     category: ItemCategory,
     isSelected: Boolean,
     onSelected: () -> Unit
@@ -86,5 +54,5 @@ fun HistoryChipComponent(
 @Preview
 @Composable
 private fun HistoryChipPreview(){
-    HistoryChipComponent(ItemCategory.ALL, isSelected = true, onSelected = {})
+    CategoryChipComponent(ItemCategory.ALL, isSelected = true, onSelected = {})
 }
