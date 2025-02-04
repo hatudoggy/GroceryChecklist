@@ -67,6 +67,7 @@ fun NavGraphBuilder.checklistDestination() {
             }
         )
         ChecklistStartScreen(
+            viewModel = checklistStartViewModel,
             onEvent = checklistStartViewModel::onEvent
         )
     }

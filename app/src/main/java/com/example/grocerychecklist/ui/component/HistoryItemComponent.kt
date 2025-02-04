@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
+import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.getText
 import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
@@ -44,14 +46,14 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
     ) {
         // Left Column
         Column(
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = historyItem.name,
                 style = TextStyle(
-                    fontSize = 20.sp, // Increased font size
+                    fontSize = 18.sp, // Increased font size
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
@@ -67,13 +69,13 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
                 .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.End
         ) {
-
+            val converter = ConvertNumToCurrency()
             // Price per unit
             Text(
-                text = "₱ " + historyItem.price + " / " + historyItem.measurement.singularText,
+                text = converter(Currency.PHP, historyItem.price, true) + "/" + historyItem.measurement.singularText,
                 style = TextStyle(
                     fontSize = 14.sp, // Increased font size
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Light,
                     color = Color(0xFFA5A5A5)
                 ),
                 textAlign = TextAlign.Right
@@ -82,10 +84,10 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
             // Total Price
             Text(
                 modifier = Modifier.padding(top = 4.dp),
-                text = "₱ " + historyItem.totalPrice,
+                text = converter(Currency.PHP, historyItem.price * historyItem.quantity, true),
                 style = TextStyle(
-                    fontSize = 24.sp, // Increased font size
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp, // Increased font size
+                    fontWeight = FontWeight.Medium,
                     color = Color.Black
                 ),
                 textAlign = TextAlign.Right
@@ -94,8 +96,8 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
             Text(
                 text = "x " + historyItem.quantity + " " + historyItem.measurement.getText(quantity = historyItem.quantity),
                 style = TextStyle(
-                    fontSize = 12.sp, // Increased font size
-                    fontWeight = FontWeight.Light,
+                    fontSize = 14.sp, // Increased font size
+                    fontWeight = FontWeight.Normal,
                     color = Color(0xFFA5A5A5)
                 ),
                 textAlign = TextAlign.Right
