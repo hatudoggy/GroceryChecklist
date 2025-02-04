@@ -27,9 +27,10 @@ fun NavGraphBuilder.historyDestination(navController: NavController) {
                 HistoryDetailViewModel(GroceryChecklistApp.appModule.navigator)
             }
         )
-        val state by historyDetailViewModel.state.collectAsState()
+//        val state by historyDetailViewModel.state.collectAsState()
         HistoryDetailScreen(
-            state = state,
+//            state = state,
+            historyDetailViewModel,
             onEvent = historyDetailViewModel::onEvent
         )
     }
