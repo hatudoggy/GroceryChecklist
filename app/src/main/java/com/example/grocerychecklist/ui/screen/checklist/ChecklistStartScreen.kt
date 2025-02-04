@@ -1,6 +1,5 @@
 package com.example.grocerychecklist.ui.screen.checklist
 
-import ItemCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -24,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,13 +41,23 @@ import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.ChipComponent
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Navigator
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartViewModel
+import com.example.grocerychecklist.viewmodel.checklist.FilterType
 
 @Composable
 fun ChecklistStartScreen(
     //state: DashboardBreakdownState,
+    viewModel: ChecklistStartViewModel,
     onEvent: (ChecklistStartEvent) -> Unit,
 ) {
+    // Collects the filtered list of items based on the selected categories from the ViewModel.
+    val filteredItems by viewModel.filteredItems.collectAsState()
+    val checkedTotalPrice by viewModel.checkedTotalPrice.collectAsState()
+    val selectedChip by viewModel.filterType.collectAsState()
+
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
@@ -106,28 +118,44 @@ fun ChecklistStartScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                ChipComponent(
-                    label = "All",
-                    isActive = true
-                )
-                ChipComponent(
-                    label = "Checked"
-                )
-                ChipComponent(
-                    label = "Unchecked"
-                )
+              // Iterates through each FilterType to create a ChipComponent.
+                FilterType.entries.forEach { filterType ->
+                    ChipComponent(
+                        label = filterType.name.lowercase().replaceFirstChar { it.uppercase() },
+                        isActive = selectedChip == filterType,
+                        onClick = {
+                            viewModel.setFilterType(filterType)
+                        }
+                    )
+                }
             }
+
             Spacer(Modifier.height(16.dp))
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
-                items(5) {
+//                val sortedItems = filteredItems.sortedWith(compareBy<ChecklistData> { it.isChecked }.thenBy { it.category })
+
+                items(filteredItems) { item ->
+                    // Create and display a ChecklistItemComponent for each item in the filtered list.
                     ChecklistItemComponent(
-                        name = "Tender Juicy Hot dog",
+                        name = item.name,
                         variant = ChecklistItemComponentVariant.ChecklistRadioItem,
-                        category = ItemCategory.MEAT,
-                        price = 250.00,
-                        quantity = 5
+                        category = item.category,
+                        price = item.price,
+                        quantity = item.quantity,
+                        measurement = item.measurement,
+                        isChecked = item.isChecked,
+                        // When the checked state changes, update the ViewModel accordingly.
+                        // Use onCheckedChange instead of onClick for handling the checkbox state.
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                viewModel.checkSelectedItem(item)
+
+                            } else {
+                                viewModel.uncheckSelectedItem(item)
+                            }
+                        }
                     )
                 }
             }
@@ -147,7 +175,7 @@ fun ChecklistStartScreen(
                     color = Color.White
                 )
                 Text(
-                    converter(Currency.PHP, 250.00, false),
+                    converter(Currency.PHP, checkedTotalPrice, false),
                     fontSize = 18.sp,
                     color = Color.White
                 )
@@ -191,7 +219,11 @@ fun ChecklistStartScreen(
 @Preview(showBackground = true)
 @Composable
 fun ChecklistStartScreenPreview() {
+    val navigator = Navigator()
+    val viewModel = ChecklistStartViewModel(navigator)
+
     ChecklistStartScreen(
+        viewModel = viewModel,
         onEvent = {}
     )
 }

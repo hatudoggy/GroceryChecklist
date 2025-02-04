@@ -19,6 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,18 +49,26 @@ fun ChecklistItemComponent(
     variant: ChecklistItemComponentVariant,
     category: ItemCategory,
     price: Double,
-    quantity: Int,
+    quantity: Double,
+    measurement: Measurement? = null,
     picRef: String? = "",
     showPic: Boolean? = false,
     isChecked: Boolean? = false,
+    onCheckedChange: (Boolean) -> Unit? = {},
     onClick: () -> Unit = {}
 ) {
+    var checkedState by remember { mutableStateOf(isChecked) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
             .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
+            .clickable {
+                checkedState = !checkedState!!
+                onCheckedChange(checkedState!!)
+                onClick()
+            }
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
 
@@ -118,9 +130,9 @@ fun ChecklistItemComponent(
                     variant == ChecklistItemComponentVariant.ChecklistRadioItem
                 ) {
                     Text(
-                        "$quantity x",
+                        "x $quantity ${measurement!!.getText(quantity)}",
                         color = Color.Gray,
-                        fontSize = 16.sp
+                        fontSize = 15.sp
                     )
                 }
             }
@@ -138,7 +150,8 @@ fun ChecklistRadioItemComponentPreview() {
         price = 250.00,
         showPic = true,
         isChecked = false,
-        quantity = 4
+        quantity = 4.00,
+        measurement = Measurement.KILOGRAM
     )
 }
 
@@ -152,7 +165,8 @@ fun ChecklistRadioItemCheckedComponentPreview() {
         price = 250.00,
         showPic = true,
         isChecked = true,
-        quantity = 4
+        quantity = 4.00,
+        measurement = Measurement.KILOGRAM
     )
 }
 
@@ -165,7 +179,8 @@ fun ChecklistItemComponentPreview() {
         category = ItemCategory.MEAT,
         price = 250.00,
         showPic = true,
-        quantity = 4
+        quantity = 4.00,
+        measurement = Measurement.KILOGRAM
     )
 }
 
@@ -178,6 +193,7 @@ fun ItemComponentPreview() {
         category = ItemCategory.CLEANING,
         price = 250.00,
         showPic = false,
-        quantity = 4
+        quantity = 4.00,
+        measurement = Measurement.KILOGRAM
     )
 }

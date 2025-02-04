@@ -105,7 +105,7 @@ fun ItemMainScreen(
                         variant = ChecklistItemComponentVariant.Item,
                         category = ItemCategory.MEAT,
                         price = 250.00,
-                        quantity = 5
+                        quantity = 5.00
                     )
                 }
             }

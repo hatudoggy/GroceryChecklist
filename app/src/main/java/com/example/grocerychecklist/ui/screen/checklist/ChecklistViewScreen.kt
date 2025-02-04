@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
+import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewEvent
@@ -114,7 +115,8 @@ fun ChecklistViewScreen(
                         variant = ChecklistItemComponentVariant.ChecklistItem,
                         category = ItemCategory.MEAT,
                         price = 250.00,
-                        quantity = 5
+                        quantity = 5.00,
+                        measurement = Measurement.KILOGRAM,
                     )
                 }
             }
