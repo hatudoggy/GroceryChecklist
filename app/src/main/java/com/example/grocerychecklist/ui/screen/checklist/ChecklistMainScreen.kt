@@ -78,6 +78,7 @@ import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
@@ -89,8 +90,11 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ChecklistMainScreen(
     state: ChecklistMainState,
+    viewModel: ChecklistMainViewModel,
     onEvent: (ChecklistMainEvent) -> Unit,
 ) {
+    val filteredItems by viewModel.filteredItems.collectAsState(emptyList())
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     // Bottom sheet content
     BottomSheet(
@@ -238,30 +242,25 @@ fun ChecklistMainScreen(
                         RoundedCornerShape(percent = 50)
                     ),
                 fontSize = 16.sp,
-                placeholderText = "Search"
+                placeholderText = "Search",
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChanged(it) }
             )
             Spacer(Modifier.height(8.dp))
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                ButtonCardComponent(
-                    name = "Main Grocery",
-                    description = "A checklist of the main groceries for the month. All the essentials...",
-                    date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-                    icon = Icons.Default.Fastfood,
-                    iconBackgroundColor = ChecklistCategory.MAIN_GROCERY.color,
-                    variant = ButtonCardComponentVariant.Checklist,
-                    onClick = {onEvent(ChecklistMainEvent.NavigateChecklist)}
-                )
-                ButtonCardComponent(
-                    name = "Grandpa's Meds",
-                    description = "Important to buy it weekly",
-                    date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-                    icon = Icons.Default.Medication,
-                    iconBackgroundColor = ChecklistCategory.MEDICINE.color,
-                    variant = ButtonCardComponentVariant.Checklist,
-                    onClick = {onEvent(ChecklistMainEvent.NavigateChecklist)}
-                )
+                filteredItems.forEach { item ->
+                    ButtonCardComponent(
+                        name = item.name,
+                        description = item.description,
+                        date = item.date,
+                        icon = item.icon,
+                        iconBackgroundColor = item.iconBackgroundColor,
+                        variant = ButtonCardComponentVariant.Checklist,
+                        onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) }
+                    )
+                }
             }
         }
     }
@@ -319,6 +318,7 @@ fun ChecklistMainScreenPreview() {
     val state: ChecklistMainState = ChecklistMainState()
     ChecklistMainScreen(
         state = state,
+        viewModel = ChecklistMainViewModel(Navigator()),
         onEvent = {}
     )
 }
