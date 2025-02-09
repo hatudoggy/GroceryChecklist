@@ -19,6 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,16 +32,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.data.mapper.ItemInput
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.FullHeightDialogComponent
@@ -56,7 +61,17 @@ fun ItemMainScreen(
     if (state.isAddingItem) {
         ItemDialogComponent(
             onDismissRequest = { onEvent(ItemMainEvent.CloseDialog) },
-            //dialogInputs = dialogInputs
+            onSave = { name, price, category ->
+                val newItem = ItemInput(
+                    name = name,
+                    price = price.toDoubleOrNull() ?: 0.0,
+                    category = category.name,
+                    measureType = "pcs",
+                    measureValue = 1.0,
+                    photoRef = ""
+                )
+                onEvent(ItemMainEvent.AddItem(newItem))
+            }
         )
     }
 
@@ -99,14 +114,28 @@ fun ItemMainScreen(
             )
             Spacer(Modifier.height(8.dp))
             LazyColumn {
-                items(5) {
-                    ChecklistItemComponent(
-                        name = "Tender Juicy Hot dog",
-                        variant = ChecklistItemComponentVariant.Item,
-                        category = ItemCategory.MEAT,
-                        price = 250.00,
-                        quantity = 5.00
-                    )
+                if (state.items.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No items available",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    items(state.items.size) { index ->
+                        val item = state.items[index]
+                        ChecklistItemComponent(
+                            name = item.name,
+                            variant = ChecklistItemComponentVariant.Item,
+                            category = ItemCategory.valueOf(item.category),
+                            price = item.price,
+                            quantity = item.measureValue
+                        )
+                    }
                 }
             }
         }
@@ -128,69 +157,113 @@ fun ItemMainScreenPreview() {
 @Composable
 fun ItemDialogComponent(
     onDismissRequest: () -> Unit,
-    //dialogInputs: ItemMainDialogInputs
+    onSave: (String, String, ItemCategory) -> Unit
 ) {
+    var name by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf(ItemCategory.OTHER) } // Default category
 
-    FullHeightDialogComponent(onDismissRequest, scaffoldTopBar = {
-        ChecklistDialogTopBarComponent(onDismissRequest)
-    }, scaffoldContent = { innerPadding ->
-        ChecklistDialogContentComponent(
-            innerPadding,
-            //dialogInputs = dialogInputs
+    FullHeightDialogComponent(
+        onDismissRequest,
+        scaffoldTopBar = {
+            ChecklistDialogTopBarComponent(onDismissRequest, onSave = {
+                onSave(name, price, selectedCategory)
+            })
+        },
+        scaffoldContent = {
+            Column(
+                modifier = Modifier
+                    .padding(18.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(30.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("Price") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                CategoryDropdown(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+            }
+        }
+    )
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryDropdown(
+    selectedCategory: ItemCategory,
+    onCategorySelected: (ItemCategory) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = selectedCategory.text,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Select Category") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = "Dropdown Icon"
+                )
+            }
         )
-    })
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            ItemCategory.values().forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(text = category.text, color = category.color) },
+                    onClick = {
+                        onCategorySelected(category)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
 fun ChecklistDialogTopBarComponent(
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    onSave: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .padding(18.dp, 28.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(18.dp, 28.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = { onDismissRequest() }
-            )
-            {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-            Spacer(modifier = Modifier.fillMaxWidth(0.04f))
-            Text(
-                text = "Add Item",
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
+        IconButton(onClick = onDismissRequest) {
+            Icon(Icons.Default.Close, contentDescription = "Close")
         }
-        TextButton(onClick = {}) {
-            Text(
-                "Save", style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
+        TextButton(onClick = onSave) {
+            Text("Save")
         }
     }
 }
+
 
 @Composable
 fun ChecklistDialogContentComponent(
