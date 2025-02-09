@@ -25,6 +25,7 @@ fun NavGraphBuilder.checklistDestination() {
         val state by checklistMainViewModel.state.collectAsState()
         ChecklistMainScreen(
             state = state,
+            viewModel = checklistMainViewModel,
             onEvent = checklistMainViewModel::onEvent
         )
     }
@@ -45,6 +46,7 @@ fun NavGraphBuilder.checklistDestination() {
             }
         )
         ChecklistViewScreen(
+            checklistViewViewModel,
             onEvent = checklistViewViewModel::onEvent
         )
     }
@@ -57,6 +59,7 @@ fun NavGraphBuilder.checklistDestination() {
         val state by checklistEditViewModel.state.collectAsState()
         ChecklistEditScreen(
             state = state,
+            viewModel = checklistEditViewModel,
             onEvent = checklistEditViewModel::onEvent
         )
     }
