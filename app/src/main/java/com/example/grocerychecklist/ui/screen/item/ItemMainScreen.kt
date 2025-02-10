@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.data.mapper.ItemInput
+import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.FullHeightDialogComponent
@@ -57,12 +57,12 @@ fun ItemMainScreen(
     state: ItemMainState,
     onEvent: (ItemMainEvent) -> Unit,
 ) {
-
     if (state.isAddingItem) {
         ItemDialogComponent(
+            selectedItem = state.selectedItem,
             onDismissRequest = { onEvent(ItemMainEvent.CloseDialog) },
             onSave = { name, price, category ->
-                val newItem = ItemInput(
+                val newItemInput = ItemInput(
                     name = name,
                     price = price.toDoubleOrNull() ?: 0.0,
                     category = category.name,
@@ -70,14 +70,17 @@ fun ItemMainScreen(
                     measureValue = 1.0,
                     photoRef = ""
                 )
-                onEvent(ItemMainEvent.AddItem(newItem))
-            }
+                if (state.selectedItem == null) {
+                    onEvent(ItemMainEvent.AddItem(newItemInput)) // Add new item
+                } else {
+                    onEvent(ItemMainEvent.EditItem(state.selectedItem.id, newItemInput)) // Edit existing item
+                }
+            },
+            onDelete = state.selectedItem?.let { { onEvent(ItemMainEvent.DeleteItem(it)) } } // Delete if editing
         )
     }
 
     Scaffold(
-        modifier = Modifier.padding(vertical = 0.dp),
-        contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
@@ -88,27 +91,23 @@ fun ItemMainScreen(
             }
         },
         topBar = { TopBarComponent(title = "Items") },
-
     ) { innerPadding ->
-        Column (
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(10.dp)
+        Column(
+            modifier = Modifier.padding(innerPadding).padding(10.dp)
         ) {
             RoundedTextField(
                 leadingIcon = {
                     Icon(
                         Icons.Filled.Search,
-                        contentDescription = "icon",
+                        contentDescription = "Search",
                         tint = Color.Gray,
                         modifier = Modifier.size(18.dp)
                     )
                 },
-                modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(percent = 50)
-                    ),
+                modifier = Modifier.background(
+                    MaterialTheme.colorScheme.surface,
+                    RoundedCornerShape(percent = 50)
+                ),
                 fontSize = 16.sp,
                 placeholderText = "Search"
             )
@@ -133,7 +132,8 @@ fun ItemMainScreen(
                             variant = ChecklistItemComponentVariant.Item,
                             category = ItemCategory.valueOf(item.category),
                             price = item.price,
-                            quantity = item.measureValue
+                            quantity = item.measureValue,
+                            onClick = { onEvent(ItemMainEvent.SelectItem(item)) } // Click to edit
                         )
                     }
                 }
@@ -156,28 +156,32 @@ fun ItemMainScreenPreview() {
 
 @Composable
 fun ItemDialogComponent(
+    selectedItem: Item?, // Pass selected item if editing
     onDismissRequest: () -> Unit,
-    onSave: (String, String, ItemCategory) -> Unit
+    onSave: (String, String, ItemCategory) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(ItemCategory.OTHER) } // Default category
+    var name by remember { mutableStateOf(selectedItem?.name ?: "") }
+    var price by remember { mutableStateOf(selectedItem?.price?.toString() ?: "") }
+    var selectedCategory by remember { mutableStateOf(selectedItem?.category?.let { ItemCategory.valueOf(it) } ?: ItemCategory.OTHER) }
 
     FullHeightDialogComponent(
         onDismissRequest,
         scaffoldTopBar = {
-            ChecklistDialogTopBarComponent(onDismissRequest, onSave = {
-                onSave(name, price, selectedCategory)
-            })
+            ChecklistDialogTopBarComponent(
+                name = name,
+                onDismissRequest,
+                onSave = { onSave(name, price, selectedCategory) }
+            )
         },
         scaffoldContent = {
             Column(
                 modifier = Modifier
                     .padding(18.dp)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(50.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -194,12 +198,20 @@ fun ItemDialogComponent(
                     selectedCategory = selectedCategory,
                     onCategorySelected = { selectedCategory = it }
                 )
+
+                // Show Delete button only when editing
+                selectedItem?.let {
+                    TextButton(
+                        onClick = { onDelete?.invoke() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Delete", color = Color.Red)
+                    }
+                }
             }
         }
     )
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -248,6 +260,7 @@ fun CategoryDropdown(
 
 @Composable
 fun ChecklistDialogTopBarComponent(
+    name: String,
     onDismissRequest: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -258,12 +271,14 @@ fun ChecklistDialogTopBarComponent(
         IconButton(onClick = onDismissRequest) {
             Icon(Icons.Default.Close, contentDescription = "Close")
         }
-        TextButton(onClick = onSave) {
+        TextButton(
+            onClick = onSave,
+            enabled = name.isNotBlank()
+        ) {
             Text("Save")
         }
     }
 }
-
 
 @Composable
 fun ChecklistDialogContentComponent(
