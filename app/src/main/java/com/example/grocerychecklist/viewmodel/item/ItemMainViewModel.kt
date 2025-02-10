@@ -32,27 +32,55 @@ class ItemMainViewModel(
     fun onEvent(event: ItemMainEvent) {
         when (event) {
             is ItemMainEvent.OpenDialog -> {
-                _state.update { it.copy(isAddingItem = true) }
+                _state.update { it.copy(isAddingItem = true, selectedItem = null) }
             }
 
             is ItemMainEvent.CloseDialog -> {
-                _state.update { it.copy(isAddingItem = false) }
+                _state.update { it.copy(isAddingItem = false, selectedItem = null) }
+            }
+
+            is ItemMainEvent.SelectItem -> {
+                _state.update { it.copy(isAddingItem = true, selectedItem = event.item) }
             }
 
             is ItemMainEvent.AddItem -> {
                 viewModelScope.launch {
                     try {
                         itemRepository.addItem(event.itemInput)
-                        loadItems() // Refresh items after adding
+                        loadItems()
                     } catch (e: Exception) {
                         Log.e("ItemMainViewModel", "Error adding item: ${e.message}")
-
                     }
                 }
                 _state.update { it.copy(isAddingItem = false) }
             }
+
+            is ItemMainEvent.EditItem -> {
+                viewModelScope.launch {
+                    try {
+                        itemRepository.updateItem(event.id, event.itemInput)
+                        loadItems()
+                    } catch (e: Exception) {
+                        Log.e("ItemMainViewModel", "Error editing item: ${e.message}")
+                    }
+                }
+                _state.update { it.copy(isAddingItem = false, selectedItem = null) }
+            }
+
+            is ItemMainEvent.DeleteItem -> {
+                viewModelScope.launch {
+                    try {
+                        itemRepository.deleteItem(event.item)
+                        loadItems()
+                    } catch (e: Exception) {
+                        Log.e("ItemMainViewModel", "Error deleting item: ${e.message}")
+                    }
+                }
+                _state.update { it.copy(isAddingItem = false, selectedItem = null) }
+            }
         }
     }
+
 
     private fun loadItems() {
         viewModelScope.launch {
