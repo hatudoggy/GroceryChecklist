@@ -17,6 +17,11 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -35,9 +40,10 @@ import androidx.compose.ui.unit.dp
 import com.example.grocerychecklist.ui.screen.Routes
 
 
-data class MainRoute (
+data class MainRoute(
     val route: Routes,
-    val icon: ImageVector
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector
 )
 
 @Composable
@@ -46,22 +52,21 @@ fun BottomBarComponent(
     onNavigateClick: (route: Routes) -> Unit = {},
 ) {
     val mainRoutes = listOf(
-        MainRoute(Routes.DashboardMain, Icons.Filled.Dashboard),
-        MainRoute(Routes.ItemMain, Icons.Filled.Book),
-        MainRoute(Routes.ChecklistMain, Icons.Filled.ShoppingCart),
-        MainRoute(Routes.HistoryMain, Icons.Filled.History),
-        MainRoute(Routes.SettingsMain, Icons.Filled.Settings),
+        MainRoute(Routes.DashboardMain, Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+        MainRoute(Routes.ItemMain, Icons.Filled.Book, Icons.Outlined.Book),
+        MainRoute(Routes.ChecklistMain, Icons.Filled.ShoppingCart, Icons.Outlined.ShoppingCart),
+        MainRoute(Routes.HistoryMain, Icons.Filled.History, Icons.Outlined.History),
+        MainRoute(Routes.SettingsMain, Icons.Filled.Settings, Icons.Outlined.Settings),
     )
 
     Box(
         contentAlignment = Alignment.TopCenter
-    ){
+    ) {
         BottomAppBar(
             containerColor = Color.White,
             modifier = Modifier
                 .height(70.dp)
-                .shadow(24.dp)
-            ,
+                .shadow(24.dp),
             actions = {
                 Row(
                     modifier = Modifier
@@ -69,10 +74,11 @@ fun BottomBarComponent(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     mainRoutes.forEach { route ->
-                        if (route.route != Routes.ChecklistMain){
+                        if (route.route != Routes.ChecklistMain) {
                             IconButton(onClick = { onNavigateClick(route.route) }) {
                                 Icon(
-                                    route.icon,
+                                    if (activeButton == route.route::class.qualifiedName)
+                                        route.activeIcon else route.inactiveIcon,
                                     contentDescription = "Description",
                                     tint = if (activeButton == route.route::class.qualifiedName)
                                         MaterialTheme.colorScheme.primary else Color.Black
@@ -88,8 +94,11 @@ fun BottomBarComponent(
             },
         )
         FilledIconButton(
-            modifier = Modifier.size(60.dp).offset(y = (-28).dp).shadow(2.dp, shape = CircleShape),
-            onClick = {onNavigateClick(mainRoutes[2].route)},
+            modifier = Modifier
+                .size(60.dp)
+                .offset(y = (-28).dp)
+                .shadow(2.dp, shape = CircleShape),
+            onClick = { onNavigateClick(mainRoutes[2].route) },
             colors = IconButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
@@ -97,7 +106,7 @@ fun BottomBarComponent(
                 disabledContentColor = MaterialTheme.colorScheme.primary
             ),
         ) {
-            Icon(mainRoutes[2].icon, contentDescription = "Description")
+            Icon(mainRoutes[2].activeIcon, contentDescription = "Description")
         }
     }
 }
@@ -112,7 +121,7 @@ fun BottomBarComponentPreview() {
 @Preview(showBackground = true)
 @Composable
 fun BottomBarScaffoldPreview() {
-    Scaffold (
+    Scaffold(
         bottomBar = {
             BottomBarComponent()
         },

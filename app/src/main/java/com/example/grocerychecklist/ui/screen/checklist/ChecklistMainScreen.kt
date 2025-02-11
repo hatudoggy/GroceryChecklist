@@ -34,22 +34,16 @@ import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
@@ -57,24 +51,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
+import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
@@ -83,8 +75,6 @@ import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,73 +87,12 @@ fun ChecklistMainScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     // Bottom sheet content
-    BottomSheet(
+    CreateChecklist(
         isOpen = state.isDrawerOpen,
-        onClose = { onEvent(ChecklistMainEvent.CloseDrawer) }
-    ) {
-        var text by remember { mutableStateOf("Hello") }
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .padding(
-                    start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp,
-                )
-        ) {
-            Text(
-                "Create a Checklist",
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp
-            )
-
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.Gray)
-                        .clickable { onEvent(ChecklistMainEvent.OpenIconPicker) }
-                ){
-                    Icon(
-                        Icons.Filled.Fastfood,
-                        contentDescription = "color",
-                        tint = Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = text,
-                    onValueChange = { text = it},
-                    label = { Text("Name") }
-                )
-            }
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Description") },
-                minLines = 5,
-                value = text,
-                onValueChange = { text = it},
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) }
-                ) { Text("Cancel") }
-                Spacer(Modifier.width(10.dp))
-                Button(
-                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) },
-                ) { Text("Add") }
-            }
-        }
-    }
+        onClose = { onEvent(ChecklistMainEvent.CloseDrawer) },
+        onEvent = onEvent,
+        state = state
+    )
 
     DialogModal(
         isOpen = state.isIconPickerOpen,
@@ -176,31 +105,50 @@ fun ChecklistMainScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(5),
+                columns = GridCells.Fixed(4),
                 modifier = Modifier.weight(1f, fill = true),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(50) {
-                    Icon(
-                        Icons.Filled.Circle,
-                        contentDescription = "color",
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
+                items(ChecklistCategory.entries.size) { index ->
+                    val category = ChecklistCategory.entries[index]
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                onEvent(
+                                    ChecklistMainEvent.UpdateChecklistIcon(
+                                        IconOption.fromName(category.text)
+                                            ?: IconOption.MAIN_GROCERY,
+                                        ColorOption.fromColor(category.color)
+                                            ?: ColorOption.CopySkyGreen
+                                    )
+                                )
+                                onEvent(ChecklistMainEvent.CloseIconPicker)
+                            }
+                    ) {
+                        ButtonCardIconComponent(
+                            backgroundColor = category.color,
+                            icon = category.icon,
+                            wrapperSize = 56.dp,
+                            iconSize = 30.dp
+                        )
+                    }
                 }
             }
-            HorizontalDivider()
-            LazyRow(
-                //modifier = Modifier.weight(1f)
-            ) {
-                items(5) {
-                    Icon(
-                        Icons.Filled.Circle,
-                        contentDescription = "color",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
+//            HorizontalDivider()
+//            LazyRow(
+//                //modifier = Modifier.weight(1f)
+//            ) {
+//                items(5) {
+//                    Icon(
+//                        Icons.Filled.Circle,
+//                        contentDescription = "color",
+//                        tint = Color.Gray,
+//                        modifier = Modifier.size(48.dp)
+//                    )
+//                }
+//            }
         }
     }
 
@@ -269,10 +217,99 @@ fun ChecklistMainScreen(
 // Bottom sheet modal drawer
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun CreateChecklist(
+    isOpen: Boolean,
+    onClose: () -> Unit,
+    onEvent: (ChecklistMainEvent) -> Unit,
+    state: ChecklistMainState,
+) {
+    BottomSheet(
+        isOpen = isOpen,
+        onClose = onClose,
+    ) {
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .padding(
+                    start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp,
+                )
+        ) {
+            Text(
+                "Create a Checklist",
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp
+            )
+
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable {
+                            onEvent(ChecklistMainEvent.OpenIconPicker)
+                        }
+                ) {
+                    ButtonCardIconComponent(
+                        backgroundColor = state.newChecklist.iconBackgroundColor.color,
+                        icon = state.newChecklist.icon.imageVector,
+                        wrapperSize = 56.dp,
+                        iconSize = 30.dp
+                    )
+                }
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = state.newChecklist.name,
+                    onValueChange = { e ->
+                        onEvent(
+                            ChecklistMainEvent.UpdateChecklistName(
+                                e
+                            )
+                        )
+                    },
+                    label = { Text("Name") }
+                )
+            }
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Description") },
+                minLines = 5,
+                value = state.newChecklist.description,
+                onValueChange = { e ->
+                    onEvent(
+                        ChecklistMainEvent.UpdateChecklistDescription(
+                            e
+                        )
+                    )
+                },
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) }
+                ) { Text("Cancel") }
+                Spacer(Modifier.width(10.dp))
+                Button(
+                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) },
+                ) { Text("Add") }
+            }
+        }
+    }
+}
+
+// Bottom sheet modal drawer
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun BottomSheet(
     isOpen: Boolean,
     onClose: () -> Unit,
-    sheetContent: @Composable () -> Unit
+    sheetContent: @Composable () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -351,24 +388,16 @@ fun BottomSheetPreview() {
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.Gray)
-                ){
-                    Icon(
-                        Icons.Filled.Fastfood,
-                        contentDescription = "color",
-                        tint = Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                ButtonCardIconComponent(
+                    backgroundColor = ChecklistCategory.MAIN_GROCERY.color,
+                    icon = ChecklistCategory.MAIN_GROCERY.icon,
+                    wrapperSize = 56.dp,
+                    iconSize = 30.dp
+                )
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = text,
-                    onValueChange = { text = it},
+                    onValueChange = { text = it },
                     label = { Text("Name") }
                 )
             }
@@ -377,7 +406,7 @@ fun BottomSheetPreview() {
                 label = { Text("Description") },
                 minLines = 5,
                 value = text,
-                onValueChange = { text = it},
+                onValueChange = { text = it },
             )
 
             Row(
@@ -405,7 +434,7 @@ fun IconPickerPreview() {
     Dialog(
         onDismissRequest = {},
     ) {
-        Card (
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp)
@@ -419,31 +448,42 @@ fun IconPickerPreview() {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(5),
+                    columns = GridCells.Fixed(4),
                     modifier = Modifier.weight(1f, fill = true),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(50) {
-                        Icon(
-                            Icons.Filled.Circle,
-                            contentDescription = "color",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
+                    items(ChecklistCategory.entries.size) { index ->
+                        val category = ChecklistCategory.entries[index]
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+
+                                }
+                        ) {
+                            ButtonCardIconComponent(
+                                backgroundColor = category.color,
+                                icon = category.icon,
+                                wrapperSize = 56.dp,
+                                iconSize = 30.dp
+                            )
+                        }
                     }
                 }
-                HorizontalDivider()
-                LazyRow(
-                    //modifier = Modifier.weight(1f)
-                ) {
-                    items(5) {
-                        Icon(
-                            Icons.Filled.Circle,
-                            contentDescription = "color",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
+//                HorizontalDivider()
+//                LazyRow(
+//                    //modifier = Modifier.weight(1f)
+//                ) {
+//                    items(5) {
+//                        Icon(
+//                            Icons.Filled.Circle,
+//                            contentDescription = "color",
+//                            tint = Color.Gray,
+//                            modifier = Modifier.size(48.dp)
+//                        )
+//                    }
+//                }
             }
         }
     }

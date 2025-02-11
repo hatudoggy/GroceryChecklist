@@ -1,6 +1,8 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
 import androidx.compose.runtime.Stable
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
 
 sealed interface ChecklistMainEvent {
     data object ToggleDrawer: ChecklistMainEvent
@@ -10,4 +12,8 @@ sealed interface ChecklistMainEvent {
     data object CloseIconPicker: ChecklistMainEvent
     data object OpenIconPicker: ChecklistMainEvent
     data object NavigateChecklist: ChecklistMainEvent
+
+    data class UpdateChecklistName(val name: String): ChecklistMainEvent
+    data class UpdateChecklistDescription(val description: String): ChecklistMainEvent
+    data class UpdateChecklistIcon(val icon: IconOption, val color: ColorOption): ChecklistMainEvent
 }

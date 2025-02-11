@@ -18,7 +18,7 @@ class HistoryRepository(
             name = checklist.name,
             description = checklist.description,
             icon = checklist.icon,
-            iconColor = checklist.iconColor,
+            iconColor = checklist.iconBackgroundColor,
             createdAt = currentDateTime
         )
 

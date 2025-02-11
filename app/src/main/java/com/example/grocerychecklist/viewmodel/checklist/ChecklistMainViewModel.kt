@@ -28,7 +28,12 @@ data class ChecklistMainData(
 
 class ChecklistMainViewModel(
     private val navigator: Navigator
-) : SearchableViewModel<ChecklistMainData>(matchesSearch = { item, query -> item.name.contains(query, ignoreCase = true)}) {
+) : SearchableViewModel<ChecklistMainData>(matchesSearch = { item, query ->
+    item.name.contains(
+        query,
+        ignoreCase = true
+    )
+}) {
 
     init {
         setItems(
@@ -82,23 +87,48 @@ class ChecklistMainViewModel(
             ChecklistMainEvent.NavigateChecklist -> {
                 navigator.navigate(Routes.ChecklistDetail)
             }
+
             ChecklistMainEvent.ToggleDrawer -> {
                 _state.update { it.copy(isDrawerOpen = !it.isDrawerOpen) }
             }
+
             ChecklistMainEvent.OpenDrawer -> {
                 _state.update { it.copy(isDrawerOpen = true) }
             }
+
             ChecklistMainEvent.CloseDrawer -> {
                 _state.update { it.copy(isDrawerOpen = false) }
             }
+
             ChecklistMainEvent.ToggleIconPicker -> {
                 _state.update { it.copy(isIconPickerOpen = !it.isIconPickerOpen) }
             }
+
             ChecklistMainEvent.OpenIconPicker -> {
                 _state.update { it.copy(isIconPickerOpen = true) }
             }
+
             ChecklistMainEvent.CloseIconPicker -> {
                 _state.update { it.copy(isIconPickerOpen = false) }
+            }
+
+            is ChecklistMainEvent.UpdateChecklistName -> {
+                _state.update { it.copy(newChecklist = it.newChecklist.copy(name = event.name)) }
+            }
+
+            is ChecklistMainEvent.UpdateChecklistDescription -> {
+                _state.update { it.copy(newChecklist = it.newChecklist.copy(description = event.description)) }
+            }
+
+            is ChecklistMainEvent.UpdateChecklistIcon -> {
+                _state.update {
+                    it.copy(
+                        newChecklist = it.newChecklist.copy(
+                            icon = event.icon,
+                            iconBackgroundColor = event.color
+                        )
+                    )
+                }
             }
         }
     }

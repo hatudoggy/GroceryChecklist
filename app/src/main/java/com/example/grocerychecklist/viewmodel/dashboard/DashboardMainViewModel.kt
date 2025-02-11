@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.viewmodel.dashboard
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.data.ColorOption
@@ -40,7 +41,7 @@ class DashboardMainViewModel(
                     name = "New Checklist!",
                     description = "Trip lang",
                     icon = IconOption.Home,
-                    iconColor = ColorOption.White
+                    iconBackgroundColor = ColorOption.White
                 )
                 viewModelScope.launch {
                     checklistRepository.addChecklist(checklistInput)
