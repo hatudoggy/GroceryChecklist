@@ -1,6 +1,9 @@
 package com.example.grocerychecklist.ui.component
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +38,7 @@ enum class ButtonCardComponentVariant {
     History,
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ButtonCardComponent(
     name: String,
@@ -45,13 +50,17 @@ fun ButtonCardComponent(
     description: String? = null,
     expense: Double? = null,
     onClick: () -> Unit = {},
+    onLongPress: () -> Unit = {},
     isClicked: Boolean? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
+            .combinedClickable(
+                onClick = { onClick() },
+                onLongClick = { onLongPress() }
+            )
             .padding(8.dp, 0.dp)
             .heightIn(min = 60.dp, max = 60.dp),
         verticalAlignment = Alignment.CenterVertically,

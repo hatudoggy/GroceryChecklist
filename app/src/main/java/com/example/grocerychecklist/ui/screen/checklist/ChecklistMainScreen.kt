@@ -5,40 +5,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -49,7 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,19 +55,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
-import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,7 +72,6 @@ fun ChecklistMainScreen(
     state: ChecklistMainState,
     onEvent: (ChecklistMainEvent) -> Unit,
 ) {
-
     // Bottom sheet content
     CreateChecklist(
         isOpen = state.isDrawerOpen,
@@ -137,22 +122,8 @@ fun ChecklistMainScreen(
                     }
                 }
             }
-//            HorizontalDivider()
-//            LazyRow(
-//                //modifier = Modifier.weight(1f)
-//            ) {
-//                items(5) {
-//                    Icon(
-//                        Icons.Filled.Circle,
-//                        contentDescription = "color",
-//                        tint = Color.Gray,
-//                        modifier = Modifier.size(48.dp)
-//                    )
-//                }
-//            }
         }
     }
-
 
     // Main screen content
     Scaffold(
@@ -210,7 +181,8 @@ fun ChecklistMainScreen(
                             icon = item.icon.imageVector,
                             iconBackgroundColor = item.iconBackgroundColor.color,
                             variant = ButtonCardComponentVariant.Checklist,
-                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) }
+                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) },
+                            onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
                         )
                     }
                 }
@@ -239,11 +211,41 @@ fun ChecklistMainScreen(
 
                 }
             }
+
+            // Edit, Delete Action Menu
+            ActionMenu(
+                isOpen = state.isActionMenuOpen,
+                onClose = { onEvent(ChecklistMainEvent.ToggleActionMenu(state.selectedChecklist)) },
+                onDeleteDialog = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }
+            )
+
+            // Delete Dialog
+            if (state.isDeleteDialogOpen) {
+                AlertDialog(
+                    onDismissRequest = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) },
+                    title = { Text("Delete Item?") },
+                    text = { Text("Are you sure you want to delete this item?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onEvent(ChecklistMainEvent.DeleteChecklist(state.selectedChecklist))
+                            }
+                        ) {
+                            Text("Delete", color = Color.Red)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }) {
+                            Text("Cancel", color = Color.Black)
+                        }
+                    }
+                )
+            }
         }
     }
 }
 
-// Bottom sheet modal drawer
+// Bottom sheet modal drawer for creating Checklist
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateChecklist(
@@ -335,6 +337,62 @@ fun CreateChecklist(
     }
 }
 
+@Composable
+fun ActionMenu(
+    isOpen: Boolean,
+    onClose: () -> Unit,
+    onDeleteDialog: () -> Unit
+) {
+    BottomSheet(
+        isOpen = isOpen,
+        onClose = {
+            onClose()
+        }
+    ) {
+        Column(
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(10.dp, 1.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {}
+                    .padding(10.dp, 15.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Edit Checklist",
+                )
+                Text(
+                    text = "Edit",
+                    fontSize = 18.sp,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .padding(10.dp, 1.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onDeleteDialog() }
+                    .padding(10.dp, 15.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete Checklist",
+                    tint = Color.Red
+                )
+                Text(
+                    text = "Delete",
+                    fontSize = 18.sp,
+                    color = Color.Red
+                )
+            }
+        }
+    }
+}
+
 // Bottom sheet modal drawer
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -345,7 +403,16 @@ fun BottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState()
 
-    if (isOpen) {
+    // Closes the sheet when isOpen changes to false
+    LaunchedEffect(isOpen) {
+        if (!isOpen) {
+            sheetState.hide() // Ensures smooth closing before reopening
+        }
+    }
+
+    // Waits for sheetState.isVisible to turn to false to ensure smooth closing
+    // Fixes the snappy opening/closing of the sheet after an action
+    if (isOpen || sheetState.isVisible) {
         ModalBottomSheet(
             onDismissRequest = onClose,
             sheetState = sheetState,
@@ -453,6 +520,49 @@ fun BottomSheetPreview() {
                 ) { Text("Add") }
             }
 
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = false)
+@Composable
+fun BottomSheetActionsPreview() {
+    val sheetState = rememberStandardBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = {},
+        sheetState = sheetState
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(10.dp, 5.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {}
+                    .padding(10.dp)
+            ) {
+                Text(
+                    text = "Edit",
+                    fontSize = 18.sp,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .padding(10.dp, 5.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {}
+                    .padding(10.dp)
+            ) {
+                Text(
+                    text = "Delete",
+                    fontSize = 18.sp,
+                )
+            }
         }
     }
 }

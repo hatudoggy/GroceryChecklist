@@ -16,6 +16,8 @@ data class ChecklistMainState(
     val isAddingChecklist: Boolean = false,
     val isDrawerOpen: Boolean = false,
     val isIconPickerOpen: Boolean = false,
+    val isActionMenuOpen: Boolean = false,
+    val isDeleteDialogOpen: Boolean = false,
 
     // Search
     val searchQuery: String = "",
@@ -31,4 +33,5 @@ data class ChecklistMainState(
     // Miscs
     val checklistName: String = "",
     val checklistDescription: String = "",
+    val selectedChecklist: Checklist? = null,
 )

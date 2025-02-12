@@ -87,6 +87,24 @@ class ChecklistMainViewModel(
                 _state.update { it.copy(isIconPickerOpen = false) }
             }
 
+            is ChecklistMainEvent.ToggleActionMenu -> {
+                _state.update {
+                    val newMenuState = !it.isActionMenuOpen
+                    it.copy(
+                        isActionMenuOpen = newMenuState,
+                        selectedChecklist = if (newMenuState) event.checklist else null
+                    )
+                }
+            }
+
+            is ChecklistMainEvent.ToggleDeleteDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteDialogOpen = !it.isDeleteDialogOpen
+                    )
+                }
+            }
+
             is ChecklistMainEvent.SearchChecklist -> {
 
                 _state.update {
@@ -145,6 +163,24 @@ class ChecklistMainViewModel(
                 }
             }
 
+            is ChecklistMainEvent.DeleteChecklist -> {
+                viewModelScope.launch {
+                    try {
+                        if (event.checklist?.id == null) return@launch
+                        // Close the Delete Dialog
+                        onEvent(ChecklistMainEvent.ToggleDeleteDialog)
+
+                        // Close the Action Menu
+                        onEvent(ChecklistMainEvent.ToggleActionMenu(event.checklist))
+
+                        // Delete the item
+                        checklistRepository.deleteChecklist(event.checklist)
+                        loadChecklists()
+                    } catch (e: Exception) {
+                        Log.e("ChecklistMainViewModel", "Error deleting checklist: ${e.message}")
+                    }
+                }
+            }
         }
     }
 
