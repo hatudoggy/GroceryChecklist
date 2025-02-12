@@ -15,15 +15,12 @@ sealed interface ChecklistMainEvent {
 
     // State Changes
     data class SearchChecklist(val query: String) : ChecklistMainEvent
-    data class SetNewChecklistName(val name: String) : ChecklistMainEvent
-    data class SetNewChecklistDescription(val description: String) : ChecklistMainEvent
-    data class SetNewChecklistIcon(val icon: IconOption, val color: ColorOption) :
-        ChecklistMainEvent
+    data class SetNewChecklist(val checklist: ChecklistInput) : ChecklistMainEvent
+    data class SetDeletingChecklist(val checklist: Checklist?): ChecklistMainEvent
+    data class SetEditingChecklist(val checklist: Checklist?) : ChecklistMainEvent
     data object ResetNewChecklist : ChecklistMainEvent
     data object ResetDeletingChecklist : ChecklistMainEvent
     data object ResetEditingChecklist : ChecklistMainEvent
-    data class SetDeletingChecklist(val checklist: Checklist?): ChecklistMainEvent
-    data class SetEditingChecklist(val checklist: Checklist?) : ChecklistMainEvent
 
     // Repository Changes
     data class AddChecklist(val checklist: ChecklistInput) : ChecklistMainEvent

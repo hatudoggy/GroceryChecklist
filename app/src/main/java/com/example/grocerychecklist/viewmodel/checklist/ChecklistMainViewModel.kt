@@ -154,22 +154,8 @@ class ChecklistMainViewModel(
                 }
             }
 
-            is ChecklistMainEvent.SetNewChecklistName -> {
-                _state.update { it.copy(newChecklist = it.newChecklist.copy(name = event.name)) }
-            }
-
-            is ChecklistMainEvent.SetNewChecklistDescription -> {
-                _state.update { it.copy(newChecklist = it.newChecklist.copy(description = event.description)) }
-            }
-
-            is ChecklistMainEvent.SetNewChecklistIcon -> {
-                _state.update {
-                    it.copy(
-                        newChecklist = it.newChecklist.copy(
-                            icon = event.icon, iconBackgroundColor = event.color
-                        )
-                    )
-                }
+            is ChecklistMainEvent.SetNewChecklist -> {
+                _state.update { it.copy(newChecklist = event.checklist) }
             }
 
             is ChecklistMainEvent.SetDeletingChecklist -> {

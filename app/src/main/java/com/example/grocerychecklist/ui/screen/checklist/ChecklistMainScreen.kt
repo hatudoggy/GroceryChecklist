@@ -115,11 +115,13 @@ fun ChecklistMainScreen(
                                     )
                                 else
                                     onEvent(
-                                        ChecklistMainEvent.SetNewChecklistIcon(
-                                            IconOption.fromName(category.text)
-                                                ?: IconOption.MAIN_GROCERY,
-                                            ColorOption.fromColor(category.color)
-                                                ?: ColorOption.CopySkyGreen
+                                        ChecklistMainEvent.SetNewChecklist(
+                                            state.newChecklist.copy(
+                                                icon = IconOption.fromName(category.text)
+                                                    ?: IconOption.MAIN_GROCERY,
+                                                iconBackgroundColor = ColorOption.fromColor(category.color)
+                                                    ?: ColorOption.CopySkyGreen
+                                            )
                                         )
                                     )
                                 onEvent(ChecklistMainEvent.ToggleIconPicker)
@@ -327,8 +329,10 @@ fun BottomSheetChecklist(
                             )
                         else
                             onEvent(
-                                ChecklistMainEvent.SetNewChecklistName(
-                                    e
+                                ChecklistMainEvent.SetNewChecklist(
+                                    state.newChecklist.copy(
+                                        name = e
+                                    )
                                 )
                             )
 
@@ -352,8 +356,10 @@ fun BottomSheetChecklist(
                         )
                     else
                         onEvent(
-                            ChecklistMainEvent.SetNewChecklistDescription(
-                                e
+                            ChecklistMainEvent.SetNewChecklist(
+                                state.newChecklist.copy(
+                                    description = e
+                                )
                             )
                         )
 
