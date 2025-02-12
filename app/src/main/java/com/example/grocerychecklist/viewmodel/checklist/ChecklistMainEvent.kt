@@ -20,7 +20,9 @@ sealed interface ChecklistMainEvent {
     data class SetNewChecklistIcon(val icon: IconOption, val color: ColorOption) :
         ChecklistMainEvent
     data object ResetNewChecklist : ChecklistMainEvent
+    data object ResetDeletingChecklist : ChecklistMainEvent
     data object ResetEditingChecklist : ChecklistMainEvent
+    data class SetDeletingChecklist(val checklist: Checklist?): ChecklistMainEvent
     data class SetEditingChecklist(val checklist: Checklist?) : ChecklistMainEvent
 
     // Repository Changes

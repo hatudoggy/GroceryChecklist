@@ -74,7 +74,7 @@ class ChecklistMainViewModel(
                     drawerState = innerDrawerState
 
                     it.copy(
-                        isDrawerOpen = !it.isDrawerOpen,
+                        isDrawerOpen = innerDrawerState,
                     )
                 }
 
@@ -104,11 +104,24 @@ class ChecklistMainViewModel(
             }
 
             is ChecklistMainEvent.ToggleDeleteDialog -> {
+
+                var deleteDialogState = false
                 _state.update {
+                    val innerDeleteDialogState = !it.isDeleteDialogOpen
+                    // Assign this to the variable outside
+                    deleteDialogState = innerDeleteDialogState
+
                     it.copy(
-                        isDeleteDialogOpen = !it.isDeleteDialogOpen,
-                        isActionMenuOpen = false // Close the Action Menu when the Delete Dialog is opened. It's mandatory to close it
+                        isDeleteDialogOpen = innerDeleteDialogState,
                     )
+                }
+
+                // Close the Action Menu if the Dialog is open. It's mandatory to close it
+                if (_state.value.isActionMenuOpen) onEvent(ChecklistMainEvent.ToggleActionMenu(null))
+
+                // Resets both deletable checklist if the dialog is closed
+                if (!deleteDialogState) {
+                    onEvent(ChecklistMainEvent.ResetDeletingChecklist)
                 }
             }
 
@@ -159,6 +172,18 @@ class ChecklistMainViewModel(
                 }
             }
 
+            is ChecklistMainEvent.SetDeletingChecklist -> {
+                _state.update {
+                    it.copy(deletingChecklist = event.checklist)
+                }
+            }
+
+            is ChecklistMainEvent.SetEditingChecklist -> {
+                _state.update {
+                    it.copy(editingChecklist = event.checklist)
+                }
+            }
+
             ChecklistMainEvent.ResetNewChecklist -> {
                 _state.update {
                     it.copy(
@@ -180,9 +205,9 @@ class ChecklistMainViewModel(
                 }
             }
 
-            is ChecklistMainEvent.SetEditingChecklist -> {
+            ChecklistMainEvent.ResetDeletingChecklist -> {
                 _state.update {
-                    it.copy(editingChecklist = event.checklist)
+                    it.copy(deletingChecklist = null)
                 }
             }
 

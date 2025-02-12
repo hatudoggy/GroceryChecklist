@@ -143,10 +143,12 @@ fun ChecklistMainScreen(
         onClose = { onEvent(ChecklistMainEvent.ToggleActionMenu(state.selectedChecklist)) },
         onEditMenu = {
             onEvent(ChecklistMainEvent.ToggleDrawer)
-            // Set the editing checklist to the selected checklist
             onEvent(ChecklistMainEvent.SetEditingChecklist(state.selectedChecklist))
         },
-        onDeleteDialog = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }
+        onDeleteDialog = {
+            onEvent(ChecklistMainEvent.ToggleDeleteDialog)
+            onEvent(ChecklistMainEvent.SetDeletingChecklist(state.selectedChecklist))
+        }
     )
 
     // Delete Dialog
@@ -158,7 +160,7 @@ fun ChecklistMainScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onEvent(ChecklistMainEvent.DeleteChecklist(state.selectedChecklist))
+                        onEvent(ChecklistMainEvent.DeleteChecklist(state.deletingChecklist))
                     }
                 ) {
                     Text("Delete", color = Color.Red)
@@ -284,7 +286,7 @@ fun BottomSheetChecklist(
                 )
         ) {
             Text(
-                if (state.editingChecklist != null) "Edit" else "Create a" + " Checklist",
+                (if (state.editingChecklist != null) "Edit" else "Create a") + " Checklist",
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp
             )

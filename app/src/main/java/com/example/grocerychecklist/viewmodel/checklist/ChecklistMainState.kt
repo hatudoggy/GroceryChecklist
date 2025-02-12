@@ -33,6 +33,9 @@ data class ChecklistMainState(
     // For editing checklist
     val editingChecklist: Checklist? = null,
 
+    // For deleting checklist
+    val deletingChecklist: Checklist? = null,
+
     // Misc
     val checklistName: String = "",
     val checklistDescription: String = "",
