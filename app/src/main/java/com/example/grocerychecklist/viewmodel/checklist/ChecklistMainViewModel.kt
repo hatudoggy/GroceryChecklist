@@ -9,6 +9,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.ui.component.ChecklistCategory
@@ -64,27 +67,30 @@ class ChecklistMainViewModel(
             }
 
             ChecklistMainEvent.ToggleDrawer -> {
-                _state.update { it.copy(isDrawerOpen = !it.isDrawerOpen) }
-            }
+                var drawerState = false
+                _state.update {
+                    val innerDrawerState = !it.isDrawerOpen
+                    // Assign this to the variable outside
+                    drawerState = innerDrawerState
 
-            ChecklistMainEvent.OpenDrawer -> {
-                _state.update { it.copy(isDrawerOpen = true) }
-            }
+                    it.copy(
+                        isDrawerOpen = !it.isDrawerOpen,
+                    )
+                }
 
-            ChecklistMainEvent.CloseDrawer -> {
-                _state.update { it.copy(isDrawerOpen = false) }
+                // Close the Action Menu if the Drawer is open. It's mandatory to close it
+                if (_state.value.isActionMenuOpen) onEvent(ChecklistMainEvent.ToggleActionMenu(null))
+
+                // Resets both the new and editing checklist if the drawer is closed
+                // It's okay to reset both
+                if (!drawerState) {
+                    onEvent(ChecklistMainEvent.ResetNewChecklist)
+                    onEvent(ChecklistMainEvent.ResetEditingChecklist)
+                }
             }
 
             ChecklistMainEvent.ToggleIconPicker -> {
                 _state.update { it.copy(isIconPickerOpen = !it.isIconPickerOpen) }
-            }
-
-            ChecklistMainEvent.OpenIconPicker -> {
-                _state.update { it.copy(isIconPickerOpen = true) }
-            }
-
-            ChecklistMainEvent.CloseIconPicker -> {
-                _state.update { it.copy(isIconPickerOpen = false) }
             }
 
             is ChecklistMainEvent.ToggleActionMenu -> {
@@ -92,7 +98,7 @@ class ChecklistMainViewModel(
                     val newMenuState = !it.isActionMenuOpen
                     it.copy(
                         isActionMenuOpen = newMenuState,
-                        selectedChecklist = if (newMenuState) event.checklist else null
+                        selectedChecklist = if (newMenuState) event.checklist else null, // Set the selected checklist. If closed, set to null again
                     )
                 }
             }
@@ -100,7 +106,8 @@ class ChecklistMainViewModel(
             is ChecklistMainEvent.ToggleDeleteDialog -> {
                 _state.update {
                     it.copy(
-                        isDeleteDialogOpen = !it.isDeleteDialogOpen
+                        isDeleteDialogOpen = !it.isDeleteDialogOpen,
+                        isActionMenuOpen = false // Close the Action Menu when the Delete Dialog is opened. It's mandatory to close it
                     )
                 }
             }
@@ -134,15 +141,15 @@ class ChecklistMainViewModel(
                 }
             }
 
-            is ChecklistMainEvent.UpdateChecklistName -> {
+            is ChecklistMainEvent.SetNewChecklistName -> {
                 _state.update { it.copy(newChecklist = it.newChecklist.copy(name = event.name)) }
             }
 
-            is ChecklistMainEvent.UpdateChecklistDescription -> {
+            is ChecklistMainEvent.SetNewChecklistDescription -> {
                 _state.update { it.copy(newChecklist = it.newChecklist.copy(description = event.description)) }
             }
 
-            is ChecklistMainEvent.UpdateChecklistIcon -> {
+            is ChecklistMainEvent.SetNewChecklistIcon -> {
                 _state.update {
                     it.copy(
                         newChecklist = it.newChecklist.copy(
@@ -152,10 +159,43 @@ class ChecklistMainViewModel(
                 }
             }
 
+            ChecklistMainEvent.ResetNewChecklist -> {
+                _state.update {
+                    it.copy(
+                        newChecklist = ChecklistInput(
+                            name = "",
+                            description = "",
+                            icon = IconOption.MAIN_GROCERY,
+                            iconBackgroundColor = ColorOption.CopySkyGreen
+                        )
+                    )
+                }
+            }
+
+            ChecklistMainEvent.ResetEditingChecklist -> {
+                _state.update {
+                    it.copy(
+                        editingChecklist = null
+                    )
+                }
+            }
+
+            is ChecklistMainEvent.SetEditingChecklist -> {
+                _state.update {
+                    it.copy(editingChecklist = event.checklist)
+                }
+            }
+
             is ChecklistMainEvent.AddChecklist -> {
                 viewModelScope.launch {
                     try {
+                        // Save the checklist to Room
                         checklistRepository.addChecklist(event.checklist)
+
+                        // Close the drawer and reset the state of the newChecklist variable
+                        onEvent(ChecklistMainEvent.ToggleDrawer)
+
+                        // Reload the checklists
                         loadChecklists()
                     } catch (e: Exception) {
                         Log.e("ChecklistMainViewModel", "Error adding checklist: ${e.message}")
@@ -167,17 +207,43 @@ class ChecklistMainViewModel(
                 viewModelScope.launch {
                     try {
                         if (event.checklist?.id == null) return@launch
-                        // Close the Delete Dialog
-                        onEvent(ChecklistMainEvent.ToggleDeleteDialog)
-
-                        // Close the Action Menu
-                        onEvent(ChecklistMainEvent.ToggleActionMenu(event.checklist))
-
                         // Delete the item
                         checklistRepository.deleteChecklist(event.checklist)
+
+                        // Close the Delete Dialog and reset the states
+                        onEvent(ChecklistMainEvent.ToggleDeleteDialog)
+
                         loadChecklists()
                     } catch (e: Exception) {
                         Log.e("ChecklistMainViewModel", "Error deleting checklist: ${e.message}")
+                    }
+                }
+            }
+
+            is ChecklistMainEvent.UpdateChecklist -> {
+                viewModelScope.launch {
+                    try {
+                        // Transform the checklist to ChecklistInput
+                        val transformedChecklist = ChecklistInput(
+                            name = event.checklist.name,
+                            description = event.checklist.description,
+                            icon = event.checklist.icon,
+                            iconBackgroundColor = event.checklist.iconBackgroundColor
+                        )
+
+                        // Update the checklist
+                        checklistRepository.updateChecklist(
+                            event.checklist.id,
+                            transformedChecklist
+                        )
+
+                        // Close the drawer and reset states
+                        onEvent(ChecklistMainEvent.ToggleDrawer)
+
+                        // Reload the checklists
+                        loadChecklists()
+                    } catch (e: Exception) {
+                        Log.e("ChecklistMainViewModel", "Error updating checklist: ${e.message}")
                     }
                 }
             }

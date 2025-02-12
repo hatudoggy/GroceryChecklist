@@ -65,7 +65,7 @@ fun BottomBarComponent(
         BottomAppBar(
             containerColor = Color.White,
             modifier = Modifier
-                .height(70.dp)
+                .height(100.dp)
                 .shadow(24.dp),
             actions = {
                 Row(

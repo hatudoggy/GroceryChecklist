@@ -72,17 +72,17 @@ fun ChecklistMainScreen(
     state: ChecklistMainState,
     onEvent: (ChecklistMainEvent) -> Unit,
 ) {
-    // Bottom sheet content
-    CreateChecklist(
+    // Create Checklist Bottom Sheet
+    BottomSheetChecklist(
         isOpen = state.isDrawerOpen,
-        onClose = { onEvent(ChecklistMainEvent.CloseDrawer) },
+        onClose = { onEvent(ChecklistMainEvent.ToggleDrawer) },
         onEvent = onEvent,
         state = state
     )
 
     DialogModal(
         isOpen = state.isIconPickerOpen,
-        onClose = { onEvent(ChecklistMainEvent.CloseIconPicker) }
+        onClose = { onEvent(ChecklistMainEvent.ToggleIconPicker) }
     ) {
         Column(
             modifier = Modifier
@@ -102,15 +102,27 @@ fun ChecklistMainScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .clickable {
-                                onEvent(
-                                    ChecklistMainEvent.UpdateChecklistIcon(
-                                        IconOption.fromName(category.text)
-                                            ?: IconOption.MAIN_GROCERY,
-                                        ColorOption.fromColor(category.color)
-                                            ?: ColorOption.CopySkyGreen
+                                if (state.editingChecklist != null)
+                                    onEvent(
+                                        ChecklistMainEvent.SetEditingChecklist(
+                                            state.editingChecklist.copy(
+                                                icon = IconOption.fromName(category.text)
+                                                    ?: IconOption.MAIN_GROCERY,
+                                                iconBackgroundColor = ColorOption.fromColor(category.color)
+                                                    ?: ColorOption.CopySkyGreen
+                                            )
+                                        )
                                     )
-                                )
-                                onEvent(ChecklistMainEvent.CloseIconPicker)
+                                else
+                                    onEvent(
+                                        ChecklistMainEvent.SetNewChecklistIcon(
+                                            IconOption.fromName(category.text)
+                                                ?: IconOption.MAIN_GROCERY,
+                                            ColorOption.fromColor(category.color)
+                                                ?: ColorOption.CopySkyGreen
+                                        )
+                                    )
+                                onEvent(ChecklistMainEvent.ToggleIconPicker)
                             }
                     ) {
                         ButtonCardIconComponent(
@@ -125,6 +137,41 @@ fun ChecklistMainScreen(
         }
     }
 
+    // Edit, Delete Action Menu
+    ActionMenu(
+        isOpen = state.isActionMenuOpen,
+        onClose = { onEvent(ChecklistMainEvent.ToggleActionMenu(state.selectedChecklist)) },
+        onEditMenu = {
+            onEvent(ChecklistMainEvent.ToggleDrawer)
+            // Set the editing checklist to the selected checklist
+            onEvent(ChecklistMainEvent.SetEditingChecklist(state.selectedChecklist))
+        },
+        onDeleteDialog = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }
+    )
+
+    // Delete Dialog
+    if (state.isDeleteDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) },
+            title = { Text("Delete Item?") },
+            text = { Text("Are you sure you want to delete this item?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(ChecklistMainEvent.DeleteChecklist(state.selectedChecklist))
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }) {
+                    Text("Cancel", color = Color.Black)
+                }
+            }
+        )
+    }
+
     // Main screen content
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -133,7 +180,7 @@ fun ChecklistMainScreen(
             FloatingActionButton(
                 shape = CircleShape,
                 onClick = {
-                    onEvent(ChecklistMainEvent.OpenDrawer)
+                    onEvent(ChecklistMainEvent.ToggleDrawer)
                 },
                 containerColor = PrimaryGreenSurface
             ) {
@@ -211,44 +258,14 @@ fun ChecklistMainScreen(
 
                 }
             }
-
-            // Edit, Delete Action Menu
-            ActionMenu(
-                isOpen = state.isActionMenuOpen,
-                onClose = { onEvent(ChecklistMainEvent.ToggleActionMenu(state.selectedChecklist)) },
-                onDeleteDialog = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }
-            )
-
-            // Delete Dialog
-            if (state.isDeleteDialogOpen) {
-                AlertDialog(
-                    onDismissRequest = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) },
-                    title = { Text("Delete Item?") },
-                    text = { Text("Are you sure you want to delete this item?") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                onEvent(ChecklistMainEvent.DeleteChecklist(state.selectedChecklist))
-                            }
-                        ) {
-                            Text("Delete", color = Color.Red)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }) {
-                            Text("Cancel", color = Color.Black)
-                        }
-                    }
-                )
-            }
         }
     }
 }
 
-// Bottom sheet modal drawer for creating Checklist
+// Bottom sheet modal drawer for editing Checklist
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateChecklist(
+fun BottomSheetChecklist(
     isOpen: Boolean,
     onClose: () -> Unit,
     onEvent: (ChecklistMainEvent) -> Unit,
@@ -267,7 +284,7 @@ fun CreateChecklist(
                 )
         ) {
             Text(
-                "Create a Checklist",
+                if (state.editingChecklist != null) "Edit" else "Create a" + " Checklist",
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp
             )
@@ -280,26 +297,39 @@ fun CreateChecklist(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .clickable {
-                            onEvent(ChecklistMainEvent.OpenIconPicker)
+                            onEvent(ChecklistMainEvent.ToggleIconPicker)
                         }
                 ) {
                     ButtonCardIconComponent(
-                        backgroundColor = state.newChecklist.iconBackgroundColor.color,
-                        icon = state.newChecklist.icon.imageVector,
+                        backgroundColor = state.editingChecklist?.iconBackgroundColor?.color
+                            ?: state.newChecklist.iconBackgroundColor.color,
+                        icon = state.editingChecklist?.icon?.imageVector
+                            ?: state.newChecklist.icon.imageVector,
                         wrapperSize = 56.dp,
                         iconSize = 30.dp
                     )
                 }
 
+                // Name of Checklist
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = state.newChecklist.name,
+                    value = state.editingChecklist?.name ?: state.newChecklist.name,
                     onValueChange = { e ->
-                        onEvent(
-                            ChecklistMainEvent.UpdateChecklistName(
-                                e
+                        if (state.editingChecklist != null)
+                            onEvent(
+                                ChecklistMainEvent.SetEditingChecklist(
+                                    state.editingChecklist.copy(
+                                        name = e
+                                    )
+                                )
                             )
-                        )
+                        else
+                            onEvent(
+                                ChecklistMainEvent.SetNewChecklistName(
+                                    e
+                                )
+                            )
+
                     },
                     label = { Text("Name") }
                 )
@@ -308,13 +338,23 @@ fun CreateChecklist(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Description") },
                 minLines = 5,
-                value = state.newChecklist.description,
+                value = state.editingChecklist?.description ?: state.newChecklist.description,
                 onValueChange = { e ->
-                    onEvent(
-                        ChecklistMainEvent.UpdateChecklistDescription(
-                            e
+                    if (state.editingChecklist != null)
+                        onEvent(
+                            ChecklistMainEvent.SetEditingChecklist(
+                                state.editingChecklist.copy(
+                                    description = e
+                                )
+                            )
                         )
-                    )
+                    else
+                        onEvent(
+                            ChecklistMainEvent.SetNewChecklistDescription(
+                                e
+                            )
+                        )
+
                 },
             )
 
@@ -323,15 +363,18 @@ fun CreateChecklist(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) }
+                    onClick = { onEvent(ChecklistMainEvent.ToggleDrawer) }
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
                 Button(
                     onClick = {
-                        onEvent(ChecklistMainEvent.AddChecklist(state.newChecklist))
-                        onEvent(ChecklistMainEvent.CloseDrawer)
+                        if (state.editingChecklist != null)
+                            onEvent(ChecklistMainEvent.UpdateChecklist(state.editingChecklist))
+                        else
+                            onEvent(ChecklistMainEvent.AddChecklist(state.newChecklist))
+
                     },
-                ) { Text("Add") }
+                ) { if (state.editingChecklist != null) Text("Edit") else Text("Add") }
             }
         }
     }
@@ -341,6 +384,7 @@ fun CreateChecklist(
 fun ActionMenu(
     isOpen: Boolean,
     onClose: () -> Unit,
+    onEditMenu: () -> Unit,
     onDeleteDialog: () -> Unit
 ) {
     BottomSheet(
@@ -356,7 +400,9 @@ fun ActionMenu(
                     .padding(10.dp, 1.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable {}
+                    .clickable {
+                        onEditMenu()
+                    }
                     .padding(10.dp, 15.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {

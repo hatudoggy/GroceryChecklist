@@ -30,7 +30,10 @@ data class ChecklistMainState(
         iconBackgroundColor = ColorOption.CopySkyGreen
     ),
 
-    // Miscs
+    // For editing checklist
+    val editingChecklist: Checklist? = null,
+
+    // Misc
     val checklistName: String = "",
     val checklistDescription: String = "",
     val selectedChecklist: Checklist? = null,
