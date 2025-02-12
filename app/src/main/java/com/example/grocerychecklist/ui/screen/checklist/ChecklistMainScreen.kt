@@ -26,7 +26,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fastfood
@@ -82,11 +84,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ChecklistMainScreen(
     state: ChecklistMainState,
-    viewModel: ChecklistMainViewModel,
     onEvent: (ChecklistMainEvent) -> Unit,
 ) {
-//    val filteredItems by viewModel.filteredItems.collectAsState(emptyList())
-//    val searchQuery by viewModel.searchQuery.collectAsState()
 
     // Bottom sheet content
     CreateChecklist(
@@ -197,20 +196,47 @@ fun ChecklistMainScreen(
                 onValueChange = { e -> onEvent(ChecklistMainEvent.SearchChecklist(e)) }
             )
             Spacer(Modifier.height(8.dp))
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                state.checklists.forEach { item ->
-                    ButtonCardComponent(
-                        name = item.name,
-                        description = item.description,
-                        date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
-                            .toString(),
-                        icon = item.icon.imageVector,
-                        iconBackgroundColor = item.iconBackgroundColor.color,
-                        variant = ButtonCardComponentVariant.Checklist,
-                        onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) }
-                    )
+
+            if (state.checklists.isNotEmpty()) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    state.checklists.forEach { item ->
+                        ButtonCardComponent(
+                            name = item.name,
+                            description = item.description,
+                            date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
+                                .toString(),
+                            icon = item.icon.imageVector,
+                            iconBackgroundColor = item.iconBackgroundColor.color,
+                            variant = ButtonCardComponentVariant.Checklist,
+                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) }
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Checklist,
+                            contentDescription = "Empty Checklist",
+                            modifier = Modifier.size(32.dp),
+                        )
+                        Text(
+                            text = "No Checklist Items",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray
+                        )
+                    }
+
                 }
             }
         }
@@ -355,16 +381,15 @@ fun DialogModal(
 }
 
 
-//@Preview(showBackground = true)
-//@Composable
-//fun ChecklistMainScreenPreview() {
-//    val state: ChecklistMainState = ChecklistMainState()
-//    ChecklistMainScreen(
-//        state = state,
-//        viewModel = {},
-//        onEvent = {}
-//    )
-//}
+@Preview(showBackground = true)
+@Composable
+fun ChecklistMainScreenPreview() {
+    val state: ChecklistMainState = ChecklistMainState()
+    ChecklistMainScreen(
+        state = state,
+        onEvent = {}
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)

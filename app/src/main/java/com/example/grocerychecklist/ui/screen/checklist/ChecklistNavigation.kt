@@ -26,7 +26,6 @@ fun NavGraphBuilder.checklistDestination() {
         val state by checklistMainViewModel.state.collectAsState()
         ChecklistMainScreen(
             state = state,
-            viewModel = checklistMainViewModel,
             onEvent = checklistMainViewModel::onEvent
         )
     }
