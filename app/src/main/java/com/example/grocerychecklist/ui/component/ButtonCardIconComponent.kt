@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 
@@ -23,14 +24,16 @@ import androidx.compose.ui.unit.dp
 fun ButtonCardIconComponent(
     backgroundColor: Color,
     iconColor: Color = Color.White,
-    icon: ImageVector
+    icon: ImageVector,
+    wrapperSize: Dp = 42.5.dp,
+    iconSize: Dp = 24.dp
 ) {
     val luminance = backgroundColor.luminance()
     val iconColor = if (luminance > 0.65f && iconColor == Color.White) Color.Black else iconColor
 
     Box(
         modifier = Modifier
-            .size(42.5.dp)
+            .size(wrapperSize)
             .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor),
         contentAlignment = Alignment.Center,
@@ -39,7 +42,7 @@ fun ButtonCardIconComponent(
             icon,
             contentDescription = "icon",
             tint = iconColor,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(iconSize)
         )
     }
 }

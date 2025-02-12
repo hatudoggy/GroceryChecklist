@@ -13,7 +13,7 @@ data class Checklist(
     val name: String,
     val description: String,
     val icon: IconOption,
-    val iconColor: ColorOption,
+    val iconBackgroundColor: ColorOption,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
     val lastOpenedAt: LocalDateTime?,

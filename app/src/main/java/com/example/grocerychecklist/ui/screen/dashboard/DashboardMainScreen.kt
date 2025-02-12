@@ -172,7 +172,7 @@ fun DashboardMainScreenPreview() {
                 name = "Dog",
                 description = "",
                 icon = IconOption.Home,
-                iconColor = ColorOption.White,
+                iconBackgroundColor = ColorOption.White,
                 createdAt = currentDateTime,
                 updatedAt = currentDateTime,
                 lastOpenedAt = currentDateTime,

@@ -8,28 +8,28 @@ object ChecklistInputTestMockData {
         name = "Checklist 1",
         description = "A test checklist 1",
         icon = IconOption.Android,
-        iconColor = ColorOption.White
+        iconBackgroundColor = ColorOption.White
     )
 
     val checklist2 = ChecklistInput(
         name = "Checklist 2",
         description = "A test checklist 2",
         icon = IconOption.Android,
-        iconColor = ColorOption.White
+        iconBackgroundColor = ColorOption.White
     )
 
     val checklist3 = ChecklistInput(
         name = "Checklist 3",
         description = "A test checklist 3",
         icon = IconOption.Android,
-        iconColor = ColorOption.White
+        iconBackgroundColor = ColorOption.White
     )
 
     val updatedChecklist = ChecklistInput(
         name = "Checklist Updated",
         description = "Hep hep Horay!",
         icon = IconOption.Home,
-        iconColor = ColorOption.Black
+        iconBackgroundColor = ColorOption.Black
     )
 
     val checklistList = listOf(
