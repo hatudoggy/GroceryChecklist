@@ -75,6 +75,8 @@ import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,8 +85,8 @@ fun ChecklistMainScreen(
     viewModel: ChecklistMainViewModel,
     onEvent: (ChecklistMainEvent) -> Unit,
 ) {
-    val filteredItems by viewModel.filteredItems.collectAsState(emptyList())
-    val searchQuery by viewModel.searchQuery.collectAsState()
+//    val filteredItems by viewModel.filteredItems.collectAsState(emptyList())
+//    val searchQuery by viewModel.searchQuery.collectAsState()
 
     // Bottom sheet content
     CreateChecklist(
@@ -191,20 +193,21 @@ fun ChecklistMainScreen(
                     ),
                 fontSize = 16.sp,
                 placeholderText = "Search",
-                value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) }
+                value = state.searchQuery,
+                onValueChange = { e -> onEvent(ChecklistMainEvent.SearchChecklist(e)) }
             )
             Spacer(Modifier.height(8.dp))
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                filteredItems.forEach { item ->
+                state.checklists.forEach { item ->
                     ButtonCardComponent(
                         name = item.name,
                         description = item.description,
-                        date = item.date,
-                        icon = item.icon,
-                        iconBackgroundColor = item.iconBackgroundColor,
+                        date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
+                            .toString(),
+                        icon = item.icon.imageVector,
+                        iconBackgroundColor = item.iconBackgroundColor.color,
                         variant = ButtonCardComponentVariant.Checklist,
                         onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) }
                     )
@@ -296,7 +299,10 @@ fun CreateChecklist(
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
                 Button(
-                    onClick = { onEvent(ChecklistMainEvent.CloseDrawer) },
+                    onClick = {
+                        onEvent(ChecklistMainEvent.AddChecklist(state.newChecklist))
+                        onEvent(ChecklistMainEvent.CloseDrawer)
+                    },
                 ) { Text("Add") }
             }
         }
@@ -349,16 +355,16 @@ fun DialogModal(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun ChecklistMainScreenPreview() {
-    val state: ChecklistMainState = ChecklistMainState()
-    ChecklistMainScreen(
-        state = state,
-        viewModel = ChecklistMainViewModel(Navigator()),
-        onEvent = {}
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun ChecklistMainScreenPreview() {
+//    val state: ChecklistMainState = ChecklistMainState()
+//    ChecklistMainScreen(
+//        state = state,
+//        viewModel = {},
+//        onEvent = {}
+//    )
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
