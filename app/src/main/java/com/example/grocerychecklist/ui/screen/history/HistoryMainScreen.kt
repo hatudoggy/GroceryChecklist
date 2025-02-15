@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,19 +36,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
+import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.domain.utility.ItemCategoryUtility
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
-import com.example.grocerychecklist.ui.theme.SkyGreen
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryMainEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryMainState
 import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
@@ -176,7 +173,6 @@ val historyData = listOf(
 fun HistoryMainScreen(
     state: HistoryMainState,
     onEvent: (HistoryMainEvent) -> Unit,
-    viewModel: HistoryMainViewModel
 ) {
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -202,7 +198,7 @@ fun HistoryMainScreen(
         ) {
 
             state.monthsList.forEach { month ->
-                val displayMonth = if (viewModel.isCurrentMonth(month)) "This Month" else month
+                val displayMonth = if (DateUtility.isCurrentMonth(month)) "This Month" else month
 
                 item {
                     Text(
@@ -216,9 +212,9 @@ fun HistoryMainScreen(
                     val cardClickedState = state.cardStates[data.history.id]
                     val isCardClicked = cardClickedState == true
 
-                    if (viewModel.areDatesMatching(
+                    if (DateUtility.areDatesMatching(
                             month,
-                            viewModel.formatDate(data.history.createdAt)
+                            DateUtility.formatDate(data.history.createdAt)
                         )
                     ) {
                         CollapsibleComponent(
@@ -227,7 +223,7 @@ fun HistoryMainScreen(
                                 ButtonCardComponent(
                                     name = data.history.name,
                                     expense = data.totalPrice,
-                                    date = viewModel.formatDateWithDay(data.history.createdAt),
+                                    date = DateUtility.formatDateWithDay(data.history.createdAt),
                                     icon = data.history.icon.imageVector,
                                     iconBackgroundColor = data.history.iconColor.color,
                                     variant = ButtonCardComponentVariant.History,
@@ -238,7 +234,7 @@ fun HistoryMainScreen(
                                 )
                             },
                             collapsedComponent = {
-                                HistoryCollapsedComponent(data, onEvent, viewModel)
+                                HistoryCollapsedComponent(data, onEvent)
                             }
                         )
                         Spacer(modifier = Modifier.height(5.dp))
@@ -258,7 +254,6 @@ fun HistoryMainScreen(
 fun HistoryCollapsedComponent(
     data: HistoryMapped,
     onEvent: (HistoryMainEvent) -> Unit,
-    viewModel: HistoryMainViewModel,
     converter: ConvertNumToCurrency = ConvertNumToCurrency(),
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -274,7 +269,7 @@ fun HistoryCollapsedComponent(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    viewModel.getItemCategoryFromString(details.category)?.color
+                                    ItemCategoryUtility.getItemCategoryFromString(details.category)?.color
                                         ?: ItemCategory.OTHER.color
                                 )
                                 .padding(vertical = 5.dp, horizontal = 10.dp)
@@ -313,7 +308,6 @@ fun HistoryMainScreenPreview() {
 
     HistoryMainScreen(
         state = state,
-        onEvent = {},
-        viewModel = viewModel
+        onEvent = {}
     )
 }
