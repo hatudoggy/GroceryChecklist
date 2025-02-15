@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.data.mapper.ItemInput
 import com.example.grocerychecklist.data.model.Item
+import com.example.grocerychecklist.domain.utility.ItemCategoryUtility
 import com.example.grocerychecklist.ui.component.CategoryDropdown
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
@@ -48,13 +49,11 @@ import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.item.ItemMainEvent
 import com.example.grocerychecklist.viewmodel.item.ItemMainState
-import com.example.grocerychecklist.viewmodel.item.ItemMainViewModel
 
 @Composable
 fun ItemMainScreen(
     state: ItemMainState,
     onEvent: (ItemMainEvent) -> Unit,
-    viewModel: ItemMainViewModel
 ) {
     if (state.isAddingItem) {
         ItemDialogComponent(
@@ -81,7 +80,6 @@ fun ItemMainScreen(
                 }
             },
             onDelete = state.selectedItem?.let { { onEvent(ItemMainEvent.DeleteItem(it)) } }, // Delete if editing
-            viewModel = viewModel
         )
     }
 
@@ -137,7 +135,7 @@ fun ItemMainScreen(
                         ChecklistItemComponent(
                             name = item.name,
                             variant = ChecklistItemComponentVariant.Item,
-                            category = viewModel.getItemCategoryFromString(item.category)
+                            category = ItemCategoryUtility.getItemCategoryFromString(item.category)
                                 ?: ItemCategory.OTHER,
                             price = item.price,
                             quantity = item.measureValue,
@@ -159,9 +157,6 @@ fun ItemMainScreenPreview() {
     ItemMainScreen(
         state = mockState,
         onEvent = {},
-        viewModel = ItemMainViewModel(
-            itemRepository = TODO()
-        )
     )
 }
 
@@ -171,13 +166,12 @@ fun ItemDialogComponent(
     onDismissRequest: () -> Unit,
     onSave: (String, String, ItemCategory) -> Unit,
     onDelete: (() -> Unit)? = null,
-    viewModel: ItemMainViewModel
 ) {
     var name by remember { mutableStateOf(selectedItem?.name ?: "") }
     var price by remember { mutableStateOf(selectedItem?.price?.toString() ?: "") }
     var selectedCategory by remember {
         mutableStateOf(selectedItem?.category?.let {
-            viewModel.getItemCategoryFromString(it)
+            ItemCategoryUtility.getItemCategoryFromString(it)
         } ?: ItemCategory.OTHER)
     }
 

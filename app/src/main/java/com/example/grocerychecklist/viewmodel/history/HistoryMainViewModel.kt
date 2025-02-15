@@ -5,34 +5,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
-import com.example.grocerychecklist.data.dao.HistoryDAO
 import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.mapper.ChecklistItemInput
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
-import com.example.grocerychecklist.data.repository.ChecklistItemRepository
-import com.example.grocerychecklist.data.repository.ChecklistRepository
-import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
-import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class HistoryMainViewModel(
@@ -69,32 +56,6 @@ class HistoryMainViewModel(
                 }
             }
         }
-    }
-
-    fun isCurrentMonth(date: String): Boolean {
-        val formattedDate = "$date 01"
-        val inputDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("MMM yyyy dd"))
-        val currentDate = LocalDate.now()
-
-        return inputDate.month == currentDate.month && inputDate.year == currentDate.year
-    }
-
-    fun formatDate(createdAt: LocalDateTime): String {
-        val formatter = DateTimeFormatter.ofPattern("MMM yyyy")
-        return createdAt.toLocalDate().format(formatter)
-    }
-
-    fun formatDateWithDay(createdAt: LocalDateTime): String {
-        val formatter = DateTimeFormatter.ofPattern("MMM dd yyyy")
-        return createdAt.toLocalDate().format(formatter)
-    }
-
-    fun areDatesMatching(dateFromList: String, dateFromBackend: String): Boolean {
-        return dateFromList == dateFromBackend.split(" ")[0] + " " + dateFromBackend.split(" ")[1]
-    }
-
-    fun getItemCategoryFromString(categoryText: String): ItemCategory? {
-        return ItemCategory.entries.firstOrNull { it.text.equals(categoryText, ignoreCase = true) }
     }
 
     fun sortHistoryData(historyData: List<HistoryMapped>): List<HistoryMapped> {
