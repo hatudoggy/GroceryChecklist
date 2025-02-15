@@ -2,31 +2,31 @@ package com.example.grocerychecklist.ui.screen
 
 import kotlinx.serialization.Serializable
 
-sealed class Routes {
+sealed interface Routes {
     @Serializable
-    data object DashboardMain: Routes()
+    data object DashboardMain: Routes
     @Serializable
-    data object DashboardBreakdown: Routes()
+    data object DashboardBreakdown: Routes
 
     @Serializable
-    data object ChecklistMain: Routes()
+    data object ChecklistMain: Routes
     @Serializable
-    data object ChecklistDetail: Routes()
+    data class ChecklistDetail(val checklistId: Long): Routes
     @Serializable
-    data object ChecklistView: Routes()
+    data object ChecklistView: Routes
     @Serializable
-    data object ChecklistEdit: Routes()
+    data class ChecklistEdit(val checklistId: Long): Routes
     @Serializable
-    data object ChecklistStart: Routes()
+    data class ChecklistStart(val checklistId: Long): Routes
 
     @Serializable
-    data object ItemMain: Routes()
+    data object ItemMain: Routes
 
     @Serializable
-    data object HistoryMain: Routes()
+    data object HistoryMain: Routes
     @Serializable
-    data object HistoryDetail: Routes()
+    data object HistoryDetail: Routes
 
     @Serializable
-    data object SettingsMain: Routes()
+    data object SettingsMain: Routes
 }
