@@ -28,8 +28,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -48,10 +46,15 @@ import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
 import com.example.grocerychecklist.ui.component.BottomModalComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
+import com.example.grocerychecklist.viewmodel.settings.SettingsMainEvent
+import com.example.grocerychecklist.viewmodel.settings.SettingsMainState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsMainScreen() {
+fun SettingsMainScreen(
+    state: SettingsMainState,
+    onEvent: (SettingsMainEvent) -> Unit,
+) {
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
@@ -112,7 +115,7 @@ fun BlurredCardWithLoginPrompt() {
                     subTitle = "Change profile picture, number, e-mail",
                     bottomModalContent = {
                         ColorSchemeBottomModalContentComponent()
-                    }
+                    },
                 )
                 SettingsButtonCard(
                     icon = Icons.Default.Edit,
@@ -120,7 +123,7 @@ fun BlurredCardWithLoginPrompt() {
                     subTitle = "Update and secure your account",
                     bottomModalContent = {
                         CurrencyBottomModalContentComponent()
-                    }
+                    },
                 )
             }
         }
@@ -147,18 +150,6 @@ fun AvatarButtonCard(
     subTitle: String,
     bottomModalContent: @Composable () -> Unit,
 ) {
-    val openBottomSheet = rememberSaveable {
-        mutableStateOf(false)
-    }
-    val bottomSheetState = rememberModalBottomSheetState()
-
-    if (openBottomSheet.value) {
-        BottomModalComponent(bottomSheetState, {
-            openBottomSheet.value = false
-        }, content = {
-            bottomModalContent()
-        }, contentTitle = "Select ${title.lowercase()}")
-    }
 
     OutlinedCard(
         modifier = Modifier
@@ -176,9 +167,6 @@ fun AvatarButtonCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = {
-                        openBottomSheet.value = true
-                    })
                     .padding(10.dp)
 
             ) {
@@ -210,15 +198,14 @@ fun SettingsButtonCard(
     title: String,
     subTitle: String,
     bottomModalContent: @Composable () -> Unit,
+    state: SettingsMainState = SettingsMainState(),
+    onEvent: (SettingsMainEvent) -> Unit = {}
 ) {
-    val openBottomSheet = rememberSaveable {
-        mutableStateOf(false)
-    }
     val bottomSheetState = rememberModalBottomSheetState()
 
-    if (openBottomSheet.value) {
+    if (state.isBottomModalOpen) {
         BottomModalComponent(bottomSheetState, {
-            openBottomSheet.value = false
+             onEvent(SettingsMainEvent.ToggleBottomModal)
         }, content = {
             bottomModalContent()
         }, contentTitle = "Select ${title.lowercase()}")
@@ -231,7 +218,7 @@ fun SettingsButtonCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = {
-                openBottomSheet.value = true
+                onEvent(SettingsMainEvent.ToggleBottomModal)
             })
             .padding(10.dp)
 
@@ -343,5 +330,9 @@ fun CurrencyBottomModalContentComponent() {
 @Preview(showBackground = true)
 @Composable
 fun SettingsMainScreenPreview() {
-    SettingsMainScreen()
+    val state: SettingsMainState = SettingsMainState()
+    SettingsMainScreen(
+        state,
+        onEvent = {}
+    )
 }
