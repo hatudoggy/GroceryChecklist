@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class ItemMainViewModel(
     private val itemRepository: ItemRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ItemMainState())
     val state: StateFlow<ItemMainState> = _state.stateIn(
@@ -81,12 +81,15 @@ class ItemMainViewModel(
         }
     }
 
+    fun getItemCategoryFromString(categoryText: String): ItemCategory? {
+        return ItemCategory.entries.firstOrNull { it.text.equals(categoryText, ignoreCase = true) }
+    }
 
     private fun loadItems() {
         viewModelScope.launch {
             itemRepository.getItems(ItemOrder.CreatedAt)
                 .catch { emit(emptyList<Item>()) }
-                .collect {itemList -> _state.update { it.copy(items = itemList) }}
+                .collect { itemList -> _state.update { it.copy(items = itemList) } }
         }
     }
 }
