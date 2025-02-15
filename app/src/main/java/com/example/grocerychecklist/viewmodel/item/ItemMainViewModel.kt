@@ -81,10 +81,6 @@ class ItemMainViewModel(
         }
     }
 
-    fun getItemCategoryFromString(categoryText: String): ItemCategory? {
-        return ItemCategory.entries.firstOrNull { it.text.equals(categoryText, ignoreCase = true) }
-    }
-
     private fun loadItems() {
         viewModelScope.launch {
             itemRepository.getItems(ItemOrder.CreatedAt)
