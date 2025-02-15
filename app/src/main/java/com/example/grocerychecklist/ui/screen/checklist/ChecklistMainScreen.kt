@@ -22,8 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -37,10 +35,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -230,7 +226,7 @@ fun ChecklistMainScreen(
                         item {
                             ButtonCardComponent(
                                 name = item.name,
-                                description = item.description,
+                                description = if (item.description.isNotBlank()) item.description else "No Description",
                                 date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
                                     .toString(),
                                 icon = item.icon.imageVector,
@@ -328,7 +324,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetEditingChecklist(
                                     state.editingChecklist.copy(
-                                        name = e
+                                        name = e.trim()
                                     )
                                 )
                             )
@@ -336,7 +332,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetNewChecklist(
                                     state.newChecklist.copy(
-                                        name = e
+                                        name = e.trim()
                                     )
                                 )
                             )
@@ -355,7 +351,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetEditingChecklist(
                                 state.editingChecklist.copy(
-                                    description = e
+                                    description = e.trim()
                                 )
                             )
                         )
@@ -363,7 +359,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetNewChecklist(
                                 state.newChecklist.copy(
-                                    description = e
+                                    description = e.trim()
                                 )
                             )
                         )
@@ -379,7 +375,10 @@ fun BottomSheetChecklist(
                     onClick = { onEvent(ChecklistMainEvent.ToggleDrawer) }
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
+                println(state.editingChecklist)
                 Button(
+                    enabled = state.editingChecklist?.name?.trim()
+                        ?.isNotEmpty() == true || state.newChecklist.name.trim().isNotEmpty(),
                     onClick = {
                         if (state.editingChecklist != null)
                             onEvent(ChecklistMainEvent.UpdateChecklist(state.editingChecklist))
