@@ -13,10 +13,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
@@ -43,12 +47,18 @@ import com.example.grocerychecklist.ui.component.CollapsibleComponent
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.ui.theme.SkyGreen
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
+import com.example.grocerychecklist.viewmodel.history.HistoryMainEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryMainState
 import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/******************************************************************/
+/* DELETE THIS SECTION AFTER THE IMPLEMENTATION OF HISTORYDETAILS */
+/******************************************************************/
 data class HistoryData(
     val id: Int,
     val title: String,
@@ -68,8 +78,12 @@ private fun calculateExpense(details: List<HistoryDataDetails>): Double {
 }
 
 data class HistoryDataDetails(
-    val name: String, val category: ItemCategory, val price: Double, val quantity: Double, val measurement: Measurement
-){
+    val name: String,
+    val category: ItemCategory,
+    val price: Double,
+    val quantity: Double,
+    val measurement: Measurement
+) {
     val totalPrice: Double = price * quantity
 }
 
@@ -153,21 +167,31 @@ val historyData = listOf(
     )
 )
 
+/************************************************************************/
+/* DELETE THE ABOVE  SECTION AFTER THE IMPLEMENTATION OF HISTORYDETAILS */
+/************************************************************************/
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HistoryMainScreen(
-    navController: NavController,
-    viewModel: HistoryMainViewModel,
-    historyMainState: HistoryMainState,
+    state: HistoryMainState,
+    onEvent: (HistoryMainEvent) -> Unit,
+    viewModel: HistoryMainViewModel
 ) {
-    val (cardStates, monthsList) = historyMainState
-    val converter = viewModel.converter
-
-    viewModel.sortHistoryData(historyData)
-
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
+        floatingActionButton = {
+            FloatingActionButton(
+                shape = CircleShape,
+                onClick = {
+                    onEvent(HistoryMainEvent.AddMockData)
+                },
+                containerColor = PrimaryGreenSurface
+            ) {
+                Icon(Icons.Filled.Add, "Add FAB")
+            }
+        },
         topBar = { TopBarComponent(title = "History") },
     ) { innerPadding ->
 
@@ -177,7 +201,7 @@ fun HistoryMainScreen(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
         ) {
 
-            monthsList.forEach { month ->
+            state.monthsList.forEach { month ->
                 val displayMonth = if (viewModel.isCurrentMonth(month)) "This Month" else month
 
                 item {
@@ -188,28 +212,33 @@ fun HistoryMainScreen(
                     Spacer(modifier = Modifier.height(2.5.dp))
                 }
 
-                items(historyData) { data ->
-                    val isCardClicked = cardStates[data.id] ?: false
+                items(state.cards) { data ->
+                    val cardClickedState = state.cardStates[data.history.id]
+                    val isCardClicked = cardClickedState == true
 
-                    if (viewModel.areDatesMatching(month, data.date)) {
+                    if (viewModel.areDatesMatching(
+                            month,
+                            viewModel.formatDate(data.history.createdAt)
+                        )
+                    ) {
                         CollapsibleComponent(
                             isCardClicked,
                             cardComponent = {
                                 ButtonCardComponent(
-                                    name = data.title,
-                                    expense = data.totalExpenses,
-                                    date = data.date,
-                                    icon = Icons.Filled.Fastfood,
-                                    iconBackgroundColor = SkyGreen,
+                                    name = data.history.name,
+                                    expense = data.totalPrice,
+                                    date = viewModel.formatDateWithDay(data.history.createdAt),
+                                    icon = data.history.icon.imageVector,
+                                    iconBackgroundColor = data.history.iconColor.color,
                                     variant = ButtonCardComponentVariant.History,
                                     onClick = {
-                                        cardStates[data.id] = !isCardClicked
+                                        onEvent(HistoryMainEvent.ToggleCard(data.history.id))
                                     },
                                     isClicked = isCardClicked
                                 )
                             },
                             collapsedComponent = {
-                                HistoryCollapsedComponent(data, converter, navController)
+                                HistoryCollapsedComponent(data, onEvent, viewModel)
                             }
                         )
                         Spacer(modifier = Modifier.height(5.dp))
@@ -227,38 +256,41 @@ fun HistoryMainScreen(
 
 @Composable
 fun HistoryCollapsedComponent(
-    data: HistoryData,
-    converter: ConvertNumToCurrency,
-    navController: NavController
+    data: HistoryMapped,
+    onEvent: (HistoryMainEvent) -> Unit,
+    viewModel: HistoryMainViewModel,
+    converter: ConvertNumToCurrency = ConvertNumToCurrency(),
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
         Row {
             Spacer(Modifier.fillMaxWidth(0.15f))
             Column {
-                data.details.forEach { details ->
+                data.aggregatedItems.forEach { details ->
                     ListItem(headlineContent = {
                         Text(
-                            details.category.text,
-                            color = Color.White,
+                            details.category,
+                            color = Color.Black.copy(alpha = 0.5f),
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(details.category.color)
+                                .background(
+                                    viewModel.getItemCategoryFromString(details.category)?.color
+                                        ?: ItemCategory.OTHER.color
+                                )
                                 .padding(vertical = 5.dp, horizontal = 10.dp)
                         )
                     }, trailingContent = {
                         Text(
                             converter(
                                 Currency.PHP,
-                                details.totalPrice
+                                details.sumOfPrice
                             ),
                             fontSize = 13.sp,
                         )
                     })
 
                     // Remove this divider if it is the last item
-                    if (details != data.details.last())
+                    if (details != data.aggregatedItems.last())
                         HorizontalDivider()
                 }
             }
@@ -266,7 +298,7 @@ fun HistoryCollapsedComponent(
 
         TextButton(onClick = {}) {
             Text("See More", modifier = Modifier.clickable(onClick = {
-                navController.navigate(Routes.HistoryDetail)
+                onEvent(HistoryMainEvent.NavigateHistory(data.history.id))
             }))
         }
     }
@@ -277,11 +309,11 @@ fun HistoryCollapsedComponent(
 @Composable
 fun HistoryMainScreenPreview() {
     val viewModel: HistoryMainViewModel = viewModel()
-    val historyMainState by viewModel.historyMainState.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     HistoryMainScreen(
-        navController = rememberNavController(),
-        viewModel,
-        historyMainState
+        state = state,
+        onEvent = {},
+        viewModel = viewModel
     )
 }
