@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -222,21 +223,23 @@ fun ChecklistMainScreen(
             Spacer(Modifier.height(8.dp))
 
             if (state.checklists.isNotEmpty()) {
-                Column(
+                LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     state.checklists.forEach { item ->
-                        ButtonCardComponent(
-                            name = item.name,
-                            description = item.description,
-                            date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
-                                .toString(),
-                            icon = item.icon.imageVector,
-                            iconBackgroundColor = item.iconBackgroundColor.color,
-                            variant = ButtonCardComponentVariant.Checklist,
-                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist(item.id)) },
-                            onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
-                        )
+                        item {
+                            ButtonCardComponent(
+                                name = item.name,
+                                description = item.description,
+                                date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
+                                    .toString(),
+                                icon = item.icon.imageVector,
+                                iconBackgroundColor = item.iconBackgroundColor.color,
+                                variant = ButtonCardComponentVariant.Checklist,
+                                onClick = { onEvent(ChecklistMainEvent.NavigateChecklist(item.id)) },
+                                onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
+                            )
+                        }
                     }
                 }
             } else {
@@ -389,7 +392,6 @@ fun BottomSheetChecklist(
         }
     }
 }
-
 
 
 // Dialog for icon picker
