@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 abstract class SearchableViewModel<T>(
     private val matchesSearch: (T, String) -> Boolean
@@ -32,5 +33,9 @@ abstract class SearchableViewModel<T>(
 
     fun setItems(items: List<T>) {
         _allItems.value = items
+    }
+
+    protected fun updateItems(transform: (List<T>) -> List<T>) {
+        _allItems.update(transform)
     }
 }

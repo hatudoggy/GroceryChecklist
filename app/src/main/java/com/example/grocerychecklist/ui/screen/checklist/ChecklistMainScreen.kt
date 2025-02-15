@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.ui.component.ActionMenu
+import com.example.grocerychecklist.ui.component.BottomSheet
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
@@ -232,7 +234,7 @@ fun ChecklistMainScreen(
                             icon = item.icon.imageVector,
                             iconBackgroundColor = item.iconBackgroundColor.color,
                             variant = ButtonCardComponentVariant.Checklist,
-                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) },
+                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist(item.id)) },
                             onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
                         )
                     }
@@ -388,94 +390,7 @@ fun BottomSheetChecklist(
     }
 }
 
-@Composable
-fun ActionMenu(
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    onEditMenu: () -> Unit,
-    onDeleteDialog: () -> Unit
-) {
-    BottomSheet(
-        isOpen = isOpen,
-        onClose = {
-            onClose()
-        }
-    ) {
-        Column(
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(10.dp, 1.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        onEditMenu()
-                    }
-                    .padding(10.dp, 15.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Edit Checklist",
-                )
-                Text(
-                    text = "Edit",
-                    fontSize = 18.sp,
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .padding(10.dp, 1.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onDeleteDialog() }
-                    .padding(10.dp, 15.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete Checklist",
-                    tint = Color.Red
-                )
-                Text(
-                    text = "Delete",
-                    fontSize = 18.sp,
-                    color = Color.Red
-                )
-            }
-        }
-    }
-}
 
-// Bottom sheet modal drawer
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomSheet(
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    sheetContent: @Composable () -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState()
-
-    // Closes the sheet when isOpen changes to false
-    LaunchedEffect(isOpen) {
-        if (!isOpen) {
-            sheetState.hide() // Ensures smooth closing before reopening
-        }
-    }
-
-    // Waits for sheetState.isVisible to turn to false to ensure smooth closing
-    // Fixes the snappy opening/closing of the sheet after an action
-    if (isOpen || sheetState.isVisible) {
-        ModalBottomSheet(
-            onDismissRequest = onClose,
-            sheetState = sheetState,
-            containerColor = Color.White,
-        ) {
-            sheetContent()
-        }
-    }
-}
 
 // Dialog for icon picker
 @Composable

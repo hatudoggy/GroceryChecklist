@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.data.mapper.ItemInput
 import com.example.grocerychecklist.data.model.Item
+import com.example.grocerychecklist.ui.component.CategoryDropdown
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.FullHeightDialogComponent
@@ -213,50 +214,7 @@ fun ItemDialogComponent(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CategoryDropdown(
-    selectedCategory: ItemCategory,
-    onCategorySelected: (ItemCategory) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        OutlinedTextField(
-            value = selectedCategory.text,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Select Category") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = "Dropdown Icon"
-                )
-            }
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            ItemCategory.values().forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(text = category.text, color = category.color) },
-                    onClick = {
-                        onCategorySelected(category)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun ChecklistDialogTopBarComponent(

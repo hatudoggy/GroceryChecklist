@@ -9,7 +9,7 @@ sealed interface ChecklistMainEvent {
     // UI Toggles
     data object ToggleDrawer : ChecklistMainEvent
     data object ToggleIconPicker : ChecklistMainEvent
-    data object NavigateChecklist : ChecklistMainEvent
+    data class NavigateChecklist(val checklistId: Long) : ChecklistMainEvent
     data class ToggleActionMenu(val checklist: Checklist?) : ChecklistMainEvent
     data object ToggleDeleteDialog : ChecklistMainEvent
 

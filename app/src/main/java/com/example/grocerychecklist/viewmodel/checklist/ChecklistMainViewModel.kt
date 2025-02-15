@@ -62,8 +62,8 @@ class ChecklistMainViewModel(
 
     fun onEvent(event: ChecklistMainEvent) {
         when (event) {
-            ChecklistMainEvent.NavigateChecklist -> {
-                navigator.navigate(Routes.ChecklistDetail)
+            is ChecklistMainEvent.NavigateChecklist -> {
+                navigator.navigate(Routes.ChecklistDetail(event.checklistId))
             }
 
             ChecklistMainEvent.ToggleDrawer -> {
