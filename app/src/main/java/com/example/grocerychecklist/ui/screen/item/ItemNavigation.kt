@@ -23,7 +23,6 @@ fun NavGraphBuilder.itemDestination() {
         ItemMainScreen(
             state = state,
             onEvent = itemMainViewModel::onEvent,
-            viewModel = itemMainViewModel
         )
     }
 }
