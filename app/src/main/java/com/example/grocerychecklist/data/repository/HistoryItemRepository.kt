@@ -4,6 +4,7 @@ import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import kotlinx.coroutines.flow.Flow
 
 class HistoryItemRepository(
@@ -29,6 +30,30 @@ class HistoryItemRepository(
                 order = item.checklistItem.order,
                 quantity = item.checklistItem.quantity,
                 isChecked = isChecked,
+                createdAt = currentDateTime
+            )
+        }
+
+        return historyItemDAO.insertBatch(historyItems)
+    }
+
+    suspend fun addHistoryItems(historyId: Long, items: List<ChecklistData>): List<Long> {
+
+        val currentDateTime = DateUtility.getCurrentDateTime()
+
+        val historyItems = items.map { item ->
+            HistoryItem(
+                historyId = historyId,
+                checklistItemId = item.checklistId,
+                name = item.name,
+                price = item.price,
+                category = item.category.name,
+                measureType = item.measurement.name,
+                measureValue = item.measurementValue,
+                photoRef = item.photoRef,
+                order = item.order,
+                quantity = item.quantity,
+                isChecked = item.isChecked,
                 createdAt = currentDateTime
             )
         }

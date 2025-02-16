@@ -12,7 +12,7 @@ sealed interface ChecklistEditEvent {
     // UI Toggles
     data object OpenDrawer: ChecklistEditEvent
     data object CloseDrawer: ChecklistEditEvent
-    data class OpenActionMenu(val item: ChecklistItemFull): ChecklistEditEvent
+    data class OpenActionMenu(val item: ChecklistData): ChecklistEditEvent
     data object CloseActionMenu: ChecklistEditEvent
     data object OpenDeleteDialog: ChecklistEditEvent
     data object CloseDeleteDialog: ChecklistEditEvent
@@ -21,8 +21,9 @@ sealed interface ChecklistEditEvent {
 //    data class SelectItem(val item: ChecklistItemFull): ChecklistEditEvent
     data object ClearSelectedItem: ChecklistEditEvent
     data class AddChecklistItem(val formInputs: ChecklistEditFormInputs): ChecklistEditEvent
-    data class EditChecklistItem(val formInputs: ChecklistEditFormInputs): ChecklistEditEvent
-    data class DeleteChecklistItem(val item: ChecklistItem): ChecklistEditEvent
+    data class EditChecklistItem(val checklistId: Long, val formInputs: ChecklistEditFormInputs): ChecklistEditEvent
+    data class DeleteChecklistItem(val checklistId: Long): ChecklistEditEvent
+    data class DeleteChecklistItemAndItem(val checklistId: Long, val itemId: Long): ChecklistEditEvent
 
     // Filter Changes
     data class SetSearchQuery(val query: String): ChecklistEditEvent

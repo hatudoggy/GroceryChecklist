@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.viewmodel.history
 
+import ItemCategory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
@@ -47,7 +48,7 @@ class HistoryMainViewModel(
             }
 
             is HistoryMainEvent.NavigateHistory -> {
-                navigator.navigate(Routes.ChecklistDetail(event.historyId))
+                navigator.navigate(Routes.HistoryDetail (event.historyId))
             }
 
             is HistoryMainEvent.AddMockData -> {
@@ -91,7 +92,7 @@ class HistoryMainViewModel(
     suspend fun addMockData() {
         val checklistRepository = appModule.checklistRepository
         val checklistItemRepository = appModule.checklistItemRepository
-        val historyRepository = appModule.historyRepositoryRepository
+        val historyRepository = appModule.historyRepository
         val historyItemRepository = appModule.historyItemRepository
 
         val checklistMockData = ChecklistInputTestMockData.checklistList
