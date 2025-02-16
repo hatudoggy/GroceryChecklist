@@ -27,10 +27,7 @@ fun NavGraphBuilder.historyDestination(navController: NavController) {
         val state by historyMainViewModel.state.collectAsState()
 
         HistoryMainScreen(
-            state = state, onEvent = historyMainViewModel::onEvent,
-            HistoryMainViewModel(
-                appModule.navigator, appModule.historyRepository
-            )
+            state = state, onEvent = historyMainViewModel::onEvent
         )
     }
 

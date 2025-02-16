@@ -113,7 +113,7 @@ class ChecklistEditViewModel(
                 viewModelScope.launch {
                     try {
                         val id = repo.updateChecklistItem(
-                            checklistId,
+                            event.checklistId,
                             checklistItemInput = ChecklistItemInput(
                                 name = event.formInputs.name,
                                 price = event.formInputs.price,

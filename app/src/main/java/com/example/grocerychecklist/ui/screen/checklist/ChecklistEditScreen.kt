@@ -92,6 +92,7 @@ fun ChecklistEditScreen(
                 ))
             else
                 onEvent(ChecklistEditEvent.EditChecklistItem(
+                    state.selectedItem.id,
                     ChecklistEditFormInputs(name, category, price, quantity)
                 ))
         },

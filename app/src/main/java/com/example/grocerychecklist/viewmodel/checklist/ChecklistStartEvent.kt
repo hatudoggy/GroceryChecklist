@@ -22,7 +22,7 @@ sealed interface ChecklistStartEvent {
     // Input Event
     data object ClearSelectedItem: ChecklistStartEvent
     data class AddChecklistItem(val formInputs: ChecklistStartFormInputs): ChecklistStartEvent
-    data class EditChecklistItem(val formInputs: ChecklistStartFormInputs): ChecklistStartEvent
+    data class EditChecklistItem(val checklistId: Long, val formInputs: ChecklistStartFormInputs): ChecklistStartEvent
     data class DeleteChecklistItem(val checklistId: Long): ChecklistStartEvent
     data class DeleteChecklistItemAndItem(val checklistId: Long, val itemId: Long): ChecklistStartEvent
 

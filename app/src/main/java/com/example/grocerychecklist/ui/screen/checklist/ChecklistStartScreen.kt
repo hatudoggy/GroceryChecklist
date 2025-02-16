@@ -92,7 +92,8 @@ fun ChecklistStartScreen(
             else
                 onEvent(
                     ChecklistStartEvent.EditChecklistItem(
-                    ChecklistStartFormInputs(name, category, price, quantity)
+                        state.selectedItem.id,
+                        ChecklistStartFormInputs(name, category, price, quantity)
                 ))
         },
         onVisible = { visible -> if(!visible) onEvent(ChecklistStartEvent.ClearSelectedItem)}
