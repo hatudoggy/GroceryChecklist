@@ -38,7 +38,7 @@ class AppModuleImpl(
         ItemRepository(db.itemDAO())
     }
 
-    override val historyRepositoryRepository: HistoryRepository by lazy {
+    override val historyRepository: HistoryRepository by lazy {
         HistoryRepository(db.historyDAO())
     }
 

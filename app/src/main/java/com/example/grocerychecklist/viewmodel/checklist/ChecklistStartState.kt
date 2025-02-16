@@ -6,6 +6,7 @@ data class ChecklistStartState (
     val items: List<ChecklistData> = emptyList(),
     val filteredItems: List<ChecklistData> = emptyList(),
     val searchQuery: String = "",
+    val selectedItem: ChecklistData? = null,
 
     // Filter state
     val selectedChip: FilterType = FilterType.ALL,
@@ -13,9 +14,10 @@ data class ChecklistStartState (
     // Pricing
     val totalPrice: Double = 0.00,
 
-    val isAddingChecklistItem: Boolean = false,
-    val itemName: String = "",
-    val itemCategory: String = "",
-    val itemPrice: String = "",
-    val itemQuantity: String = "",
+    // UI Toggles
+    val isDrawerOpen: Boolean = false,
+    val isActionMenuOpen: Boolean = false,
+    val isDeleteDialogOpen: Boolean = false,
+    val isEditingItem: Boolean = false,
+    val isCheckoutOpen: Boolean = false,
 )

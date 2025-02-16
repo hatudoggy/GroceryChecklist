@@ -28,8 +28,8 @@ class ChecklistEditViewModel(
     private val navigator: Navigator,
     entry: NavBackStackEntry,
     private val repo: ChecklistItemRepository,
-): SearchableViewModel<ChecklistItemFull>(
-    matchesSearch = { item, query -> item.item.name.contains(query, ignoreCase = true)}
+): SearchableViewModel<ChecklistData>(
+    matchesSearch = { item, query -> item.name.contains(query, ignoreCase = true)}
 ){
     val checklistId = entry.toRoute<Routes.ChecklistEdit>().checklistId
 
@@ -47,7 +47,7 @@ class ChecklistEditViewModel(
     init {
         viewModelScope.launch {
             repo.getChecklistItems(checklistId, ChecklistItemOrder.Name)
-                .collect { setItems(it) }
+                .collect { setItems(checklistDataMapper(it)) }
         }
     }
 
@@ -135,7 +135,22 @@ class ChecklistEditViewModel(
                 viewModelScope.launch {
                     try {
                         val id = repo.deleteChecklistItem(
-                            event.item,
+                            event.checklistId,
+                        )
+                        println("Deleted Checklist Id: $id")
+                        onEvent(ChecklistEditEvent.CloseDeleteDialog)
+                    } catch (err: Error) {
+                        Log.e("ChecklistMainViewModel", "Error adding item: ${err.message}")
+                    }
+                }
+            }
+
+            is ChecklistEditEvent.DeleteChecklistItemAndItem -> {
+                viewModelScope.launch {
+                    try {
+                        val id = repo.deleteChecklistItemAndItem(
+                            event.checklistId,
+                            event.itemId
                         )
                         println("Deleted Checklist Id: $id")
                         onEvent(ChecklistEditEvent.CloseDeleteDialog)

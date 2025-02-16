@@ -18,6 +18,10 @@ val PrimaryDarkGreen = Color(0xFF6FA539)
 val PrimaryLightGreen = Color(0xFF8AE260)
 val PrimaryGreenSurface = Color(0xFFE2FFD5)
 
+val ErrorText = Color(0xFF871c1c)
+val ErrorFilled = Color(0xFFCC3148)
+val ErrorTonal = Color(0xFFf0c7c7)
+
 val LightGray = Color(0xFFF0F0F0)
 
 val VibrantOrange = Color(0xFFFF9800)

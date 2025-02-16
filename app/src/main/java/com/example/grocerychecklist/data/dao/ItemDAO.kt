@@ -30,5 +30,8 @@ interface ItemDAO: BaseDAO<Item> {
     @Query("SELECT * FROM item WHERE category = :category")
     fun getAllItemsByCategory(category: String): Flow<List<Item>>
 
+    @Query("DELETE FROM item WHERE id = :itemId")
+    suspend fun deleteItemById(itemId: Long): Int
+
     //fun aggregateTotalItems(): Int
 }

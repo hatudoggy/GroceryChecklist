@@ -1,13 +1,11 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
-import ItemCategory
-import com.example.grocerychecklist.data.model.ChecklistItemFull
 
 data class ChecklistEditState (
     // Items state
-    val items: List<ChecklistItemFull> = emptyList(),
+    val items: List<ChecklistData> = emptyList(),
     val searchQuery: String = "",
-    val selectedItem: ChecklistItemFull? = null,
+    val selectedItem: ChecklistData? = null,
 
     // UI Toggles
     val isDrawerOpen: Boolean = false,

@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,18 +49,23 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.ui.component.ActionMenu
+import com.example.grocerychecklist.ui.component.AlertDialogExtend
 import com.example.grocerychecklist.ui.component.BottomSheet
+import com.example.grocerychecklist.ui.component.BottomSheetChecklistItem
 import com.example.grocerychecklist.ui.component.CategoryDropdown
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.ErrorText
+import com.example.grocerychecklist.ui.theme.ErrorTonal
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistEditEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistEditState
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
 
 
 data class ChecklistEditFormInputs (
@@ -74,7 +81,7 @@ fun ChecklistEditScreen(
     onEvent: (ChecklistEditEvent) -> Unit,
 )  {
 
-    BottomSheetChecklistEdit(
+    BottomSheetChecklistItem(
         selectedItem = state.selectedItem,
         isOpen = state.isDrawerOpen,
         onClose = { onEvent(ChecklistEditEvent.CloseDrawer) },
@@ -103,33 +110,60 @@ fun ChecklistEditScreen(
         }
     )
 
-    // Delete Dialog
-    if (state.isDeleteDialogOpen) {
-        AlertDialog(
-            containerColor = Color.White,
-            onDismissRequest = { onEvent(ChecklistEditEvent.CloseDeleteDialog) },
-            title = { Text("Delete Item?") },
-            text = { Text("Are you sure you want to delete this item?") },
-            confirmButton = {
-                TextButton(
+    AlertDialogExtend(
+        isOpen = state.isDeleteDialogOpen,
+        onClose = { onEvent(ChecklistEditEvent.CloseDeleteDialog) },
+        title = "Delete Item?",
+        body = "Are you sure you want to delete this item?",
+        actionButtons = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                FilledTonalButton(
                     onClick = {
                         state.selectedItem.let {
                             if (it != null) {
-                                onEvent(ChecklistEditEvent.DeleteChecklistItem(it.checklistItem))
+                                onEvent(ChecklistEditEvent.DeleteChecklistItem(it.id))
                             }
                         }
-                    }
+                    },
+                    colors = ButtonColors(
+                        containerColor = ErrorTonal,
+                        contentColor = ErrorText,
+                        disabledContainerColor = ErrorTonal,
+                        disabledContentColor = ErrorText
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Delete", color = Color.Red)
+                    Text("Delete Checklist Item")
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { onEvent(ChecklistEditEvent.CloseDeleteDialog) }) {
-                    Text("Cancel", color = Color.Black)
+                FilledTonalButton(
+                    onClick = {
+                        state.selectedItem.let {
+                            if (it != null) {
+                                onEvent(ChecklistEditEvent.DeleteChecklistItemAndItem(it.id, it.itemId))
+                            }
+                        }
+                    },
+                    colors = ButtonColors(
+                        containerColor = ErrorTonal,
+                        contentColor = ErrorText,
+                        disabledContainerColor = ErrorTonal,
+                        disabledContentColor = ErrorText
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Delete Checklist Item & Item")
+                }
+                TextButton(
+                    onClick = { onEvent(ChecklistEditEvent.CloseDeleteDialog) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Cancel", color = Color.DarkGray)
                 }
             }
-        )
-    }
+        },
+    )
 
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -209,12 +243,12 @@ fun ChecklistEditScreen(
             LazyColumn {
                 items(state.items) { item ->
                     ChecklistItemComponent(
-                        name = item.item.name,
+                        name = item.name,
                         variant = ChecklistItemComponentVariant.ChecklistItem,
-                        category = ItemCategory.entries.find { it.name == item.item.category } ?: ItemCategory.OTHER,
-                        price = item.item.price,
-                        quantity = item.checklistItem.quantity.toDouble(),
-                        measurement = Measurement.entries.find { it.name == item.item.measureType } ?: Measurement.PIECE,
+                        category = item.category,
+                        price = item.price,
+                        quantity = item.quantity.toDouble(),
+                        measurement = item.measurement,
                         onLongPress = { onEvent(ChecklistEditEvent.OpenActionMenu(item)) }
                     )
                 }
@@ -222,101 +256,6 @@ fun ChecklistEditScreen(
         }
     }
 }
-
-// Bottom sheet modal drawer for editing Checklist
-@Composable
-fun BottomSheetChecklistEdit(
-    selectedItem: ChecklistItemFull? = null,
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    onAdd: (String, ItemCategory, Double, Int) -> Unit,
-    onVisible: (Boolean) -> Unit = {}
-) {
-
-    var name by remember { mutableStateOf(selectedItem?.item?.name ?: "") }
-    var category by remember { mutableStateOf(selectedItem?.item?.category?.let { ItemCategory.valueOf(it) } ?: ItemCategory.OTHER) }
-    var price by remember { mutableStateOf(selectedItem?.item?.price?.toString() ?: "") }
-    var quantity by remember { mutableStateOf(selectedItem?.checklistItem?.quantity?.toString() ?: "")  }
-
-    LaunchedEffect(isOpen) {
-        if (!isOpen) {
-            name = ""
-            category = ItemCategory.OTHER
-            price = ""
-            quantity = ""
-        } else {
-            name = selectedItem?.item?.name ?: ""
-            category = selectedItem?.item?.category?.let { ItemCategory.valueOf(it) } ?: ItemCategory.OTHER
-            price = selectedItem?.item?.price?.toString() ?: ""
-            quantity = selectedItem?.checklistItem?.quantity?.toString() ?: ""
-        }
-    }
-
-    BottomSheet(
-        isOpen = isOpen,
-        onClose = onClose,
-        skipExpand = true,
-        onVisibilityChanged = { visible -> onVisible(visible) }
-    ) {
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .padding(
-                    start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp,
-                )
-        ) {
-            Text(
-                "${if(selectedItem == null) "Add" else "Edit"} Item",
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp
-            )
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") }
-            )
-
-            CategoryDropdown(
-                selectedCategory = category,
-                onCategorySelected = { category = it }
-            )
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = price,
-                onValueChange = { if (it.isDigitsOnly()) price = it }, //price = if (it.isEmpty()) "0" else it.filter { char -> char.isDigit() }
-                label = { Text("Price") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = quantity,
-                onValueChange = { if (it.isDigitsOnly()) quantity = it },
-                label = { Text("Quantity") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { onClose() }
-                ) { Text("Cancel") }
-                Spacer(Modifier.width(10.dp))
-                Button(
-                    onClick = { onAdd(name, category, price.toDouble(), quantity.toInt()) },
-                ) { Text( if(selectedItem == null) "Add" else "Edit" ) }
-            }
-        }
-    }
-}
-
 
 
 

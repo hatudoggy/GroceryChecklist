@@ -25,7 +25,7 @@ sealed interface Routes {
     @Serializable
     data object HistoryMain: Routes
     @Serializable
-    data object HistoryDetail: Routes
+    data class HistoryDetail(val historyId: Long): Routes
 
     @Serializable
     data object SettingsMain: Routes

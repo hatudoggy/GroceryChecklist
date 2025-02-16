@@ -127,7 +127,7 @@ fun ChecklistViewScreen(
                         variant = ChecklistItemComponentVariant.ChecklistItem,
                         category = item.category,
                         price = item.price,
-                        quantity = item.quantity,
+                        quantity = item.quantity.toDouble(),
                         measurement = item.measurement,
                     )
                 }

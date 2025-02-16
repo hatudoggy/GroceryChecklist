@@ -68,7 +68,14 @@ fun NavGraphBuilder.checklistDestination() {
     composable<Routes.ChecklistStart> { entry ->
         val checklistStartViewModel = viewModel<ChecklistStartViewModel>(
             factory = viewModelFactory {
-                ChecklistStartViewModel(appModule.navigator, entry)
+                ChecklistStartViewModel(
+                    appModule.navigator,
+                    entry,
+                    appModule.checklistItemRepository,
+                    appModule.checklistRepository,
+                    appModule.historyRepository,
+                    appModule.historyItemRepository
+                )
             }
         )
         val state by checklistStartViewModel.state.collectAsState()

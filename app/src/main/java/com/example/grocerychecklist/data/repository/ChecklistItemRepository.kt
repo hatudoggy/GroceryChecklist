@@ -101,6 +101,27 @@ class ChecklistItemRepository(
         }
     }
 
+    suspend fun deleteChecklistItem(checklistId: Long) {
+        checklistItemDAO.deleteChecklistById(checklistId)
+
+        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
+        checklistItems.take(1).first().forEachIndexed { index, item ->
+            val updatedItem = item.copy(order = index + 1)
+            checklistItemDAO.update(updatedItem)
+        }
+    }
+
+    suspend fun deleteChecklistItemAndItem(checklistId: Long, itemId: Long) {
+        checklistItemDAO.deleteChecklistById(checklistId)
+        itemDAO.deleteItemById(itemId)
+
+        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
+        checklistItems.take(1).first().forEachIndexed { index, item ->
+            val updatedItem = item.copy(order = index + 1)
+            checklistItemDAO.update(updatedItem)
+        }
+    }
+
     suspend fun getChecklistItem(id: Long): ChecklistItemFull {
         return checklistItemDAO.getChecklistItemById(id)
     }
