@@ -18,7 +18,7 @@ class ChecklistRepository(
             name = checklistInput.name,
             description = checklistInput.description,
             icon = checklistInput.icon,
-            iconColor = checklistInput.iconColor,
+            iconBackgroundColor = checklistInput.iconBackgroundColor,
             createdAt = currentDateTime,
             updatedAt = currentDateTime,
             lastOpenedAt = currentDateTime,
@@ -36,7 +36,7 @@ class ChecklistRepository(
             name = checklistInput.name,
             description = checklistInput.description,
             icon = checklistInput.icon,
-            iconColor = checklistInput.iconColor,
+            iconBackgroundColor = checklistInput.iconBackgroundColor,
             updatedAt = currentDateTime
         )
 

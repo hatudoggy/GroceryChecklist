@@ -41,6 +41,7 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
@@ -131,6 +132,9 @@ fun DashboardMainScreen(
                         icon = Icons.Filled.Fastfood,
                         iconBackgroundColor = SkyGreen,
                         variant = ButtonCardComponentVariant.History,
+                        onClick = {
+
+                        }
                     )
                 }
             }
@@ -168,7 +172,7 @@ fun DashboardMainScreenPreview() {
                 name = "Dog",
                 description = "",
                 icon = IconOption.Home,
-                iconColor = ColorOption.White,
+                iconBackgroundColor = ColorOption.White,
                 createdAt = currentDateTime,
                 updatedAt = currentDateTime,
                 lastOpenedAt = currentDateTime,

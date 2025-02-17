@@ -32,106 +32,106 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
 
-@Composable
-fun ChecklistDialogComponent() {
-    val viewModel: ChecklistMainViewModel = viewModel()
-    val onDismissRequest = { viewModel.closeDialog() }
-
-    FullHeightDialogComponent(onDismissRequest, scaffoldTopBar = {
-        ChecklistDialogTopBarComponent(onDismissRequest)
-    }, scaffoldContent = { innerPadding ->
-        ChecklistDialogContentComponent(innerPadding)
-    })
-}
-
-@Composable
-fun ChecklistDialogTopBarComponent(
-    onDismissRequest: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .padding(18.dp, 28.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = { onDismissRequest() }
-            )
-            {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-            Spacer(modifier = Modifier.fillMaxWidth(0.04f))
-            Text(
-                text = "Add Checklist Item",
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
-        }
-        TextButton(onClick = {}) {
-            Text(
-                "Save", style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-fun ChecklistDialogContentComponent(
-    innerPadding: PaddingValues,
-) {
-    val viewModel: ChecklistMainViewModel = viewModel()
-    val dialogState by viewModel.dialogState.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .padding(innerPadding)
-            .padding(18.dp, 0.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        OutlinedTextField(
-            value = dialogState.checklistName,
-            onValueChange = { it -> viewModel.updateChecklistName(it) },
-            label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = dialogState.checklistDescription,
-            onValueChange = { it -> viewModel.updateChecklistDescription(it) },
-            label = { Text("Description") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 5
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ChecklistDialogComponentPreview() {
-    Scaffold(contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            ChecklistDialogTopBarComponent({})
-        }) { innerPadding ->
-        ChecklistDialogContentComponent(innerPadding)
-    }
-}
+//@Composable
+//fun ChecklistDialogComponent() {
+//    val viewModel: ChecklistMainViewModel = viewModel()
+//    val onDismissRequest = { viewModel.closeDialog() }
+//
+//    FullHeightDialogComponent(onDismissRequest, scaffoldTopBar = {
+//        ChecklistDialogTopBarComponent(onDismissRequest)
+//    }, scaffoldContent = { innerPadding ->
+//        ChecklistDialogContentComponent(innerPadding)
+//    })
+//}
+//
+//@Composable
+//fun ChecklistDialogTopBarComponent(
+//    onDismissRequest: () -> Unit
+//) {
+//    Row(
+//        modifier = Modifier
+//            .padding(18.dp, 28.dp)
+//            .fillMaxWidth(),
+//        verticalAlignment = Alignment.CenterVertically,
+//        horizontalArrangement = Arrangement.SpaceBetween
+//    ) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//        ) {
+//            IconButton(
+//                onClick = { onDismissRequest() }
+//            )
+//            {
+//                Icon(
+//                    Icons.Default.Close,
+//                    contentDescription = "Close",
+//                    modifier = Modifier.size(21.dp)
+//                )
+//            }
+//            Spacer(modifier = Modifier.fillMaxWidth(0.04f))
+//            Text(
+//                text = "Add Checklist Item",
+//                textAlign = TextAlign.Center,
+//                style = TextStyle(
+//                    fontFamily = FontFamily.Default,
+//                    fontWeight = FontWeight.Normal,
+//                    fontSize = 18.sp,
+//                    lineHeight = 28.sp,
+//                    letterSpacing = 0.sp
+//                )
+//            )
+//        }
+//        TextButton(onClick = {}) {
+//            Text(
+//                "Save", style = TextStyle(
+//                    fontFamily = FontFamily.Default,
+//                    fontWeight = FontWeight.SemiBold,
+//                    fontSize = 15.sp,
+//                    lineHeight = 28.sp,
+//                    letterSpacing = 0.sp
+//                )
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ChecklistDialogContentComponent(
+//    innerPadding: PaddingValues,
+//) {
+//    val viewModel: ChecklistMainViewModel = viewModel()
+//    val dialogState by viewModel.dialogState.collectAsState()
+//
+//    Column(
+//        modifier = Modifier
+//            .padding(innerPadding)
+//            .padding(18.dp, 0.dp)
+//            .fillMaxWidth(),
+//        verticalArrangement = Arrangement.spacedBy(16.dp)
+//    ) {
+//        OutlinedTextField(
+//            value = dialogState.checklistName,
+//            onValueChange = { it -> viewModel.updateChecklistName(it) },
+//            label = { Text("Title") },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        OutlinedTextField(
+//            value = dialogState.checklistDescription,
+//            onValueChange = { it -> viewModel.updateChecklistDescription(it) },
+//            label = { Text("Description") },
+//            modifier = Modifier.fillMaxWidth(),
+//            minLines = 5
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun ChecklistDialogComponentPreview() {
+//    Scaffold(contentWindowInsets = WindowInsets(0.dp),
+//        topBar = {
+//            ChecklistDialogTopBarComponent({})
+//        }) { innerPadding ->
+//        ChecklistDialogContentComponent(innerPadding)
+//    }
+//}

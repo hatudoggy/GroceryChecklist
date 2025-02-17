@@ -1,8 +1,10 @@
 package com.example.grocerychecklist.data.model
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption

@@ -28,13 +28,14 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun RoundedTextField(
+    value: String = "",
     modifier: Modifier = Modifier,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     placeholderText: String = "Placeholder",
-    fontSize: TextUnit = MaterialTheme.typography.bodyLarge.fontSize
+    fontSize: TextUnit = MaterialTheme.typography.bodyLarge.fontSize,
+    onValueChange: (String) -> Unit? = {}
 ) {
-    var text by rememberSaveable() { mutableStateOf("") }
     BasicTextField(
         modifier = modifier
             .background(
@@ -44,9 +45,9 @@ fun RoundedTextField(
             .fillMaxWidth()
             .border(1.dp, Color.LightGray, RoundedCornerShape(50))
             .padding(vertical = 8.dp, horizontal = 10.dp),
-        value = text,
+        value = value,  // Use the externally passed value
         onValueChange = {
-            text = it
+            onValueChange(it)  // Call the parent state update
         },
         maxLines = 1,
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -65,7 +66,7 @@ fun RoundedTextField(
                 }
 
                 Box(Modifier.weight(1f)) {
-                    if (text.isEmpty()) {
+                    if (value.isEmpty()) {  // Use the externally passed value
                         Text(
                             text = placeholderText,
                             style = LocalTextStyle.current.copy(

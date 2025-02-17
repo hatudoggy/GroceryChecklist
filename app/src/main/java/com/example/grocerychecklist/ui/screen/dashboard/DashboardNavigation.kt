@@ -33,6 +33,8 @@ fun NavGraphBuilder.dashboardDestination(
         )
         //val state by dashboardBreakdownViewModel.state.collectAsState()
         DashboardBreakdownScreen(
+            //state = state,
+            viewModel = dashboardBreakdownViewModel,
             onEvent = dashboardBreakdownViewModel::onEvent
         )
     }

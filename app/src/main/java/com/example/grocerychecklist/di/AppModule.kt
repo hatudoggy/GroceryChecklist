@@ -16,6 +16,6 @@ interface AppModule {
     val checklistRepository: ChecklistRepository
     val checklistItemRepository: ChecklistItemRepository
     val itemRepository: ItemRepository
-    val historyRepositoryRepository: HistoryRepository
+    val historyRepository: HistoryRepository
     val historyItemRepository: HistoryItemRepository
 }

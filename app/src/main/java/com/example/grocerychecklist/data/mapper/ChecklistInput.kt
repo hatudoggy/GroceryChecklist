@@ -7,5 +7,5 @@ data class ChecklistInput(
     val name: String,
     val description: String,
     val icon: IconOption,
-    val iconColor: ColorOption,
+    val iconBackgroundColor: ColorOption,
 )

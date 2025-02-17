@@ -20,9 +20,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
+import com.example.grocerychecklist.domain.usecase.Currency
+import com.example.grocerychecklist.ui.component.Measurement
+import com.example.grocerychecklist.ui.component.getText
+import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
 
 @Composable
-fun HistoryItemComponent() {
+fun HistoryItemComponent(historyItem: HistoryDataDetails) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -41,20 +46,20 @@ fun HistoryItemComponent() {
     ) {
         // Left Column
         Column(
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = "Chicken Eggs",
+                text = historyItem.name,
                 style = TextStyle(
-                    fontSize = 20.sp, // Increased font size
+                    fontSize = 18.sp, // Increased font size
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
             )
 
-            ItemTagComponent(ItemCategory.POULTRY)
+            ItemTagComponent(historyItem.category)
         }
 
         // Right Column
@@ -64,32 +69,35 @@ fun HistoryItemComponent() {
                 .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.End
         ) {
+            val converter = ConvertNumToCurrency()
+            // Price per unit
             Text(
-                text = "₱ 20 / dozen",
+                text = converter(Currency.PHP, historyItem.price, true) + "/" + historyItem.measurement.singularText,
                 style = TextStyle(
                     fontSize = 14.sp, // Increased font size
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Light,
                     color = Color(0xFFA5A5A5)
                 ),
                 textAlign = TextAlign.Right
             )
 
+            // Total Price
             Text(
                 modifier = Modifier.padding(top = 4.dp),
-                text = "₱ 20",
+                text = converter(Currency.PHP, historyItem.price * historyItem.quantity, true),
                 style = TextStyle(
-                    fontSize = 24.sp, // Increased font size
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp, // Increased font size
+                    fontWeight = FontWeight.Medium,
                     color = Color.Black
                 ),
                 textAlign = TextAlign.Right
             )
 
             Text(
-                text = "x 1 dozen",
+                text = "x " + historyItem.quantity + " " + historyItem.measurement.getText(quantity = historyItem.quantity),
                 style = TextStyle(
-                    fontSize = 12.sp, // Increased font size
-                    fontWeight = FontWeight.Light,
+                    fontSize = 14.sp, // Increased font size
+                    fontWeight = FontWeight.Normal,
                     color = Color(0xFFA5A5A5)
                 ),
                 textAlign = TextAlign.Right
@@ -101,5 +109,13 @@ fun HistoryItemComponent() {
 @Preview
 @Composable
 fun HistoryItemPreview(){
-    HistoryItemComponent()
+    HistoryItemComponent(historyItem =
+        HistoryDataDetails(
+            name = "Paracetamol",
+            category = ItemCategory.MEDICINE,
+            price = 120.0,
+            quantity = 1.0,
+            measurement = Measurement.PACK
+        )
+    )
 }

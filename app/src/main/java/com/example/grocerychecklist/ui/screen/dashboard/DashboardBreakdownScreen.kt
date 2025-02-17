@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +45,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownViewModel
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardCategoryData
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
@@ -53,8 +59,16 @@ import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 @Composable
 fun DashboardBreakdownScreen(
     //state: DashboardBreakdownState,
+    viewModel: DashboardBreakdownViewModel,
     onEvent: (DashboardBreakdownEvent) -> Unit,
 ) {
+    // Accessing days from the ViewModel.
+    val days = viewModel.days
+    // Collecting dashboard category data from the ViewModel as a state.
+    val state by viewModel.dashboardCategoryData.collectAsState()
+    // Collecting the selected day from the ViewModel as a state.
+    val selectedDay by viewModel.selectedDay.collectAsState()
+
     Scaffold(
         topBar = { TopBarComponent(
             title = "Dashboard",
@@ -154,9 +168,10 @@ fun DashboardBreakdownScreen(
             }
 
             Column {
+                // State variables to manage the dropdown's expanded state and the selected option text.
+                // `expanded` controls the visibility of the dropdown menu.
                 var expanded by remember { mutableStateOf(false) }
-                var selectedOptionText by remember { mutableStateOf("Today") }
-                val options = listOf("Today", "Yesterday", "This Week", "This Month")
+                var selectedOptionText by remember { mutableStateOf(selectedDay.first()) }
 
                 Row(
                     modifier = Modifier
@@ -200,11 +215,12 @@ fun DashboardBreakdownScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            options.forEach { selectionOption ->
+                            days.forEach { selectionOption ->
                                 DropdownMenuItem(
                                     onClick = {
                                         selectedOptionText = selectionOption
                                         expanded = false
+                                        viewModel.filterData(selectionOption)
                                     },
                                     text = { Text(selectionOption) }
                                 )
@@ -214,28 +230,55 @@ fun DashboardBreakdownScreen(
 
                 }
 
-                Column (
+                LazyColumn (
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 8.dp),
 
                     verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
 
                     ) {
-                    DashboardCategoryBreakDownComponent(ItemCategory.MEAT, 0.5f, 6502)
-                    DashboardCategoryBreakDownComponent(ItemCategory.FRUIT, 0.3f, 5502)
-                    DashboardCategoryBreakDownComponent(ItemCategory.VEGETABLE, 0.2f, 4502)
-                    DashboardCategoryBreakDownComponent(ItemCategory.MEDICINE, 0.15f, 3502)
-                    DashboardCategoryBreakDownComponent(ItemCategory.POULTRY, 0.1f, 2502)
-                    DashboardCategoryBreakDownComponent(ItemCategory.CLEANING, 0.05f, 1502)
 
+                    // Iterating through each category data to display breakdown.
+                    items(state) { dashboardCategoryData ->
+                        DashboardCategoryBreakDownComponent(dashboardCategoryData)
+                    }
                 }
             }
         }
     }
 }
 
+
+/**
+ * Displays a breakdown of a single category on the dashboard.
+ *
+ * This component visualizes the category's name, a colored indicator, a progress bar representing
+ * its percentage, and the associated expense value.
+ *
+ * @param data The [DashboardCategoryData] object containing the category's details, percentage, and expense value.
+ *
+ * @see DashboardCategoryData
+ *
+ * Example Usage:
+ * ```
+ * DashboardCategoryBreakDownComponent(
+ *     data = DashboardCategoryData(
+ *         category = DashboardCategory(
+ *             text = "Food",
+ *             color = Color.Red
+ *         ),
+ *         percent = 0.4f,
+ *         expenses = 1200.0
+ *     )
+ * )
+ * ```
+ */
 @Composable
-fun DashboardCategoryBreakDownComponent(category: ItemCategory, percent: Float, value: Int){
+fun DashboardCategoryBreakDownComponent(data: DashboardCategoryData){
+    val category = data.category
+    val percent = data.percent
+    val value = data.expenses
+
     Row {
         Row (
             modifier = Modifier
@@ -308,5 +351,11 @@ fun DashboardCategoryBreakDownComponent(category: ItemCategory, percent: Float, 
 @Preview(showBackground = true)
 @Composable
 fun DashboardBreakdownPreview() {
-    DashboardBreakdownScreen(onEvent = {})
+    val navigator = Navigator()
+    val viewModel = DashboardBreakdownViewModel(navigator);
+
+    DashboardBreakdownScreen(
+        viewModel = viewModel,
+        onEvent = {}
+    )
 }

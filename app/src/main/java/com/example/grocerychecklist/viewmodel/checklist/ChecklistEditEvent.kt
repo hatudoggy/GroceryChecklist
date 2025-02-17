@@ -1,11 +1,30 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
+import ItemCategory
+import com.example.grocerychecklist.data.model.ChecklistItem
+import com.example.grocerychecklist.data.model.ChecklistItemFull
+import com.example.grocerychecklist.ui.screen.checklist.ChecklistEditFormInputs
+
 sealed interface ChecklistEditEvent {
+    // Navigation Events
     data object NavigateBack: ChecklistEditEvent
-    data object OpenDialog: ChecklistEditEvent
-    data object CloseDialog: ChecklistEditEvent
-    data class SetItemName(val name: String): ChecklistEditEvent
-    data class SetItemCategory(val category: String): ChecklistEditEvent
-    data class SetItemPrice(val price: String): ChecklistEditEvent
-    data class SetItemQuantity(val quantity: String): ChecklistEditEvent
+
+    // UI Toggles
+    data object OpenDrawer: ChecklistEditEvent
+    data object CloseDrawer: ChecklistEditEvent
+    data class OpenActionMenu(val item: ChecklistData): ChecklistEditEvent
+    data object CloseActionMenu: ChecklistEditEvent
+    data object OpenDeleteDialog: ChecklistEditEvent
+    data object CloseDeleteDialog: ChecklistEditEvent
+
+    // Input Event
+//    data class SelectItem(val item: ChecklistItemFull): ChecklistEditEvent
+    data object ClearSelectedItem: ChecklistEditEvent
+    data class AddChecklistItem(val formInputs: ChecklistEditFormInputs): ChecklistEditEvent
+    data class EditChecklistItem(val checklistId: Long, val formInputs: ChecklistEditFormInputs): ChecklistEditEvent
+    data class DeleteChecklistItem(val checklistId: Long): ChecklistEditEvent
+    data class DeleteChecklistItemAndItem(val checklistId: Long, val itemId: Long): ChecklistEditEvent
+
+    // Filter Changes
+    data class SetSearchQuery(val query: String): ChecklistEditEvent
 }

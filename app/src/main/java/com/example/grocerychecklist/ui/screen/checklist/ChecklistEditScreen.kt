@@ -4,7 +4,6 @@ import ItemCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,50 +13,66 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
+import com.example.grocerychecklist.data.model.ChecklistItemFull
+import com.example.grocerychecklist.ui.component.ActionMenu
+import com.example.grocerychecklist.ui.component.AlertDialogExtend
+import com.example.grocerychecklist.ui.component.BottomSheet
+import com.example.grocerychecklist.ui.component.BottomSheetChecklistItem
+import com.example.grocerychecklist.ui.component.CategoryDropdown
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
-import com.example.grocerychecklist.ui.component.FullHeightDialogComponent
+import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.ErrorText
+import com.example.grocerychecklist.ui.theme.ErrorTonal
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistEditEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistEditState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
 
-data class ChecklistEditDialogInputs (
+
+data class ChecklistEditFormInputs (
     val name: String,
-    val updateName: (value: String) -> Unit,
-    val category: String,
-    val updateCategory: (value: String) -> Unit,
-    val price: String,
-    val updatePrice: (value: String) -> Unit,
-    val quantity: String,
-    val updateQuantity: (value: String) -> Unit,
+    val category: ItemCategory,
+    val price: Double,
+    val quantity: Int,
 )
 
 @Composable
@@ -66,23 +81,90 @@ fun ChecklistEditScreen(
     onEvent: (ChecklistEditEvent) -> Unit,
 )  {
 
-    val dialogInputs = ChecklistEditDialogInputs(
-        name = state.itemName,
-        updateName = { name -> onEvent(ChecklistEditEvent.SetItemName(name)) },
-        category = state.itemCategory,
-        updateCategory = { category -> onEvent(ChecklistEditEvent.SetItemCategory(category)) },
-        price = state.itemPrice,
-        updatePrice = { price -> onEvent(ChecklistEditEvent.SetItemPrice(price)) },
-        quantity = state.itemQuantity,
-        updateQuantity = { quantity -> onEvent(ChecklistEditEvent.SetItemQuantity(quantity)) },
+    BottomSheetChecklistItem(
+        selectedItem = state.selectedItem,
+        isOpen = state.isDrawerOpen,
+        onClose = { onEvent(ChecklistEditEvent.CloseDrawer) },
+        onAdd = { name, category, price, quantity ->
+            if (state.selectedItem == null)
+                onEvent(ChecklistEditEvent.AddChecklistItem(
+                    ChecklistEditFormInputs(name, category, price, quantity)
+                ))
+            else
+                onEvent(ChecklistEditEvent.EditChecklistItem(
+                    state.selectedItem.id,
+                    ChecklistEditFormInputs(name, category, price, quantity)
+                ))
+        },
+        onVisible = { visible -> if(!visible) onEvent(ChecklistEditEvent.ClearSelectedItem)}
     )
 
-    if (state.isAddingChecklistItem) {
-        ChecklistItemDialogComponent(
-            onDismissRequest = { onEvent(ChecklistEditEvent.CloseDialog) },
-            dialogInputs = dialogInputs
-        )
-    }
+    // Edit, Delete Action Menu
+    ActionMenu(
+        isOpen = state.isActionMenuOpen,
+        onClose = { onEvent(ChecklistEditEvent.CloseActionMenu) },
+        onEditMenu = {
+            onEvent(ChecklistEditEvent.OpenDrawer)
+        },
+        onDeleteDialog = {
+            onEvent(ChecklistEditEvent.OpenDeleteDialog)
+        }
+    )
+
+    AlertDialogExtend(
+        isOpen = state.isDeleteDialogOpen,
+        onClose = { onEvent(ChecklistEditEvent.CloseDeleteDialog) },
+        title = "Delete Item?",
+        body = "Are you sure you want to delete this item?",
+        actionButtons = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                FilledTonalButton(
+                    onClick = {
+                        state.selectedItem.let {
+                            if (it != null) {
+                                onEvent(ChecklistEditEvent.DeleteChecklistItem(it.id))
+                            }
+                        }
+                    },
+                    colors = ButtonColors(
+                        containerColor = ErrorTonal,
+                        contentColor = ErrorText,
+                        disabledContainerColor = ErrorTonal,
+                        disabledContentColor = ErrorText
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Delete Checklist Item")
+                }
+                FilledTonalButton(
+                    onClick = {
+                        state.selectedItem.let {
+                            if (it != null) {
+                                onEvent(ChecklistEditEvent.DeleteChecklistItemAndItem(it.id, it.itemId))
+                            }
+                        }
+                    },
+                    colors = ButtonColors(
+                        containerColor = ErrorTonal,
+                        contentColor = ErrorText,
+                        disabledContainerColor = ErrorTonal,
+                        disabledContentColor = ErrorText
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Delete Checklist Item & Item")
+                }
+                TextButton(
+                    onClick = { onEvent(ChecklistEditEvent.CloseDeleteDialog) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Cancel", color = Color.DarkGray)
+                }
+            }
+        },
+    )
 
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
@@ -90,7 +172,7 @@ fun ChecklistEditScreen(
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
-                onClick = { onEvent(ChecklistEditEvent.OpenDialog) },
+                onClick = { onEvent(ChecklistEditEvent.OpenDrawer) },
                 containerColor = PrimaryGreenSurface
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
@@ -154,166 +236,36 @@ fun ChecklistEditScreen(
                         RoundedCornerShape(percent = 50)
                     ),
                 fontSize = 16.sp,
-                placeholderText = "Search"
+                placeholderText = "Search",
+                value = state.searchQuery,
+                onValueChange = { onEvent(ChecklistEditEvent.SetSearchQuery(it)) }
             )
             Spacer(Modifier.height(8.dp))
             LazyColumn {
-                items(5) {
+                items(state.items) { item ->
                     ChecklistItemComponent(
-                        name = "Tender Juicy Hot dog",
+                        name = item.name,
                         variant = ChecklistItemComponentVariant.ChecklistItem,
-                        category = ItemCategory.MEAT,
-                        price = 250.00,
-                        quantity = 5
+                        category = item.category,
+                        price = item.price,
+                        quantity = item.quantity.toDouble(),
+                        measurement = item.measurement,
+                        onLongPress = { onEvent(ChecklistEditEvent.OpenActionMenu(item)) }
                     )
                 }
             }
         }
     }
-//    FullHeightDialogComponent({}, scaffoldTopBar = {
-//        ChecklistDialogTopBarComponent(onDismissRequest = {})
-//    }, scaffoldContent = { innerPadding ->
-//        ChecklistDialogContentComponent(innerPadding)
-//    })
 }
 
-@Composable
-fun ChecklistItemDialogComponent(
-    onDismissRequest: () -> Unit,
-    dialogInputs: ChecklistEditDialogInputs
-) {
 
-    FullHeightDialogComponent(onDismissRequest, scaffoldTopBar = {
-        ChecklistDialogTopBarComponent(onDismissRequest)
-    }, scaffoldContent = { innerPadding ->
-        ChecklistDialogContentComponent(
-            innerPadding,
-            dialogInputs = dialogInputs
-        )
-    })
-}
 
-@Composable
-fun ChecklistDialogTopBarComponent(
-    onDismissRequest: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .padding(18.dp, 28.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = { onDismissRequest() }
-            )
-            {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-            Spacer(modifier = Modifier.fillMaxWidth(0.04f))
-            Text(
-                text = "Add Checklist Item",
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
-        }
-        TextButton(onClick = {}) {
-            Text(
-                "Save", style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-fun ChecklistDialogContentComponent(
-    innerPadding: PaddingValues,
-    dialogInputs: ChecklistEditDialogInputs
-) {
-
-    Column(
-        modifier = Modifier
-            .padding(innerPadding)
-            .padding(18.dp, 0.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 0.dp)
-        ) {
-            Text("Item", fontSize = 18.sp)
-        }
-        OutlinedTextField(
-            value = dialogInputs.name,
-            onValueChange = { it -> dialogInputs.updateName(it) },
-            label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 0.dp)
-        ) {
-            Text("Category", fontSize = 18.sp)
-        }
-        OutlinedTextField(
-            value = dialogInputs.category,
-            onValueChange = { it -> dialogInputs.updateCategory(it) },
-            label = { Text("Category") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 0.dp)
-        ) {
-            Text("Price", fontSize = 18.sp)
-        }
-        OutlinedTextField(
-            value = dialogInputs.price,
-            onValueChange = { it -> dialogInputs.updatePrice(it) },
-            label = { Text("Price") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 0.dp)
-        ) {
-            Text("Quantity", fontSize = 18.sp)
-        }
-        OutlinedTextField(
-            value = dialogInputs.quantity,
-            onValueChange = { it -> dialogInputs.updateQuantity(it) },
-            label = { Text("Quantity") },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
 fun ChecklistEditScreenPreview() {
     val mockState = ChecklistEditState(
-        isAddingChecklistItem = false,
-        itemName = ""
+        isDrawerOpen = false
     )
 
     ChecklistEditScreen(

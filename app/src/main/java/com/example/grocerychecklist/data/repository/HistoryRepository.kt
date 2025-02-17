@@ -1,6 +1,7 @@
 package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.HistoryDAO
+import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.domain.utility.DateUtility
@@ -18,7 +19,7 @@ class HistoryRepository(
             name = checklist.name,
             description = checklist.description,
             icon = checklist.icon,
-            iconColor = checklist.iconColor,
+            iconColor = checklist.iconBackgroundColor,
             createdAt = currentDateTime
         )
 
@@ -31,6 +32,10 @@ class HistoryRepository(
 
     fun getHistories(): Flow<List<History>> {
         return historyDAO.getAllHistoriesOrderedByCreatedAt()
+    }
+
+    suspend fun getAggregatedHistory(): Flow<List<HistoryMapped>> {
+        return historyDAO.getHistoryWithAggregatedItems()
     }
 
 }

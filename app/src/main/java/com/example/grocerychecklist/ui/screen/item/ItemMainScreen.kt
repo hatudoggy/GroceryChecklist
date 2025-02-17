@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,16 +27,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.data.mapper.ItemInput
+import com.example.grocerychecklist.data.model.Item
+import com.example.grocerychecklist.domain.utility.ItemCategoryUtility
+import com.example.grocerychecklist.ui.component.CategoryDropdown
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.FullHeightDialogComponent
@@ -52,17 +55,35 @@ fun ItemMainScreen(
     state: ItemMainState,
     onEvent: (ItemMainEvent) -> Unit,
 ) {
-
     if (state.isAddingItem) {
         ItemDialogComponent(
+            selectedItem = state.selectedItem,
             onDismissRequest = { onEvent(ItemMainEvent.CloseDialog) },
-            //dialogInputs = dialogInputs
+            onSave = { name, price, category ->
+                val newItemInput = ItemInput(
+                    name = name,
+                    price = price.toDoubleOrNull() ?: 0.0,
+                    category = category.name,
+                    measureType = "pcs",
+                    measureValue = 1.0,
+                    photoRef = ""
+                )
+                if (state.selectedItem == null) {
+                    onEvent(ItemMainEvent.AddItem(newItemInput)) // Add new item
+                } else {
+                    onEvent(
+                        ItemMainEvent.EditItem(
+                            state.selectedItem.id,
+                            newItemInput
+                        )
+                    ) // Edit existing item
+                }
+            },
+            onDelete = state.selectedItem?.let { { onEvent(ItemMainEvent.DeleteItem(it)) } }, // Delete if editing
         )
     }
 
     Scaffold(
-        modifier = Modifier.padding(vertical = 0.dp),
-        contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
@@ -73,9 +94,8 @@ fun ItemMainScreen(
             }
         },
         topBar = { TopBarComponent(title = "Items") },
-
     ) { innerPadding ->
-        Column (
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(10.dp)
@@ -84,29 +104,44 @@ fun ItemMainScreen(
                 leadingIcon = {
                     Icon(
                         Icons.Filled.Search,
-                        contentDescription = "icon",
+                        contentDescription = "Search",
                         tint = Color.Gray,
                         modifier = Modifier.size(18.dp)
                     )
                 },
-                modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(percent = 50)
-                    ),
+                modifier = Modifier.background(
+                    MaterialTheme.colorScheme.surface,
+                    RoundedCornerShape(percent = 50)
+                ),
                 fontSize = 16.sp,
                 placeholderText = "Search"
             )
             Spacer(Modifier.height(8.dp))
             LazyColumn {
-                items(5) {
-                    ChecklistItemComponent(
-                        name = "Tender Juicy Hot dog",
-                        variant = ChecklistItemComponentVariant.Item,
-                        category = ItemCategory.MEAT,
-                        price = 250.00,
-                        quantity = 5
-                    )
+                if (state.items.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No items available",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    items(state.items.size) { index ->
+                        val item = state.items[index]
+                        ChecklistItemComponent(
+                            name = item.name,
+                            variant = ChecklistItemComponentVariant.Item,
+                            category = ItemCategoryUtility.getItemCategoryFromString(item.category)
+                                ?: ItemCategory.OTHER,
+                            price = item.price,
+                            quantity = item.measureValue,
+                            onClick = { onEvent(ItemMainEvent.SelectItem(item)) } // Click to edit
+                        )
+                    }
                 }
             }
         }
@@ -119,75 +154,96 @@ fun ItemMainScreenPreview() {
     val mockState = ItemMainState(
 
     )
-   ItemMainScreen(
-       state = mockState,
-       onEvent = {}
-   )
+    ItemMainScreen(
+        state = mockState,
+        onEvent = {},
+    )
 }
 
 @Composable
 fun ItemDialogComponent(
+    selectedItem: Item?, // Pass selected item if editing
     onDismissRequest: () -> Unit,
-    //dialogInputs: ItemMainDialogInputs
+    onSave: (String, String, ItemCategory) -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
+    var name by remember { mutableStateOf(selectedItem?.name ?: "") }
+    var price by remember { mutableStateOf(selectedItem?.price?.toString() ?: "") }
+    var selectedCategory by remember {
+        mutableStateOf(selectedItem?.category?.let {
+            ItemCategoryUtility.getItemCategoryFromString(it)
+        } ?: ItemCategory.OTHER)
+    }
 
-    FullHeightDialogComponent(onDismissRequest, scaffoldTopBar = {
-        ChecklistDialogTopBarComponent(onDismissRequest)
-    }, scaffoldContent = { innerPadding ->
-        ChecklistDialogContentComponent(
-            innerPadding,
-            //dialogInputs = dialogInputs
-        )
-    })
+    FullHeightDialogComponent(
+        onDismissRequest,
+        scaffoldTopBar = {
+            ChecklistDialogTopBarComponent(
+                name = name,
+                onDismissRequest,
+                onSave = { onSave(name, price, selectedCategory) }
+            )
+        },
+        scaffoldContent = {
+            Column(
+                modifier = Modifier
+                    .padding(18.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Spacer(modifier = Modifier.height(50.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("Price") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                CategoryDropdown(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+
+                // Show Delete button only when editing
+                selectedItem?.let {
+                    TextButton(
+                        onClick = { onDelete?.invoke() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Delete", color = Color.Red)
+                    }
+                }
+            }
+        }
+    )
 }
+
 
 @Composable
 fun ChecklistDialogTopBarComponent(
-    onDismissRequest: () -> Unit
+    name: String,
+    onDismissRequest: () -> Unit,
+    onSave: () -> Unit
 ) {
     Row(
         modifier = Modifier
-            .padding(18.dp, 28.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+            .fillMaxWidth()
+            .padding(18.dp, 28.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = { onDismissRequest() }
-            )
-            {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-            Spacer(modifier = Modifier.fillMaxWidth(0.04f))
-            Text(
-                text = "Add Item",
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
+        IconButton(onClick = onDismissRequest) {
+            Icon(Icons.Default.Close, contentDescription = "Close")
         }
-        TextButton(onClick = {}) {
-            Text(
-                "Save", style = TextStyle(
-                    fontFamily = FontFamily.Default,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = 0.sp
-                )
-            )
+        TextButton(
+            onClick = onSave,
+            enabled = name.isNotBlank()
+        ) {
+            Text("Save")
         }
     }
 }
@@ -213,7 +269,7 @@ fun ChecklistDialogContentComponent(
         }
         OutlinedTextField(
             value = "",
-            onValueChange = {  },
+            onValueChange = { },
             label = { Text("Name") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -225,7 +281,7 @@ fun ChecklistDialogContentComponent(
         }
         OutlinedTextField(
             value = "",
-            onValueChange = {  },
+            onValueChange = { },
             label = { Text("Category") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -237,7 +293,7 @@ fun ChecklistDialogContentComponent(
         }
         OutlinedTextField(
             value = "",
-            onValueChange = {  },
+            onValueChange = { },
             label = { Text("Price") },
             modifier = Modifier.fillMaxWidth()
         )

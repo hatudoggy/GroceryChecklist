@@ -55,7 +55,7 @@ class ChecklistRepositoryTest {
         assert(allChecklists[1].name == checklistInput[1].name)
         assert(allChecklists[1].description == checklistInput[1].description)
         assert(allChecklists[1].icon == checklistInput[1].icon)
-        assert(allChecklists[1].iconColor == checklistInput[1].iconColor)
+        assert(allChecklists[1].iconBackgroundColor == checklistInput[1].iconBackgroundColor)
         assert(allChecklists[1].createdAt is LocalDateTime)
         assert(allChecklists[1].updatedAt is LocalDateTime)
     }
@@ -81,7 +81,7 @@ class ChecklistRepositoryTest {
         assert(updatedChecklist.name == updatedChecklistInput.name) {"Name"}
         assert(updatedChecklist.description == updatedChecklistInput.description) {"Description"}
         assert(updatedChecklist.icon == updatedChecklistInput.icon) {"Icon"}
-        assert(updatedChecklist.iconColor == updatedChecklistInput.iconColor) {"IconColor"}
+        assert(updatedChecklist.iconBackgroundColor == updatedChecklistInput.iconBackgroundColor) {"IconColor"}
         assert(updatedChecklist.updatedAt != checklist.updatedAt) {"UpdatedAt"}
     }
 
@@ -163,7 +163,7 @@ class ChecklistRepositoryTest {
         assert(checklist.name == checklistInput[1].name)
         assert(checklist.description == checklistInput[1].description)
         assert(checklist.icon == checklistInput[1].icon)
-        assert(checklist.iconColor == checklistInput[1].iconColor)
+        assert(checklist.iconBackgroundColor == checklistInput[1].iconBackgroundColor)
     }
 
     @Test
