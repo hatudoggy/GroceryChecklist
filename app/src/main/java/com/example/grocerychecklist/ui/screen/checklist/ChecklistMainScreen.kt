@@ -324,7 +324,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetEditingChecklist(
                                     state.editingChecklist.copy(
-                                        name = e.trim()
+                                        name = e
                                     )
                                 )
                             )
@@ -332,7 +332,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetNewChecklist(
                                     state.newChecklist.copy(
-                                        name = e.trim()
+                                        name = e
                                     )
                                 )
                             )
@@ -351,7 +351,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetEditingChecklist(
                                 state.editingChecklist.copy(
-                                    description = e.trim()
+                                    description = e
                                 )
                             )
                         )
@@ -359,7 +359,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetNewChecklist(
                                 state.newChecklist.copy(
-                                    description = e.trim()
+                                    description = e
                                 )
                             )
                         )
