@@ -70,6 +70,8 @@ fun ChecklistDetailScreen(
 
             is ChecklistDetailState.Loaded -> {
                 val checklist = state.checklist
+                val totalPrice = state.totalPrice
+                val itemCount = state.itemCount
 
                 Column(
                     modifier = Modifier
@@ -86,8 +88,8 @@ fun ChecklistDetailScreen(
                     )
 
                     CheckListStats(
-                        quantity = "12",
-                        totalPrice = "9876",
+                        quantity = itemCount.toString(),
+                        totalPrice = totalPrice.toString(),
                         lastShopAt = checklist.lastShopAt
                     )
 
@@ -103,7 +105,6 @@ fun ChecklistDetailScreen(
         }
     }
 }
-
 
 @Composable
 fun CheckListOverview(
@@ -284,7 +285,9 @@ fun ChecklistDetailScreenPreview() {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
             lastOpenedAt = LocalDateTime.now()
-        )
+        ),
+        totalPrice = 5430.24,
+        itemCount = 21
     )
     // Different states to test
     val loadingState = ChecklistDetailState.Loading
