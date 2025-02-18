@@ -1,11 +1,17 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
+
 data class ChecklistEditState (
-    val isAddingChecklistItem: Boolean = false,
-    val itemName: String = "",
-    val itemCategory: String = "",
-    val itemPrice: String = "",
-    val itemQuantity: String = "",
-    //val checklistDescription: String = ""
+    // Items state
+    val items: List<ChecklistData> = emptyList(),
+    val searchQuery: String = "",
+    val selectedItem: ChecklistData? = null,
+
+    // UI Toggles
+    val isDrawerOpen: Boolean = false,
+    val isActionMenuOpen: Boolean = false,
+    val isDeleteDialogOpen: Boolean = false,
+    val isEditingItem: Boolean = false,
+
 )
 

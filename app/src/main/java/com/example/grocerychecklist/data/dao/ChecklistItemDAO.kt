@@ -60,6 +60,9 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
     @Query("SELECT MAX(`order`) FROM checklistitem WHERE checklistId = :checklistId")
     suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
 
+    @Query("DELETE FROM checklistitem WHERE id = :checklistId")
+    suspend fun deleteChecklistById(checklistId: Long): Int
+
     @Query("SELECT COUNT(*) FROM checklistitem WHERE checklistId = :checklistId")
     suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
 

@@ -5,7 +5,6 @@ import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
 import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.model.Checklist
-import com.example.grocerychecklist.ui.component.ChecklistCategory
 
 @Stable
 data class ChecklistMainState(
@@ -21,6 +20,7 @@ data class ChecklistMainState(
 
     // Search
     val searchQuery: String = "",
+    val filterableChecklist: List<Checklist> = emptyList(),
 
     // For adding new checklist
     val newChecklist: ChecklistInput = ChecklistInput(

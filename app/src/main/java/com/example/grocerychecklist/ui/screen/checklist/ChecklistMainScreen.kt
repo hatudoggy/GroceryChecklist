@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -21,8 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -36,10 +35,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.ui.component.ActionMenu
+import com.example.grocerychecklist.ui.component.BottomSheet
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
@@ -220,21 +219,23 @@ fun ChecklistMainScreen(
             Spacer(Modifier.height(8.dp))
 
             if (state.checklists.isNotEmpty()) {
-                Column(
+                LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     state.checklists.forEach { item ->
-                        ButtonCardComponent(
-                            name = item.name,
-                            description = item.description,
-                            date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
-                                .toString(),
-                            icon = item.icon.imageVector,
-                            iconBackgroundColor = item.iconBackgroundColor.color,
-                            variant = ButtonCardComponentVariant.Checklist,
-                            onClick = { onEvent(ChecklistMainEvent.NavigateChecklist) },
-                            onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
-                        )
+                        item {
+                            ButtonCardComponent(
+                                name = item.name,
+                                description = if (item.description.isNotBlank()) item.description else "No Description",
+                                date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
+                                    .toString(),
+                                icon = item.icon.imageVector,
+                                iconBackgroundColor = item.iconBackgroundColor.color,
+                                variant = ButtonCardComponentVariant.Checklist,
+                                onClick = { onEvent(ChecklistMainEvent.NavigateChecklist(item.id)) },
+                                onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
+                            )
+                        }
                     }
                 }
             } else {
@@ -323,7 +324,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetEditingChecklist(
                                     state.editingChecklist.copy(
-                                        name = e
+                                        name = e.trim()
                                     )
                                 )
                             )
@@ -331,7 +332,7 @@ fun BottomSheetChecklist(
                             onEvent(
                                 ChecklistMainEvent.SetNewChecklist(
                                     state.newChecklist.copy(
-                                        name = e
+                                        name = e.trim()
                                     )
                                 )
                             )
@@ -350,7 +351,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetEditingChecklist(
                                 state.editingChecklist.copy(
-                                    description = e
+                                    description = e.trim()
                                 )
                             )
                         )
@@ -358,7 +359,7 @@ fun BottomSheetChecklist(
                         onEvent(
                             ChecklistMainEvent.SetNewChecklist(
                                 state.newChecklist.copy(
-                                    description = e
+                                    description = e.trim()
                                 )
                             )
                         )
@@ -374,7 +375,10 @@ fun BottomSheetChecklist(
                     onClick = { onEvent(ChecklistMainEvent.ToggleDrawer) }
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
+                println(state.editingChecklist)
                 Button(
+                    enabled = state.editingChecklist?.name?.trim()
+                        ?.isNotEmpty() == true || state.newChecklist.name.trim().isNotEmpty(),
                     onClick = {
                         if (state.editingChecklist != null)
                             onEvent(ChecklistMainEvent.UpdateChecklist(state.editingChecklist))
@@ -388,94 +392,6 @@ fun BottomSheetChecklist(
     }
 }
 
-@Composable
-fun ActionMenu(
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    onEditMenu: () -> Unit,
-    onDeleteDialog: () -> Unit
-) {
-    BottomSheet(
-        isOpen = isOpen,
-        onClose = {
-            onClose()
-        }
-    ) {
-        Column(
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(10.dp, 1.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        onEditMenu()
-                    }
-                    .padding(10.dp, 15.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Edit Checklist",
-                )
-                Text(
-                    text = "Edit",
-                    fontSize = 18.sp,
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .padding(10.dp, 1.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onDeleteDialog() }
-                    .padding(10.dp, 15.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete Checklist",
-                    tint = Color.Red
-                )
-                Text(
-                    text = "Delete",
-                    fontSize = 18.sp,
-                    color = Color.Red
-                )
-            }
-        }
-    }
-}
-
-// Bottom sheet modal drawer
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomSheet(
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    sheetContent: @Composable () -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState()
-
-    // Closes the sheet when isOpen changes to false
-    LaunchedEffect(isOpen) {
-        if (!isOpen) {
-            sheetState.hide() // Ensures smooth closing before reopening
-        }
-    }
-
-    // Waits for sheetState.isVisible to turn to false to ensure smooth closing
-    // Fixes the snappy opening/closing of the sheet after an action
-    if (isOpen || sheetState.isVisible) {
-        ModalBottomSheet(
-            onDismissRequest = onClose,
-            sheetState = sheetState,
-            containerColor = Color.White,
-        ) {
-            sheetContent()
-        }
-    }
-}
 
 // Dialog for icon picker
 @Composable

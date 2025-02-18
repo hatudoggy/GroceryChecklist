@@ -22,7 +22,7 @@ fun NavGraphBuilder.itemDestination() {
         val state by itemMainViewModel.state.collectAsState()
         ItemMainScreen(
             state = state,
-            onEvent = itemMainViewModel::onEvent
+            onEvent = itemMainViewModel::onEvent,
         )
     }
 }

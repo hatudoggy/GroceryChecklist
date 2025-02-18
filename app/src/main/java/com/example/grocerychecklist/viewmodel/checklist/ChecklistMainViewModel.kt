@@ -1,37 +1,26 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.HolidayVillage
-import androidx.compose.material.icons.filled.Medication
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
 import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.repository.ChecklistRepository
-import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.SearchableViewModel
-import com.example.grocerychecklist.viewmodel.item.ItemMainEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 data class ChecklistMainData(
     val name: String,
@@ -62,8 +51,8 @@ class ChecklistMainViewModel(
 
     fun onEvent(event: ChecklistMainEvent) {
         when (event) {
-            ChecklistMainEvent.NavigateChecklist -> {
-                navigator.navigate(Routes.ChecklistDetail)
+            is ChecklistMainEvent.NavigateChecklist -> {
+                navigator.navigate(Routes.ChecklistDetail(event.checklistId))
             }
 
             ChecklistMainEvent.ToggleDrawer -> {
@@ -141,7 +130,7 @@ class ChecklistMainViewModel(
                     if (event.query.isEmpty()) loadChecklists()
 
                     // Filter through the checklist state
-                    val filteredChecklists = _state.value.checklists.filter { checklist ->
+                    val filteredChecklists = _state.value.filterableChecklist.filter { checklist ->
                         checklist.name.contains(event.query, ignoreCase = true)
                     }
 
@@ -266,7 +255,7 @@ class ChecklistMainViewModel(
             checklistRepository.getChecklists().catch {
                 emit(emptyList<Checklist>())
             }.collect { checklists ->
-                _state.update { it.copy(checklists = checklists) }
+                _state.update { it.copy(checklists = checklists, filterableChecklist = checklists) }
             }
         }
     }
