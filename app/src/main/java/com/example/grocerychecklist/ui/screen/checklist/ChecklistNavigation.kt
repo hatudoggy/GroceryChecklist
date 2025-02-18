@@ -33,10 +33,12 @@ fun NavGraphBuilder.checklistDestination() {
     composable<Routes.ChecklistDetail> { entry ->
         val checklistDetailViewModel = viewModel<ChecklistDetailViewModel>(
             factory = viewModelFactory {
-                ChecklistDetailViewModel(appModule.navigator, entry)
+                ChecklistDetailViewModel(appModule.checklistRepository, appModule.navigator, entry)
             }
         )
+        val state by checklistDetailViewModel.state.collectAsState()
         ChecklistDetailScreen(
+            state = state,
             onEvent = checklistDetailViewModel::onEvent
         )
     }
