@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class ChecklistDetailViewModel(
     private val checklistRepository: ChecklistRepository,
+    private val checklistItemRepository: ChecklistItemRepository,
     private val navigator: Navigator,
     entry: NavBackStackEntry
 ): ViewModel() {
@@ -29,7 +31,13 @@ class ChecklistDetailViewModel(
         viewModelScope.launch {
             try {
                 val checklist = checklistRepository.getChecklist(checklistId)
-                _state.value = ChecklistDetailState.Loaded(checklist)
+                val totalPrice = checklistItemRepository.getTotalChecklistItemPrice(checklistId)
+                val itemCount = checklistItemRepository.getTotalChecklistItems(checklistId)
+                _state.value = ChecklistDetailState.Loaded(
+                    checklist,
+                    totalPrice,
+                    itemCount
+                )
             } catch (_: Exception) {
                 _state.value = ChecklistDetailState.Error
             }
