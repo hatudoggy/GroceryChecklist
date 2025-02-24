@@ -1,15 +1,19 @@
 package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
+import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class HistoryItemRepository(
     private val historyItemDAO: HistoryItemDAO
 ) {
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM")
 
     suspend fun addHistoryItems(
         historyId: Long, checklistItems: List<ChecklistItemFull>, checkedItems: Set<Long>): List<Long> {
@@ -79,5 +83,16 @@ class HistoryItemRepository(
 
     suspend fun getTotalHistoryItemPrice(historyId: Long): Double {
         return historyItemDAO.aggregateTotalHistoryItemPrice(historyId) ?: 0.00
+    }
+
+    fun getTotalItemPriceOnMonth(date: LocalDate): Flow<Double?> {
+        val stringDate = date.format(formatter)
+        return historyItemDAO.aggregateTotalPriceMonth(stringDate)
+    }
+
+
+    fun getCategoryDistributionOnMonth(date: LocalDate): Flow<List<HistoryItemAggregated>> {
+        val stringDate = date.format(formatter)
+        return historyItemDAO.aggregateCategoryBreakdownMonth(stringDate)
     }
 }

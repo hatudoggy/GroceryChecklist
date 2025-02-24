@@ -15,6 +15,7 @@ enum class ChecklistItemOrder(val order: String) {
     Order("order"),
     Name("name"),
     Price("price"),
+    Date("createdAt"),
 }
 
 class ChecklistItemRepository(
@@ -135,6 +136,9 @@ class ChecklistItemRepository(
                 checklistItemDAO.getAllChecklistItemsOrderedByName(checklistId)
 
             ChecklistItemOrder.Price ->
+                checklistItemDAO.getAllChecklistItemsOrderedByPrice(checklistId)
+
+            ChecklistItemOrder.Date ->
                 checklistItemDAO.getAllChecklistItemsOrderedByPrice(checklistId)
 
         }
