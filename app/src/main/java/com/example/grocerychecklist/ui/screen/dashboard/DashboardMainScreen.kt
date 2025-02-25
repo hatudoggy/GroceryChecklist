@@ -131,7 +131,7 @@ fun DashboardMainScreen(
                 ) {
                     Text("History", fontSize = 18.sp)
                     Text(
-                        "View All >",
+                        "View All",
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable(onClick = {
                             onEvent(DashboardMainEvent.NavigateHistoryMain)
