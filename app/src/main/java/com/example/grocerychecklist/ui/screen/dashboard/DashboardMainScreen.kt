@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -29,27 +27,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.grocerychecklist.data.ColorOption
-import com.example.grocerychecklist.data.IconOption
-import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Routes
-import com.example.grocerychecklist.ui.theme.SkyGreen
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainEvent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainState
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -78,20 +73,26 @@ fun DashboardMainScreen(
                 contentAlignment = Alignment.Center
             ) {
                 PieChart(
-                    pieChartData = PieChartData(listOf(
-                        PieChartData.Slice(5F, category[1].color),
-                        PieChartData.Slice(2F, category[2].color),
-                        PieChartData.Slice(3F, category[3].color),
-                    )),
+                    pieChartData = PieChartData(
+                        state.categoryBreakdown.map {
+                            PieChartData.Slice(
+                                it.sumOfPrice.toFloat(),
+                                ItemCategory.valueOf(it.category).color,
+                            )
+                        }
+                    ),
                     modifier = Modifier.fillMaxWidth(),
-                    sliceDrawer = SimpleSliceDrawer(18F)
+                    sliceDrawer = SimpleSliceDrawer(14F)
                 )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val converter = ConvertNumToCurrency()
-                    Text("August", fontSize = 16.sp, color = Color.Gray)
-                    Text(converter(Currency.PHP, 12592.00, false), fontSize = 34.sp)
+                    Text(
+                        DateUtility.formatDateMonthOnly(state.currentDate),
+                        fontSize = 16.sp, color = Color.Gray
+                    )
+                    Text(converter(Currency.PHP, state.monthTotalPrice, false), fontSize = 34.sp)
                     Text(
                         "View More >",
                         color = MaterialTheme.colorScheme.primary,
@@ -102,19 +103,16 @@ fun DashboardMainScreen(
                 }
             }
 
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ChartLegendComponent(
-                    category[1].text,
-                    category[1].color
-                )
-                ChartLegendComponent(
-                    category[2].text,
-                    category[2].color
-                )
-                ChartLegendComponent(
-                    category[3].text,
-                    category[3].color
-                )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                modifier = Modifier.width(250.dp)
+            ) {
+                state.categoryBreakdown.forEach {
+                    ChartLegendComponent(
+                        ItemCategory.valueOf(it.category).text,
+                        ItemCategory.valueOf(it.category).color
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -122,18 +120,34 @@ fun DashboardMainScreen(
             Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
+                    .fillMaxWidth()
+                    .weight(1f, fill = true)
+                    
             ) {
-                Text("History", fontSize = 18.sp)
-                repeat(4) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("History", fontSize = 18.sp)
+                    Text(
+                        "View All",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = {
+                            onEvent(DashboardMainEvent.NavigateHistoryMain)
+                        })
+                    )
+                }
+                state.histories.forEach { item ->
                     ButtonCardComponent(
-                        name = "Main Grocery",
-                        expense = 400.00,
-                        date = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd yyyy")),
-                        icon = Icons.Filled.Fastfood,
-                        iconBackgroundColor = SkyGreen,
+                        name = item.history.name,
+                        expense = item.totalPrice,
+                        date = DateUtility.formatDateWithDay(item.history.createdAt),
+                        icon = item.history.icon.imageVector,
+                        iconBackgroundColor = item.history.iconColor.color,
                         variant = ButtonCardComponentVariant.History,
                         onClick = {
-
+                            onEvent(DashboardMainEvent.NavigateHistoryDetail(item.history.id))
                         }
                     )
                 }
@@ -165,20 +179,9 @@ fun ChartLegendComponent(
 @Preview(showBackground = true)
 @Composable
 fun DashboardMainScreenPreview() {
-    val currentDateTime = DateUtility.getCurrentDateTime()
+
     val mockState = DashboardMainState(
-        checklists = listOf(
-            Checklist(
-                name = "Dog",
-                description = "",
-                icon = IconOption.Home,
-                iconBackgroundColor = ColorOption.White,
-                createdAt = currentDateTime,
-                updatedAt = currentDateTime,
-                lastOpenedAt = currentDateTime,
-                lastShopAt = currentDateTime
-            )
-        )
+        histories = listOf()
     )
     val mockOnEvent: (DashboardMainEvent) -> Unit = {}
 

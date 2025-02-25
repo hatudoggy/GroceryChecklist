@@ -2,10 +2,14 @@ package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.HistoryDAO
 import com.example.grocerychecklist.data.mapper.HistoryMapped
+import com.example.grocerychecklist.data.mapper.HistoryPriced
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 
 class HistoryRepository(
     private val historyDAO: HistoryDAO
@@ -34,8 +38,12 @@ class HistoryRepository(
         return historyDAO.getAllHistoriesOrderedByCreatedAt()
     }
 
-    suspend fun getAggregatedHistory(): Flow<List<HistoryMapped>> {
-        return historyDAO.getHistoryWithAggregatedItems()
+    fun getHistories(limit: Int): Flow<List<HistoryPriced>> {
+        return historyDAO.getAllHistoriesOrderedLimitWithSum(limit)
+    }
+
+    suspend fun getAggregatedHistory(limit: Int? = null): Flow<List<HistoryMapped>> {
+        return historyDAO.getHistoryWithAggregatedItems(limit)
     }
 
 }

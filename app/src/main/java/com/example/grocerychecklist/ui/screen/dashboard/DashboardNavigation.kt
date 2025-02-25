@@ -16,7 +16,11 @@ fun NavGraphBuilder.dashboardDestination(
     composable<Routes.DashboardMain> {
         val dashboardMainViewModel = viewModel<DashboardMainViewModel>(
             factory = viewModelFactory {
-                DashboardMainViewModel(GroceryChecklistApp.appModule.checklistRepository, GroceryChecklistApp.appModule.navigator)
+                DashboardMainViewModel(
+                    GroceryChecklistApp.appModule.historyRepository,
+                    GroceryChecklistApp.appModule.historyItemRepository,
+                    GroceryChecklistApp.appModule.navigator
+                )
             }
         )
         val state by dashboardMainViewModel.state.collectAsState()

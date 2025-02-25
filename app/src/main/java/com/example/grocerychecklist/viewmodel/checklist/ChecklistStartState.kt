@@ -5,6 +5,7 @@ data class ChecklistStartState (
     // Items state
     val items: List<ChecklistData> = emptyList(),
     val filteredItems: List<ChecklistData> = emptyList(),
+    val checkedItems: List<ChecklistData> = emptyList(),
     val searchQuery: String = "",
     val selectedItem: ChecklistData? = null,
 

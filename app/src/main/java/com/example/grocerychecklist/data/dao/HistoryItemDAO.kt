@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import kotlinx.coroutines.flow.Flow
@@ -42,4 +43,28 @@ interface HistoryItemDAO {
         WHERE historyId = :historyId
     """)
     suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
+
+    @Query("""
+        SELECT SUM(price * quantity)
+        FROM historyItem
+        INNER JOIN history ON historyItem.historyId = history.id
+        WHERE strftime('%Y-%m', datetime(history.createdAt, 'unixepoch')) = :date
+        AND historyItem.isChecked = 1
+    """)
+    fun aggregateTotalPriceMonth(date: String): Flow<Double?>
+
+
+    @Query("""
+        SELECT 
+            SUM(historyItem.price * historyItem.quantity) AS sumOfPrice, 
+            SUM(historyItem.quantity) AS totalItems,
+            historyItem.category AS category
+        FROM historyItem
+        INNER JOIN history ON historyItem.historyId = history.id
+        WHERE strftime('%Y-%m', datetime(history.createdAt, 'unixepoch')) = :date
+        AND historyItem.isChecked = 1
+        GROUP BY historyItem.category
+        ORDER BY sumOfPrice DESC
+    """)
+    fun aggregateCategoryBreakdownMonth(date: String): Flow<List<HistoryItemAggregated>>
 }

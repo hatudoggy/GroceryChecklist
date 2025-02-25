@@ -168,7 +168,7 @@ fun ChecklistStartScreen(
     )
 
     BottomSheetCheckout(
-        checkedItems = state.items.filter { it.isChecked },
+        checkedItems = state.items.filter { item -> state.checkedItems.any { it.id == item.id} },
         totalPrice = state.totalPrice,
         onCheckoutClick = { onEvent(ChecklistStartEvent.ProceedCheckout(state.items)) },
         isOpen = state.isCheckoutOpen,
@@ -261,7 +261,7 @@ fun ChecklistStartScreen(
                         price = item.price,
                         quantity = item.quantity.toDouble(),
                         measurement = item.measurement,
-                        isChecked = item.isChecked,
+                        isChecked = state.checkedItems.any { it.id == item.id },
                         // When the checked state changes, update the ViewModel accordingly.
                         // Use onCheckedChange instead of onClick for handling the checkbox state.
                         onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
@@ -352,7 +352,8 @@ fun BottomSheetCheckout(
                 )
 
                 LazyColumn(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
                 ) {
                     items(checkedItems) { item ->
                         ChecklistItemComponent(
@@ -366,6 +367,8 @@ fun BottomSheetCheckout(
                         )
                     }
                 }
+
+                Spacer(Modifier.height(100.dp))
             }
             Column(
                 modifier = Modifier
@@ -375,7 +378,7 @@ fun BottomSheetCheckout(
                         val offsetY = sheetState.requireOffset()
                         IntOffset(
                             x = 0,
-                            y = -offsetY.toInt()
+                            y = -offsetY.toInt() + 100
                         )
                     }
                     .background(Color.White)
@@ -391,12 +394,10 @@ fun BottomSheetCheckout(
                     Text(
                         "Total",
                         fontSize = 16.sp,
-                        //color = Color.White
                     )
                     Text(
                         converter(Currency.PHP, totalPrice, false),
                         fontSize = 18.sp,
-                        //color = Color.White
                     )
                 }
                 Spacer(Modifier.height(8.dp))
@@ -405,7 +406,11 @@ fun BottomSheetCheckout(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    Row(modifier = Modifier.padding(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(5.dp),
+                    ) {
                         Text(
                             "Checkout",
                             fontWeight = FontWeight.Medium,
@@ -420,6 +425,7 @@ fun BottomSheetCheckout(
                     }
 
                 }
+                Spacer(Modifier.height(32.dp))
             }
         }
     }
