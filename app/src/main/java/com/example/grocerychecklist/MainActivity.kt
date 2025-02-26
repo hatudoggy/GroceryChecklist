@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.grocerychecklist.ui.component.BottomBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.screen.auth.authDestination
 import com.example.grocerychecklist.ui.screen.checklist.checklistDestination
 import com.example.grocerychecklist.ui.screen.dashboard.dashboardDestination
 import com.example.grocerychecklist.ui.screen.history.historyDestination
@@ -77,9 +78,10 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = Routes.DashboardMain,
+                        startDestination = Routes.AuthMain,
                         modifier = Modifier.padding(innerPadding)
                     ) {
+                        authDestination()
                         dashboardDestination()
                         checklistDestination()
                         itemDestination()
