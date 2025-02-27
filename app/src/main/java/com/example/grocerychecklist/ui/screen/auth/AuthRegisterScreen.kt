@@ -20,13 +20,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,13 +35,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.GoogleButton
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.component.launchCredManBottomSheet
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
+import com.example.grocerychecklist.viewmodel.auth.AuthRegisterState
+
 
 @Composable
 fun AuthRegisterScreen (
+    state: AuthRegisterState,
     onEvent: (AuthRegisterEvent) -> Unit
 ) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        launchCredManBottomSheet(context) { result ->
+            onEvent(AuthRegisterEvent.GoogleSignUp(result))
+        }
+    }
+
     Scaffold(
         topBar = {
             TopBarComponent(
@@ -79,78 +89,113 @@ fun AuthRegisterScreen (
                 color = Color.Gray
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(8.dp))
 
+            //Form section
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.fullName,
+                    onValueChange = { onEvent(AuthRegisterEvent.FullNameChanged(it)) },
                     label = { Text("Full Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.email,
+                    onValueChange = { onEvent(AuthRegisterEvent.EmailChanged(it)) },
                     label = { Text("Email") },
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = !state.isEmailValid,
+                    supportingText = { state.emailError?.let { Text(it, color = Color.Red) } }
                 )
-
-                var passwordVisible by rememberSaveable() { mutableStateOf(false) }
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.password,
+                    onValueChange = { onEvent(AuthRegisterEvent.PasswordChanged(it)) },
                     label = { Text("Password") },
                     singleLine = true,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = !state.isPasswordValid,
+                    supportingText = { state.passwordError?.let { Text(it, color = Color.Red) } },
                     trailingIcon = {
-                        val image = if (passwordVisible)
+                        val image = if (state.isPasswordVisible)
                             Icons.Filled.Visibility
                         else Icons.Filled.VisibilityOff
 
-                        val description = if (passwordVisible) "Hide password" else "Show password"
+                        val description = if (state.isPasswordVisible) "Hide password" else "Show password"
 
-                        IconButton(onClick = {passwordVisible = !passwordVisible}){
-                            Icon(imageVector  = image, description)
+                        IconButton(onClick = { onEvent(AuthRegisterEvent.TogglePasswordVisibility) }) {
+                            Icon(imageVector = image, contentDescription = description)
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.confirmPassword,
+                    onValueChange = { onEvent(AuthRegisterEvent.ConfirmPasswordChanged(it)) },
+                    label = { Text("Confirm Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = !state.isConfirmPasswordValid,
+                    supportingText = { state.confirmPasswordError?.let { Text(it, color = Color.Red) } }
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Button(
-                onClick = {  },
-                modifier = Modifier
-                    .height(44.dp)
-                    .fillMaxWidth()
-            ) { Text("Register") }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 28.dp)
-            ) {
-                HorizontalDivider(Modifier.weight(1f))
-                Text(
-                    "Or sign up with",
-                    Modifier.padding(horizontal = 12.dp)
-                )
-                HorizontalDivider(Modifier.weight(1f))
-            }
-            GoogleButton(
-                text = "Sign up with Google",
-                loadingText = "Signing Up",
-                progressIndicatorColor = PrimaryGreen,
-                onClicked = {},
-                modifier = Modifier.fillMaxWidth(),
-            )
+            SignUpButton(onEvent, state)
+            SocialSignUpDivider()
+            GoogleSignUpButton(onEvent)
         }
+    }
+}
+
+@Composable
+private fun SignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegisterState) {
+    Button(
+        onClick = {
+            onEvent(AuthRegisterEvent.EmailSignUp)
+        },
+        modifier = Modifier
+            .height(44.dp)
+            .fillMaxWidth(),
+        enabled = state.isEmailValid &&
+                state.isPasswordValid &&
+                state.isConfirmPasswordValid
+    ) {
+        Text("Register")
+    }
+}
+
+@Composable
+private fun SocialSignUpDivider(){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 16.dp)
+    ) {
+        HorizontalDivider(Modifier.weight(1f))
+        Text(
+            "Or sign up with",
+            Modifier.padding(horizontal = 12.dp)
+        )
+        HorizontalDivider(Modifier.weight(1f))
+    }
+}
+
+@Composable
+fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit){
+    GoogleButton(
+        text = "Sign up with Google",
+        loadingText = "Signing Up",
+        progressIndicatorColor = PrimaryGreen,
+        modifier = Modifier.fillMaxWidth(),
+    ){ credential ->
+        onEvent(AuthRegisterEvent.GoogleSignUp(credential))
     }
 }
 
@@ -159,6 +204,7 @@ fun AuthRegisterScreen (
 @Composable
 fun AuthRegisterScreenPrev() {
     AuthRegisterScreen(
+        state = AuthRegisterState(),
         onEvent = {}
     )
 }

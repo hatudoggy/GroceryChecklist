@@ -11,7 +11,7 @@ import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
-import com.example.grocerychecklist.viewmodel.SearchableViewModel
+import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

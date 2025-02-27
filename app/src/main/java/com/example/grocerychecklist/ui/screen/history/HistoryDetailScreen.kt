@@ -26,12 +26,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.grocerychecklist.ui.component.CategorySelector
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
-
 
 @Composable
 fun HistoryDetailScreen(
@@ -39,9 +39,9 @@ fun HistoryDetailScreen(
     onEvent: (HistoryDetailEvent) -> Unit
 ) {
     // Collects the filtered list of items based on the selected categories from the ViewModel.
-    val state by viewModel.filteredItems.collectAsState()
+    val state by viewModel.filteredItems.collectAsStateWithLifecycle()
     // Collects the currently selected categories from the ViewModel.
-    val selectedCategories by viewModel.selectedCategories.collectAsState()
+    val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

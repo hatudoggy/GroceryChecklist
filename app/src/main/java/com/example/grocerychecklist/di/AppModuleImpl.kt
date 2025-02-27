@@ -2,6 +2,7 @@ package com.example.grocerychecklist.di
 
 import android.content.Context
 import com.example.grocerychecklist.data.AppDatabase
+import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.DatabaseRepository
@@ -20,6 +21,10 @@ class AppModuleImpl(
     }
     override val navigator: Navigator by lazy {
         Navigator()
+    }
+
+    override val accountService: AccountService by lazy {
+        AccountService()
     }
 
     override val databaseRepository: DatabaseRepository by lazy {
