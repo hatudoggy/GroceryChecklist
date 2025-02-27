@@ -9,6 +9,11 @@ data class HistoryMapped(
     val aggregatedItems: List<HistoryItemAggregated>
 )
 
+data class HistoryPriced(
+    @Embedded val history: History,
+    val totalPrice: Double = 0.0,
+)
+
 data class HistoryItemAggregated(
     val sumOfPrice: Double,
     val totalItems: Int,

@@ -31,5 +31,10 @@ class DateUtility {
             val formatter = DateTimeFormatter.ofPattern("MMM dd yyyy")
             return createdAt.toLocalDate().format(formatter)
         }
+
+        fun formatDateMonthOnly(createdAt: LocalDate): String {
+            val formatter = DateTimeFormatter.ofPattern("MMMM")
+            return createdAt.format(formatter)
+        }
     }
 }
