@@ -1,4 +1,4 @@
-package com.example.grocerychecklist.viewmodel
+package com.example.grocerychecklist.viewmodel.util
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

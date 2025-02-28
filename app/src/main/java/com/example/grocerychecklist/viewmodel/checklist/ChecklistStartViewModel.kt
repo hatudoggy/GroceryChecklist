@@ -12,7 +12,7 @@ import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
-import com.example.grocerychecklist.viewmodel.SearchableViewModel
+import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

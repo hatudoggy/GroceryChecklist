@@ -1,12 +1,7 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
-import ItemCategory
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.screen.Navigator
-import com.example.grocerychecklist.viewmodel.SearchableViewModel
+import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
 import kotlin.text.contains
 
 class ChecklistViewViewModel(

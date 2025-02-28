@@ -1,20 +1,15 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
-import ItemCategory
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.example.grocerychecklist.data.mapper.ChecklistItemInput
-import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
-import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
-import com.example.grocerychecklist.viewmodel.SearchableViewModel
+import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +17,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale.Category
 
 class ChecklistEditViewModel(
     private val navigator: Navigator,

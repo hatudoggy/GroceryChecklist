@@ -39,11 +39,14 @@ import com.example.grocerychecklist.ui.component.GoogleButton
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
+import com.example.grocerychecklist.viewmodel.auth.AuthLoginState
+import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 
 
 @Composable
 fun AuthLoginScreen (
-    onEvent: (AuthLoginEvent) -> Unit
+    onEvent: (AuthLoginEvent) -> Unit,
+    state: AuthLoginState
 ) {
     Scaffold(
         topBar = {
@@ -86,8 +89,8 @@ fun AuthLoginScreen (
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.email,
+                    onValueChange = {onEvent(AuthLoginEvent.UpdateEmail(it))},
                     label = { Text("Email") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,8 +98,8 @@ fun AuthLoginScreen (
 
                 var passwordVisible by rememberSaveable() { mutableStateOf(false) }
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = state.password,
+                    onValueChange = {onEvent(AuthLoginEvent.UpdatePassword(it))},
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -119,40 +122,62 @@ fun AuthLoginScreen (
 
             Spacer(Modifier.height(24.dp))
 
-            Button(
-                onClick = {  },
-                modifier = Modifier
-                    .height(44.dp)
-                    .fillMaxWidth()
-            ) { Text("Login") }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 28.dp)
-            ) {
-                HorizontalDivider(Modifier.weight(1f))
-                Text(
-                    "Or login with",
-                    Modifier.padding(horizontal = 12.dp)
-                )
-                HorizontalDivider(Modifier.weight(1f))
-            }
-            GoogleButton(
-                text = "Login to google",
-                loadingText = "Logging In",
-                progressIndicatorColor = PrimaryGreen,
-                onClicked = {},
-                modifier = Modifier.fillMaxWidth(),
-            )
+            LoginButton(onEvent, state)
+            SocialLoginDivider()
+            GoogleLoginButton(onEvent)
         }
     }
 }
 
+@Composable
+private fun LoginButton(onEvent: (AuthLoginEvent) -> Unit, state: AuthLoginState) {
+    Button(
+        onClick = {
+            if (state.email.isNotBlank() && state.password.isNotBlank()) {
+                onEvent(AuthLoginEvent.Login)
+            }
+        },
+        modifier = Modifier
+            .height(44.dp)
+            .fillMaxWidth(),
+        enabled = state.email.isNotBlank() && state.password.isNotBlank() // Disable button if fields are empty
+    ) {
+        Text("Login")
+    }
+}
+
+@Composable
+private fun SocialLoginDivider() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 28.dp)
+    ) {
+        HorizontalDivider(Modifier.weight(1f))
+        Text(
+            text = "Or login with",
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+        HorizontalDivider(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun GoogleLoginButton(onEvent: (AuthLoginEvent) -> Unit) {
+    GoogleButton(
+        text = "Login to google",
+        loadingText = "Logging In",
+        progressIndicatorColor = PrimaryGreen,
+        modifier = Modifier.fillMaxWidth(),
+    ) { credential ->
+        onEvent(AuthLoginEvent.GoogleLogIn(credential))
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun AuthLoginScreenPrev() {
     AuthLoginScreen(
-        onEvent = {}
+        onEvent = {},
+        state = AuthLoginState()
     )
 }
