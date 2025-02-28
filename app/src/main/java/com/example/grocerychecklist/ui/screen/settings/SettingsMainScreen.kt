@@ -1,5 +1,15 @@
 package com.example.grocerychecklist.ui.screen.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,15 +20,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AttachMoney
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +42,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -42,14 +58,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
 import com.example.grocerychecklist.ui.component.BottomModalComponent
+import com.example.grocerychecklist.ui.component.SignOutIndicator
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
 import com.example.grocerychecklist.viewmodel.settings.SettingsMainEvent
 import com.example.grocerychecklist.viewmodel.settings.SettingsMainState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsMainScreen(
     state: SettingsMainState,
@@ -70,19 +87,25 @@ fun SettingsMainScreen(
 
             AvatarButtonCard(
                 icon = Icons.Outlined.LightMode,
-                title = "Guest",
-                subTitle = "Not Logged In",
+                title = state.userName,
+                subTitle = state.userEmail,
                 bottomModalContent = {
                     ColorSchemeBottomModalContentComponent()
                 }
             )
-            BlurredCardWithLoginPrompt()
+            BlurredCardWithLoginPrompt(state, onEvent)
+            PreferencesSection()
         }
     }
+    // Sign Out Indicator overlay - will appear on top of the entire screen
+    SignOutIndicator(isVisible = state.isSigningOut)
 }
 
 @Composable
-fun BlurredCardWithLoginPrompt() {
+fun BlurredCardWithLoginPrompt(
+    state: SettingsMainState,
+    onEvent: (SettingsMainEvent) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth(),
@@ -93,7 +116,7 @@ fun BlurredCardWithLoginPrompt() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(9.dp))
-                .blur(2.dp) // Apply blur effect
+                .blur(if (!state.isLoggedIn) 8.dp else 0.dp) // Apply blur effect
         ) {
             Column(
                 modifier = Modifier.padding(14.dp),
@@ -112,31 +135,39 @@ fun BlurredCardWithLoginPrompt() {
                 SettingsButtonCard(
                     icon = Icons.Default.Person,
                     title = "Edit Profile",
-                    subTitle = "Change profile picture, number, e-mail",
-                    bottomModalContent = {
-                        ColorSchemeBottomModalContentComponent()
-                    },
+                    subTitle = if(state.isLoggedIn)"Change profile picture, number, e-mail" else "",
+                    state = state,
                 )
                 SettingsButtonCard(
                     icon = Icons.Default.Edit,
                     title = "Change Password",
                     subTitle = "Update and secure your account",
-                    bottomModalContent = {
-                        CurrencyBottomModalContentComponent()
-                    },
+                    state = state,
                 )
+                if (state.isLoggedIn) {
+                    SettingsButtonCard(
+                        icon = Icons.AutoMirrored.Outlined.Logout,
+                        title = "Log Out",
+                        subTitle = "Sign out from this device",
+                        state = state,
+                        onClick = { onEvent(SettingsMainEvent.SignOut) }
+                    )
+                }
             }
+
         }
 
         // Login Button (Above the blurred card)
-        Button(
-            onClick = { /* Handle login action */ },
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(top = 10.dp)
-                .shadow(5.dp, shape = RoundedCornerShape(50.dp))
-        ) {
-            Text("Log In to Sync")
+        if(!state.isLoggedIn){
+            Button(
+                onClick = { onEvent(SettingsMainEvent.LogIn) },
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(top = 10.dp)
+                    .shadow(5.dp, shape = RoundedCornerShape(50.dp))
+            ) {
+                Text("Log In to Sync")
+            }
         }
     }
 }
@@ -197,15 +228,20 @@ fun SettingsButtonCard(
     icon: ImageVector,
     title: String,
     subTitle: String,
-    bottomModalContent: @Composable () -> Unit,
+    bottomModalContent: @Composable () -> Unit = {},
     state: SettingsMainState = SettingsMainState(),
-    onEvent: (SettingsMainEvent) -> Unit = {}
+    onClick: () -> Unit = {},
+    onToggleBottomModal: () -> Unit = {},
 ) {
     val bottomSheetState = rememberModalBottomSheetState()
-
+    val cardModifier = if(state.isLoggedIn){
+        Modifier.clickable(onClick = { onClick() })
+    }else{
+        Modifier
+    }
     if (state.isBottomModalOpen) {
         BottomModalComponent(bottomSheetState, {
-             onEvent(SettingsMainEvent.ToggleBottomModal)
+             onToggleBottomModal()
         }, content = {
             bottomModalContent()
         }, contentTitle = "Select ${title.lowercase()}")
@@ -214,12 +250,9 @@ fun SettingsButtonCard(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(15.dp),
-        modifier = Modifier
+        modifier = cardModifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = {
-                onEvent(SettingsMainEvent.ToggleBottomModal)
-            })
             .padding(10.dp)
 
     ) {
@@ -307,7 +340,6 @@ fun PreferencesSection() {
     }
 }
 
-
 @Composable
 fun ColorSchemeBottomModalContentComponent() {
     BottomModalButtonComponent(onClick = {}, title = "Light", isActive = true)
@@ -330,7 +362,7 @@ fun CurrencyBottomModalContentComponent() {
 @Preview(showBackground = true)
 @Composable
 fun SettingsMainScreenPreview() {
-    val state: SettingsMainState = SettingsMainState()
+    val state: SettingsMainState = SettingsMainState(isLoggedIn = true)
     SettingsMainScreen(
         state,
         onEvent = {}

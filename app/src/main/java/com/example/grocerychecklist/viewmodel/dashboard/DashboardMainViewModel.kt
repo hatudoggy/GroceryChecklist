@@ -35,7 +35,6 @@ class DashboardMainViewModel(
     private val _state = MutableStateFlow(DashboardMainState())
     val state: StateFlow<DashboardMainState> = _state.asStateFlow()
 
-
     init {
         viewModelScope.launch {
             launch {
