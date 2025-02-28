@@ -31,17 +31,14 @@ import com.example.grocerychecklist.ui.component.CategorySelector
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailEvent
+import com.example.grocerychecklist.viewmodel.history.HistoryDetailState
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
 
 @Composable
 fun HistoryDetailScreen(
-    viewModel: HistoryDetailViewModel,
+    state: HistoryDetailState,
     onEvent: (HistoryDetailEvent) -> Unit
 ) {
-    // Collects the filtered list of items based on the selected categories from the ViewModel.
-    val state by viewModel.filteredItems.collectAsStateWithLifecycle()
-    // Collects the currently selected categories from the ViewModel.
-    val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -60,8 +57,8 @@ fun HistoryDetailScreen(
 
             // Category selector component that allows the user to filter the list by categories.
             CategorySelector(
-                selectedCategories = selectedCategories,
-                onCategorySelected = viewModel::updateSelectedCategories
+                selectedCategories = state.selectedCategories,
+                onCategorySelected = { onEvent(HistoryDetailEvent.SelectCategory(it)) }
             )
 
 
@@ -73,11 +70,11 @@ fun HistoryDetailScreen(
             ) {
 
                 // Iterates over the list of history items.
-                items(state) { historyItem ->
+                items(state.filteredItems) { historyItem ->
                     HistoryItemComponent(historyItem = historyItem)
                 }
             }
-            TotalSection(total = state.sumOf { it.price })
+            TotalSection(total = state.filteredItems.sumOf { it.price * it.quantity })
         }
     }
 }
@@ -149,10 +146,9 @@ fun TotalSection(total: Double) {
 @Composable
 fun HistoryDetailScreenPreview() {
     val navigator = Navigator()
-    val viewModel = HistoryDetailViewModel(navigator);
 
     HistoryDetailScreen(
-        viewModel = viewModel,
+        state = HistoryDetailState(filteredItems = listOf()),
         onEvent = {}
     )
 }
