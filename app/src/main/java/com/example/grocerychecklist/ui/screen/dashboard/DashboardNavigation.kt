@@ -34,13 +34,16 @@ fun NavGraphBuilder.dashboardDestination(
     composable<Routes.DashboardBreakdown> {
         val dashboardBreakdownViewModel = viewModel<DashboardBreakdownViewModel>(
             factory = viewModelFactory {
-                DashboardBreakdownViewModel(GroceryChecklistApp.appModule.navigator)
+                DashboardBreakdownViewModel(
+                    GroceryChecklistApp.appModule.navigator,
+                    GroceryChecklistApp.appModule.historyRepository,
+                    GroceryChecklistApp.appModule.historyItemRepository
+                )
             }
         )
-        //val state by dashboardBreakdownViewModel.state.collectAsState()
+        val state by dashboardBreakdownViewModel.state.collectAsState()
         DashboardBreakdownScreen(
-            //state = state,
-            viewModel = dashboardBreakdownViewModel,
+            state = state,
             onEvent = dashboardBreakdownViewModel::onEvent
         )
     }

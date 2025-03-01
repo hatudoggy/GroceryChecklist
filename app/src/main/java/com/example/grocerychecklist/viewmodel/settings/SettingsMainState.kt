@@ -9,6 +9,7 @@ data class SettingsMainState (
     val userEmail: String = "Not Logged In",
     val isLoggedIn: Boolean = false,
     val isSigningOut: Boolean = false,
+    val error: String? = null,
 
     // UI Checks
     val isBottomModalOpen: Boolean = false

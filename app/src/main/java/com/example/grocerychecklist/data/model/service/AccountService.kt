@@ -36,7 +36,9 @@ class AccountService{
     }
 
     suspend fun createAnonymousAccount() {
-        Firebase.auth.signInAnonymously().await()
+        if (Firebase.auth.currentUser == null) {
+            Firebase.auth.signInAnonymously().await()
+        }
     }
 
     suspend fun updateDisplayName(newDisplayName: String) {
@@ -69,8 +71,15 @@ class AccountService{
     suspend fun signOut() {
         Firebase.auth.signOut()
 
-        // Sign the user back in anonymously.
-        createAnonymousAccount()
+        // If user is anonymous, do not sign them out
+        if (Firebase.auth.currentUser?.isAnonymous == true) return
+
+        Firebase.auth.signOut()
+
+        // Optional: Automatically sign back in anonymously if no user exists
+        if (Firebase.auth.currentUser == null) {
+            createAnonymousAccount()
+        }
     }
 
     suspend fun deleteAccount() {
