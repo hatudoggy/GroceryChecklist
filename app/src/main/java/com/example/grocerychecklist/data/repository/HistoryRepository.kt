@@ -45,5 +45,4 @@ class HistoryRepository(
     suspend fun getAggregatedHistory(limit: Int? = null): Flow<List<HistoryMapped>> {
         return historyDAO.getHistoryWithAggregatedItems(limit)
     }
-
 }

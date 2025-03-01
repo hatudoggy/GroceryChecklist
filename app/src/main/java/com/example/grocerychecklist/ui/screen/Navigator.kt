@@ -20,6 +20,15 @@ class Navigator {
         navController?.popBackStack()
     }
 
+    fun navigateWithClearBackStack(route: Routes) {
+        navController?.navigate(route) {
+            popUpTo(route) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
+    }
+
     fun clear() {
         navController = null
     }

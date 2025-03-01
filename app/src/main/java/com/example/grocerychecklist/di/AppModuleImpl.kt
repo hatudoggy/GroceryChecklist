@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.di
 
+import android.app.Application
 import android.content.Context
 import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.data.model.service.AccountService
@@ -25,6 +26,10 @@ class AppModuleImpl(
 
     override val accountService: AccountService by lazy {
         AccountService()
+    }
+
+    override val application: Application by lazy {
+        appContext.applicationContext as Application
     }
 
     override val databaseRepository: DatabaseRepository by lazy {

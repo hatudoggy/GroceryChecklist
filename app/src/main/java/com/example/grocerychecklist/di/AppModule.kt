@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.di
 
+import android.app.Application
 import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
@@ -14,6 +15,7 @@ interface AppModule {
     val db: AppDatabase
     val navigator: Navigator
     val accountService: AccountService
+    val application: Application
     val databaseRepository: DatabaseRepository
     val checklistRepository: ChecklistRepository
     val checklistItemRepository: ChecklistItemRepository

@@ -31,16 +31,19 @@ fun NavGraphBuilder.historyDestination(navController: NavController) {
         )
     }
 
-    composable<Routes.HistoryDetail> {
+    composable<Routes.HistoryDetail> { entry ->
         val historyDetailViewModel = viewModel<HistoryDetailViewModel>(
             factory = viewModelFactory {
-                HistoryDetailViewModel(GroceryChecklistApp.appModule.navigator)
+                HistoryDetailViewModel(
+                    appModule.navigator,
+                    entry,
+                    appModule.historyItemRepository
+                )
             }
         )
-//        val state by historyDetailViewModel.state.collectAsState()
+        val state by historyDetailViewModel.state.collectAsState()
         HistoryDetailScreen(
-//            state = state,
-            historyDetailViewModel,
+            state = state,
             onEvent = historyDetailViewModel::onEvent
         )
     }

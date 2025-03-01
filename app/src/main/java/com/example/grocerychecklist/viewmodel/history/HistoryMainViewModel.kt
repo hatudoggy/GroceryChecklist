@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 class HistoryMainViewModel(
-    private val navigator: Navigator, private val historyRepository: HistoryRepository
+    private val navigator: Navigator,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HistoryMainState())

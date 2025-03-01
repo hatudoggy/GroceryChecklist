@@ -81,6 +81,16 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
                 textAlign = TextAlign.Right
             )
 
+            Text(
+                text = "x " + historyItem.quantity + " " + historyItem.measurement.getText(quantity = historyItem.quantity),
+                style = TextStyle(
+                    fontSize = 14.sp, // Increased font size
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFFA5A5A5)
+                ),
+                textAlign = TextAlign.Right
+            )
+
             // Total Price
             Text(
                 modifier = Modifier.padding(top = 4.dp),
@@ -89,16 +99,6 @@ fun HistoryItemComponent(historyItem: HistoryDataDetails) {
                     fontSize = 18.sp, // Increased font size
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
-                ),
-                textAlign = TextAlign.Right
-            )
-
-            Text(
-                text = "x " + historyItem.quantity + " " + historyItem.measurement.getText(quantity = historyItem.quantity),
-                style = TextStyle(
-                    fontSize = 14.sp, // Increased font size
-                    fontWeight = FontWeight.Normal,
-                    color = Color(0xFFA5A5A5)
                 ),
                 textAlign = TextAlign.Right
             )

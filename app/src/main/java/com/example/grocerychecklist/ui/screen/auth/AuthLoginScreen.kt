@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.GoogleButton
+import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
@@ -126,6 +127,7 @@ fun AuthLoginScreen (
             SocialLoginDivider()
             GoogleLoginButton(onEvent)
         }
+        ToastComponent(message = state.error)
     }
 }
 

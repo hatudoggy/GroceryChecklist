@@ -7,6 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.grocerychecklist.GroceryChecklistApp
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.screen.util.CustomBackButtonHandler
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownViewModel
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainViewModel
 import com.example.grocerychecklist.viewmodel.viewModelFactory
@@ -14,6 +15,7 @@ import com.example.grocerychecklist.viewmodel.viewModelFactory
 fun NavGraphBuilder.dashboardDestination(
 ) {
     composable<Routes.DashboardMain> {
+        CustomBackButtonHandler(GroceryChecklistApp.appModule.navigator, Routes.DashboardMain)
         val dashboardMainViewModel = viewModel<DashboardMainViewModel>(
             factory = viewModelFactory {
                 DashboardMainViewModel(

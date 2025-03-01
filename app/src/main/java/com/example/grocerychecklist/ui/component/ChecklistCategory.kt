@@ -1,6 +1,7 @@
 package com.example.grocerychecklist.ui.component
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -21,7 +22,7 @@ enum class ChecklistCategory(val color: Color, val text: String, val icon: Image
 
     // Household Essentials
     CLEANING_SUPPLIES(PureWhite, "Cleaning Supplies", Icons.Filled.CleanHands),
-    PAPER_GOODS(LightGray, "Paper Goods", Icons.Filled.ReceiptLong),
+    PAPER_GOODS(LightGray, "Paper Goods", Icons.AutoMirrored.Filled.ReceiptLong),
     PET_SUPPLIES(FurryBrown, "Pet Supplies", Icons.Filled.Pets),
     BABY_PRODUCTS(SoftPink, "Baby Products", Icons.Filled.ChildCare),
 

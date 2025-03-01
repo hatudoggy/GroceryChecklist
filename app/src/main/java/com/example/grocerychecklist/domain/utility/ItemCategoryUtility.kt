@@ -1,5 +1,7 @@
 package com.example.grocerychecklist.domain.utility
 
+import ItemCategory
+
 class ItemCategoryUtility {
     companion object {
         fun getItemCategoryFromString(categoryText: String): ItemCategory? {

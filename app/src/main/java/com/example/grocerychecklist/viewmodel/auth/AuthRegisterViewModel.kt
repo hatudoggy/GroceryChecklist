@@ -1,14 +1,18 @@
+import android.app.Application
+import android.content.Context
 import android.util.Log
 import android.util.Patterns
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.ERROR_TAG
-import com.example.grocerychecklist.UNEXPECTED_CREDENTIAL
+import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.util.DEFAULT_ERROR
+import com.example.grocerychecklist.util.NetworkUtils
+import com.example.grocerychecklist.util.TIMEOUT_ERROR
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterState
 import com.example.grocerychecklist.viewmodel.util.MIN_PASS_LENGTH
@@ -20,12 +24,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.SocketTimeoutException
 import java.util.regex.Pattern
+import kotlinx.coroutines.withTimeout
+
+private const val ERROR_TAG = "AuthRegisterViewModel"
+
 
 // Data class to hold the form state
 class AuthRegisterViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val application: Application
 ) : ViewModel() {
 
     // Use a single state flow to manage the entire UI state
@@ -41,7 +51,6 @@ class AuthRegisterViewModel(
             )
         }
     }
-
     // Update the email and validate it
     private fun updateEmail(newEmail: String) {
         _uiState.update { currentState ->
@@ -102,18 +111,47 @@ class AuthRegisterViewModel(
         return this.copy(isFormValid = isEmailValid && isPasswordValid && isConfirmPasswordValid)
     }
 
-    private fun onSignUpClick() {
+    private fun updateDisplayNameOnSignUp() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                val currentState = _uiState.value
-                if (!currentState.isFormValid) {
-                    throw IllegalArgumentException("Invalid form data")
+            val fullName = _uiState.value.fullName
+            if (fullName.isNotBlank()) {
+                try {
+                    withTimeout(5000) {
+                        accountService.updateDisplayName(fullName)
+                    }
+                } catch (e: SocketTimeoutException) {
+                    _uiState.update { it.copy(error = TIMEOUT_ERROR) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = DEFAULT_ERROR) }
                 }
-                accountService.linkAccountWithEmail(currentState.email, currentState.password)
-                navigator.navigate(Routes.DashboardMain)
-            } catch (e: Exception) {
+            }
+        }
+    }
+
+    private fun onSignUpClick() {
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _uiState.update { it.copy(error = "No internet connection") }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true, error = null) }
+                withTimeout(5000) {
+                    val currentState = _uiState.value
+                    if (!currentState.isFormValid) {
+                        throw IllegalArgumentException("Invalid form data")
+                    }
+                    accountService.linkAccountWithEmail(currentState.email, currentState.password)
+                    updateDisplayNameOnSignUp()
+                    navigator.navigate(Routes.DashboardMain)
+                }
+            } catch (e: SocketTimeoutException) {
+                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
+            } catch (e: IllegalArgumentException) {
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -121,22 +159,37 @@ class AuthRegisterViewModel(
     }
 
     private fun onSignUpWithGoogle(credential: Credential) {
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _uiState.update { it.copy(error = "No internet connection") }
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                    accountService.linkAccountWithGoogle(googleIdTokenCredential.idToken)
-                    navigator.navigate(Routes.DashboardMain)
-                } else {
-                    Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)
-                    _uiState.update { it.copy(error = UNEXPECTED_CREDENTIAL) }
+                _uiState.update { it.copy(isLoading = true, error = null) }
+                withTimeout(5000) {
+                    if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        accountService.linkAccountWithGoogle(googleIdTokenCredential.idToken)
+                        navigator.navigate(Routes.DashboardMain)
+                    } else {
+                        Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)
+                        _uiState.update { it.copy(error = UNEXPECTED_CREDENTIAL) }
+                    }
                 }
+            } catch (e: SocketTimeoutException) {
+                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+                _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    init {
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _uiState.update { it.copy(error = "No internet connection") }
         }
     }
 
