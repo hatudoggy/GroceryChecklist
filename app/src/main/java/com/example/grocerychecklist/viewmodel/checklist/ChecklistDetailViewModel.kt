@@ -18,10 +18,10 @@ class ChecklistDetailViewModel(
     private val navigator: Navigator,
     entry: NavBackStackEntry
 ): ViewModel() {
-
+    val checklistId = entry.toRoute<Routes.ChecklistDetail>().checklistId
     private val _state = MutableStateFlow<ChecklistDetailState>(ChecklistDetailState.Loading)
     val state: StateFlow<ChecklistDetailState> = _state
-    val checklistId = entry.toRoute<Routes.ChecklistDetail>().checklistId
+
 
     init {
         loadChecklistDetails()
@@ -47,7 +47,7 @@ class ChecklistDetailViewModel(
     fun onEvent(event: ChecklistDetailEvent) {
         when (event) {
             ChecklistDetailEvent.NavigateBack -> {navigator.popBackStack()}
-            ChecklistDetailEvent.NavigateViewMode -> {navigator.navigate(Routes.ChecklistView)}
+            ChecklistDetailEvent.NavigateViewMode -> {navigator.navigate(Routes.ChecklistView(checklistId))}
             ChecklistDetailEvent.NavigateEditMode -> {navigator.navigate(Routes.ChecklistEdit(checklistId))}
             ChecklistDetailEvent.NavigateStartMode -> {navigator.navigate(Routes.ChecklistStart(checklistId))}
         }

@@ -20,7 +20,7 @@ sealed interface Routes {
     @Serializable
     data class ChecklistDetail(val checklistId: Long): Routes
     @Serializable
-    data object ChecklistView: Routes
+    data class ChecklistView(val checklistId: Long): Routes
     @Serializable
     data class ChecklistEdit(val checklistId: Long): Routes
     @Serializable

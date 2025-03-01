@@ -62,6 +62,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.grocerychecklist.ui.component.BottomModalButtonComponent
 import com.example.grocerychecklist.ui.component.BottomModalComponent
 import com.example.grocerychecklist.ui.component.SignOutIndicator
+import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
 import com.example.grocerychecklist.viewmodel.settings.SettingsMainEvent
@@ -99,6 +100,7 @@ fun SettingsMainScreen(
     }
     // Sign Out Indicator overlay - will appear on top of the entire screen
     SignOutIndicator(isVisible = state.isSigningOut)
+    ToastComponent(message = state.error)
 }
 
 @Composable
