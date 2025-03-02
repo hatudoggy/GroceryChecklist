@@ -2,7 +2,6 @@ package com.example.grocerychecklist.ui.screen.checklist
 
 //import com.example.grocerychecklist.ui.component.ChecklistComponent
 //import com.example.grocerychecklist.ui.component.ChecklistComponentVariant
-import ItemCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,8 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,25 +31,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
-import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewEvent
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewViewModel
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewState
 
 @Composable
 fun ChecklistViewScreen(
-    //state: DashboardBreakdownState,
-    viewModel: ChecklistViewViewModel,
+    state: ChecklistViewState,
     onEvent: (ChecklistViewEvent) -> Unit,
 ) {
-    val filteredItems by viewModel.filteredItems.collectAsState(emptyList())
-    val searchQuery by viewModel.searchQuery.collectAsState()
-
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
@@ -116,12 +106,13 @@ fun ChecklistViewScreen(
                     ),
                 fontSize = 16.sp,
                 placeholderText = "Search",
-                value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) }
-                        )
+                value = state.searchQuery,
+                onValueChange = { onEvent(ChecklistViewEvent.UpdateSearchQuery(it)) }
+            )
+
             Spacer(Modifier.height(8.dp))
             LazyColumn {
-                items(filteredItems) { item ->
+                items(state.checklistItems) { item ->
                     ChecklistItemComponent(
                         name = item.name,
                         variant = ChecklistItemComponentVariant.ChecklistItem,
@@ -139,9 +130,8 @@ fun ChecklistViewScreen(
 @Preview(showBackground = true)
 @Composable
 fun ChecklistViewScreenPreview() {
-    val navigator = Navigator()
     ChecklistViewScreen(
-        viewModel = ChecklistViewViewModel(navigator),
+        state = ChecklistViewState(),
         onEvent = {}
     )
 }

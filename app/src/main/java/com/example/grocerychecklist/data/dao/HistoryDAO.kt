@@ -3,7 +3,6 @@ package com.example.grocerychecklist.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Transaction
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.mapper.HistoryPriced
@@ -11,11 +10,10 @@ import com.example.grocerychecklist.data.model.History
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Dao
 interface HistoryDAO {
@@ -61,5 +59,6 @@ interface HistoryDAO {
         }
     }
 
-
+    @Query("SELECT * FROM history WHERE createdAt >= :startDate AND createdAt <= :endDate")
+    fun getHistoriesFromDateRange(startDate: LocalDateTime, endDate: LocalDateTime): Flow<List<History>>
 }

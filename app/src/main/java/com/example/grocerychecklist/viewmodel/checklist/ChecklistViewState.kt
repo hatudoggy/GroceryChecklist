@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
-sealed class ChecklistViewState {
-
-}
+data class ChecklistViewState (
+    val searchQuery: String = "",
+    val checklistItems: List<ChecklistData> = emptyList()
+)

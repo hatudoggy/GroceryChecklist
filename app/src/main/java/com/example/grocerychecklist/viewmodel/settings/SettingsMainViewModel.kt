@@ -1,11 +1,13 @@
 package com.example.grocerychecklist.viewmodel.settings
 
+import android.app.Application
 import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.util.NetworkUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +18,8 @@ import kotlinx.coroutines.launch
 
 class SettingsMainViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val application: Application
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsMainState())
     val state: StateFlow<SettingsMainState> = _state.stateIn(
@@ -49,6 +52,11 @@ class SettingsMainViewModel(
     }
 
     private fun signOut(){
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _state.update { it.copy(error = "No internet connection") }
+            return
+        }
+
         viewModelScope.launch {
             try {
                 // Show sign-out indicator
