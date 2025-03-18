@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -41,7 +42,6 @@ import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginState
-import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 
 
 @Composable
@@ -93,6 +93,9 @@ fun AuthLoginScreen (
                     value = state.email,
                     onValueChange = {onEvent(AuthLoginEvent.UpdateEmail(it))},
                     label = { Text("Email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    isError = !state.isEmailValid,
+                    supportingText = {state.emailError?.let { Text(it, color = Color.Red) }},
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -104,7 +107,9 @@ fun AuthLoginScreen (
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    isError = !state.isPasswordValid,
+                    supportingText = {state.passwordError?.let {Text(it, color = Color.Red)}},
                     trailingIcon = {
                         val image = if (passwordVisible)
                             Icons.Filled.Visibility
@@ -142,7 +147,7 @@ private fun LoginButton(onEvent: (AuthLoginEvent) -> Unit, state: AuthLoginState
         modifier = Modifier
             .height(44.dp)
             .fillMaxWidth(),
-        enabled = state.email.isNotBlank() && state.password.isNotBlank() // Disable button if fields are empty
+        enabled = state.isEmailValid && state.isPasswordValid
     ) {
         Text("Login")
     }
