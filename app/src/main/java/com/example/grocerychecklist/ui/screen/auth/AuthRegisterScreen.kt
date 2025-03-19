@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -101,7 +102,10 @@ fun AuthRegisterScreen (
                     onValueChange = { onEvent(AuthRegisterEvent.FullNameChanged(it)) },
                     label = { Text("Full Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next
+                    )
                 )
                 OutlinedTextField(
                     value = state.email,
@@ -109,7 +113,7 @@ fun AuthRegisterScreen (
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     isError = !state.isEmailValid,
                     supportingText = { state.emailError?.let { Text(it, color = Color.Red) } }
                 )
@@ -119,7 +123,7 @@ fun AuthRegisterScreen (
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
                     isError = !state.isPasswordValid,
                     supportingText = { state.passwordError?.let { Text(it, color = Color.Red) } },
                     trailingIcon = {
@@ -141,7 +145,7 @@ fun AuthRegisterScreen (
                     label = { Text("Confirm Password") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     isError = !state.isConfirmPasswordValid,
                     supportingText = { state.confirmPasswordError?.let { Text(it, color = Color.Red) } }
                 )

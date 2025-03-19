@@ -10,6 +10,7 @@ data class SettingsMainState (
     val isLoggedIn: Boolean = false,
     val isSigningOut: Boolean = false,
     val error: String? = null,
+    val isPasswordReset: Boolean = false,
 
     // UI Checks
     val isBottomModalOpen: Boolean = false
