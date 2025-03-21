@@ -138,6 +138,7 @@ class AuthLoginViewModel(
     fun onEvent (event: AuthLoginEvent) {
         when (event) {
             AuthLoginEvent.NavigateBack -> navigator.navigate(Routes.AuthMain)
+            AuthLoginEvent.NavigateToRegister -> navigator.navigate(Routes.AuthRegister)
             AuthLoginEvent.Login -> onLogInClick()
             is AuthLoginEvent.GoogleLogIn -> onGoogleLoginClick(event.credential)
             is AuthLoginEvent.UpdateEmail -> updateEmail(event.newEmail)
