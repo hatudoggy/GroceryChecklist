@@ -81,7 +81,7 @@ fun SettingsMainScreen(
                 }
             )
             BlurredCardWithLoginPrompt(state, onEvent)
-            PreferencesSection()
+//            PreferencesSection()
         }
     }
     // Sign Out Indicator overlay - will appear on top of the entire screen

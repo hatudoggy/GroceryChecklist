@@ -1,6 +1,7 @@
 package com.example.grocerychecklist
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,17 +12,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.LaunchedEffect
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.example.grocerychecklist.ui.component.BottomBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
@@ -32,7 +35,7 @@ import com.example.grocerychecklist.ui.screen.history.historyDestination
 import com.example.grocerychecklist.ui.screen.item.itemDestination
 import com.example.grocerychecklist.ui.screen.settings.settingsDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
-import kotlinx.coroutines.flow.firstOrNull
+import com.example.grocerychecklist.util.DataSyncWorker
 
 class MainActivity : ComponentActivity() {
 
@@ -123,6 +126,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        Log.d("DataSync", "App is in the background.")
+
+        val workRequest = OneTimeWorkRequest.Builder(DataSyncWorker::class.java).build()
+        WorkManager.getInstance(this).enqueue(workRequest)
+
+        super.onStop()
     }
 }
 

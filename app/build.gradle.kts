@@ -95,4 +95,14 @@ dependencies {
 
     //Material Icons
     implementation(libs.androidx.material.icons.extended)
+
+    // Worker
+    implementation(libs.androidx.work)
+
+    // Import the BoM for the Firebase platform
+    implementation(platform(libs.firebase.bom))
+
+    // Add the dependency for the Cloud Storage library
+    implementation(libs.firebase.storage)
+
 }
