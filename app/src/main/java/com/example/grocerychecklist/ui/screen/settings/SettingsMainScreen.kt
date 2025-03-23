@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -87,6 +89,7 @@ fun SettingsMainScreen(
     ToastComponent(message = state.error)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlurredCardWithLoginPrompt(
     state: SettingsMainState,
@@ -129,6 +132,7 @@ fun BlurredCardWithLoginPrompt(
                     title = "Change Password",
                     subTitle = "Update and secure your account",
                     state = state,
+                    onClick = { onEvent(SettingsMainEvent.ResetPassword) }
                 )
                 if (state.isLoggedIn) {
                     SettingsButtonCard(
@@ -154,6 +158,32 @@ fun BlurredCardWithLoginPrompt(
             ) {
                 Text("Log In to Sync")
             }
+        }
+
+        if (state.isPasswordReset) {
+            AlertDialog(
+                onDismissRequest = { onEvent(SettingsMainEvent.ClearResetState )},
+                title = { Text("Password Reset Sent") },
+                text = { Text("Check your email for reset instructions.") },
+                confirmButton = {
+                    TextButton(onClick = { onEvent(SettingsMainEvent.ClearResetState) }) {
+                        Text("Ok")
+                    }
+                }
+            )
+        }
+
+        if (state.error != null) {
+            AlertDialog(
+                onDismissRequest = { onEvent(SettingsMainEvent.ClearErrorState) },
+                title = { Text("Error") },
+                text = { Text(state.error) },
+                confirmButton = {
+                    TextButton ( onClick = {onEvent(SettingsMainEvent.ClearErrorState)} ) {
+                        Text("Ok")
+                    }
+                }
+            )
         }
     }
 }

@@ -86,6 +86,16 @@ class AccountService{
         Firebase.auth.currentUser!!.delete().await()
     }
 
+    suspend fun resetPassword() {
+        val email = Firebase.auth.currentUser?.email
+
+        if (email.isNullOrEmpty()) {
+            throw IllegalStateException("No email found for the current user")
+        }
+
+        Firebase.auth.sendPasswordResetEmail(email.toString()).await()
+    }
+
     private fun FirebaseUser?.toAppUser(): User {
         return if (this == null) User() else User(
             id = this.uid,
