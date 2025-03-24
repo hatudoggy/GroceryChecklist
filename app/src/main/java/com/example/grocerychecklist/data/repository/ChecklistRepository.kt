@@ -25,7 +25,11 @@ class ChecklistRepository(
             lastShopAt = currentDateTime
         )
 
-        return checklistDAO.insert(checklist)
+        val checklistId = checklistDAO.insert(checklist)
+
+
+
+        return checklistId
     }
 
     suspend fun updateChecklist(id: Long, checklistInput: ChecklistInput) {
@@ -41,6 +45,7 @@ class ChecklistRepository(
         )
 
         checklistDAO.update(updatedChecklist)
+
     }
 
     suspend fun updateChecklistLastOpenedAt(checklistId: Long) {
@@ -51,6 +56,7 @@ class ChecklistRepository(
     suspend fun updateChecklistLastShoppedAt(checklistId: Long) {
         val currentDateTime = DateUtility.getCurrentDateTime()
         updateChecklistDate(checklistId, lastShopAt = currentDateTime)
+
     }
 
     private suspend fun updateChecklistDate(checklistId: Long, lastOpenedAt: LocalDateTime? = null, lastShopAt: LocalDateTime? = null) {
@@ -62,10 +68,12 @@ class ChecklistRepository(
             )
             checklistDAO.update(newChecklist)
         }
+
     }
 
     suspend fun deleteChecklist(checklist: Checklist) {
         checklistDAO.delete(checklist)
+
     }
 
     suspend fun getChecklist(id: Long): Checklist {

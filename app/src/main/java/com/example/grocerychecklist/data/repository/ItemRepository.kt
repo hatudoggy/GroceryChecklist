@@ -7,9 +7,7 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
 
 enum class ItemOrder {
-    CreatedAt,
-    Name,
-    Price,
+    CreatedAt, Name, Price,
 }
 
 class ItemRepository(
@@ -30,7 +28,11 @@ class ItemRepository(
             updatedAt = currentDateTime
         )
 
-        return itemDAO.insert(item)
+        val itemId = itemDAO.insert(item)
+
+
+
+        return itemId
     }
 
     suspend fun updateItem(id: Long, itemInput: ItemInput) {
@@ -48,10 +50,13 @@ class ItemRepository(
         )
 
         itemDAO.update(updatedItem)
+
+
     }
 
     suspend fun deleteItem(item: Item) {
         itemDAO.delete(item)
+
     }
 
     suspend fun getItem(id: Long): Item {

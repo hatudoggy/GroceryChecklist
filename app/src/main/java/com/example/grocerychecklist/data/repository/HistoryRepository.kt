@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
-import java.time.ZoneOffset
 
 class HistoryRepository(
     private val historyDAO: HistoryDAO
@@ -28,7 +27,11 @@ class HistoryRepository(
             createdAt = currentDateTime
         )
 
-        return historyDAO.insert(history)
+        val historyId = historyDAO.insert(history)
+
+
+
+        return historyId
     }
 
     suspend fun getHistory(id: Long): History {

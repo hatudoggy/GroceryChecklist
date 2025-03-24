@@ -1,7 +1,6 @@
 package com.example.grocerychecklist
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,11 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.example.grocerychecklist.ui.component.BottomBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
@@ -35,7 +33,8 @@ import com.example.grocerychecklist.ui.screen.history.historyDestination
 import com.example.grocerychecklist.ui.screen.item.itemDestination
 import com.example.grocerychecklist.ui.screen.settings.settingsDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
-import com.example.grocerychecklist.util.DataSyncWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -47,11 +46,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        //Used to clear DB data
-//        val dbRepo = GroceryChecklistApp.appModule.databaseRepository
-//        lifecycleScope.launch (Dispatchers.IO){
-//            dbRepo.clearRoomDB()
-//        }
+//        Used to clear DB data
+        val dbRepo = GroceryChecklistApp.appModule.databaseRepository
+        lifecycleScope.launch (Dispatchers.IO){
+            dbRepo.clearRoomDB()
+        }
 
         setContent {
             GroceryChecklistTheme {
@@ -88,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         Routes.DashboardMain
                     }
                     isStartDestinationDetermined = true
+
                 }
 
                 if (isStartDestinationDetermined) {
@@ -126,15 +126,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onStop() {
-        Log.d("DataSync", "App is in the background.")
-
-        val workRequest = OneTimeWorkRequest.Builder(DataSyncWorker::class.java).build()
-        WorkManager.getInstance(this).enqueue(workRequest)
-
-        super.onStop()
     }
 }
 

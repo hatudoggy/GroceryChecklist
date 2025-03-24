@@ -105,4 +105,6 @@ dependencies {
     // Add the dependency for the Cloud Storage library
     implementation(libs.firebase.storage)
 
+    implementation(libs.firebase.firestore)
+
 }
