@@ -7,11 +7,9 @@ import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.domain.utility.DateUtility
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.tasks.await
 
 enum class ChecklistItemOrder(val order: String) {
     Order("order"),
@@ -24,10 +22,6 @@ class ChecklistItemRepository(
     private val checklistItemDAO: ChecklistItemDAO,
     private val itemDAO: ItemDAO
 ) {
-
-    private val db = FirebaseFirestore.getInstance()
-    private val checklistItemsRef = db.collection("checklistItems")
-    private val itemsRef = db.collection("items")
 
     suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput): Long {
         val currentDateTime = DateUtility.getCurrentDateTime()
@@ -56,9 +50,9 @@ class ChecklistItemRepository(
 
         val checklistItemId = checklistItemDAO.insert(checklistItem)
 
-        val checklistItemDocRef = checklistItemsRef.add(checklistItem).await()
 
-        return checklistItemDocRef.id.toLong()
+
+        return checklistItemId
     }
 
     suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput) {
