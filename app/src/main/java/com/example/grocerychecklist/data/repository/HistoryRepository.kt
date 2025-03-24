@@ -6,14 +6,15 @@ import com.example.grocerychecklist.data.mapper.HistoryPriced
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.util.BackupManager
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
-import java.time.ZoneOffset
 
 class HistoryRepository(
-    private val historyDAO: HistoryDAO
+    private val historyDAO: HistoryDAO,
+    private val backupManager: BackupManager
 ) {
 
     suspend fun addHistory(checklist: Checklist): Long {
@@ -28,7 +29,11 @@ class HistoryRepository(
             createdAt = currentDateTime
         )
 
-        return historyDAO.insert(history)
+        val historyId = historyDAO.insert(history)
+
+        backupManager.triggerBackup()
+
+        return historyId
     }
 
     suspend fun getHistory(id: Long): History {

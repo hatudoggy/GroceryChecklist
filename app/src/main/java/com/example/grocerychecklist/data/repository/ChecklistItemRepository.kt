@@ -7,6 +7,7 @@ import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.util.BackupManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
@@ -20,7 +21,8 @@ enum class ChecklistItemOrder(val order: String) {
 
 class ChecklistItemRepository(
     private val checklistItemDAO: ChecklistItemDAO,
-    private val itemDAO: ItemDAO
+    private val itemDAO: ItemDAO,
+    private val backupManager: BackupManager
 ) {
 
     suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput): Long {
@@ -48,7 +50,11 @@ class ChecklistItemRepository(
             updatedAt = currentDateTime
         )
 
-        return checklistItemDAO.insert(checklistItem)
+        val checklistItemId = checklistItemDAO.insert(checklistItem)
+
+        backupManager.triggerBackup()
+
+        return checklistItemId
     }
 
     suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput) {
@@ -71,6 +77,7 @@ class ChecklistItemRepository(
 
         itemDAO.update(updatedItem)
         checklistItemDAO.update(updatedChecklistItem)
+        backupManager.triggerBackup()
     }
 
     suspend fun changeChecklistOrder(checklistId: Long, checklistItemId: Long, newOrder: Int) {
@@ -100,6 +107,8 @@ class ChecklistItemRepository(
             val updatedItem = item.copy(order = index + 1)
             checklistItemDAO.update(updatedItem)
         }
+
+        backupManager.triggerBackup()
     }
 
     suspend fun deleteChecklistItem(checklistId: Long) {
@@ -110,6 +119,8 @@ class ChecklistItemRepository(
             val updatedItem = item.copy(order = index + 1)
             checklistItemDAO.update(updatedItem)
         }
+
+        backupManager.triggerBackup()
     }
 
     suspend fun deleteChecklistItemAndItem(checklistId: Long, itemId: Long) {
@@ -121,6 +132,8 @@ class ChecklistItemRepository(
             val updatedItem = item.copy(order = index + 1)
             checklistItemDAO.update(updatedItem)
         }
+
+        backupManager.triggerBackup()
     }
 
     suspend fun getChecklistItem(id: Long): ChecklistItemFull {

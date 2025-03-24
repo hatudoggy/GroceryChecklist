@@ -1,19 +1,19 @@
 package com.example.grocerychecklist.data.repository
 
-import ItemCategory
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility
-import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
+import com.example.grocerychecklist.util.BackupManager
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class HistoryItemRepository(
-    private val historyItemDAO: HistoryItemDAO
+    private val historyItemDAO: HistoryItemDAO,
+    private val backupManager: BackupManager
 ) {
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM")
 
@@ -40,7 +40,11 @@ class HistoryItemRepository(
             )
         }
 
-        return historyItemDAO.insertBatch(historyItems)
+        val historyItemId = historyItemDAO.insertBatch(historyItems)
+
+        backupManager.triggerBackup()
+
+        return historyItemId
     }
 
     suspend fun addHistoryItems(historyId: Long, items: List<ChecklistData>): List<Long> {
@@ -64,7 +68,11 @@ class HistoryItemRepository(
             )
         }
 
-        return historyItemDAO.insertBatch(historyItems)
+        val historyItemId = historyItemDAO.insertBatch(historyItems)
+
+        backupManager.triggerBackup()
+
+        return historyItemId
     }
 
     suspend fun getHistoryItem(id: Long): HistoryItem {

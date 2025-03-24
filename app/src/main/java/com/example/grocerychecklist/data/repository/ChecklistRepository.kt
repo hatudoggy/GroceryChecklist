@@ -4,11 +4,13 @@ import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.util.BackupManager
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDateTime
 
 class ChecklistRepository(
-    private val checklistDAO: ChecklistDAO
+    private val checklistDAO: ChecklistDAO,
+    private val backupManager: BackupManager
 ) {
 
     suspend fun addChecklist(checklistInput: ChecklistInput): Long {
@@ -25,7 +27,11 @@ class ChecklistRepository(
             lastShopAt = currentDateTime
         )
 
-        return checklistDAO.insert(checklist)
+        val checklistId = checklistDAO.insert(checklist)
+
+        backupManager.triggerBackup()
+
+        return checklistId
     }
 
     suspend fun updateChecklist(id: Long, checklistInput: ChecklistInput) {
@@ -41,16 +47,22 @@ class ChecklistRepository(
         )
 
         checklistDAO.update(updatedChecklist)
+
+        backupManager.triggerBackup()
     }
 
     suspend fun updateChecklistLastOpenedAt(checklistId: Long) {
         val currentDateTime = DateUtility.getCurrentDateTime()
         updateChecklistDate(checklistId, lastOpenedAt = currentDateTime)
+
+        backupManager.triggerBackup()
     }
 
     suspend fun updateChecklistLastShoppedAt(checklistId: Long) {
         val currentDateTime = DateUtility.getCurrentDateTime()
         updateChecklistDate(checklistId, lastShopAt = currentDateTime)
+
+        backupManager.triggerBackup()
     }
 
     private suspend fun updateChecklistDate(checklistId: Long, lastOpenedAt: LocalDateTime? = null, lastShopAt: LocalDateTime? = null) {
@@ -62,10 +74,14 @@ class ChecklistRepository(
             )
             checklistDAO.update(newChecklist)
         }
+
+        backupManager.triggerBackup()
     }
 
     suspend fun deleteChecklist(checklist: Checklist) {
         checklistDAO.delete(checklist)
+
+        backupManager.triggerBackup()
     }
 
     suspend fun getChecklist(id: Long): Checklist {

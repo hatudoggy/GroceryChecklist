@@ -13,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,8 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
+import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.ui.component.BottomBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
@@ -35,7 +35,7 @@ import com.example.grocerychecklist.ui.screen.history.historyDestination
 import com.example.grocerychecklist.ui.screen.item.itemDestination
 import com.example.grocerychecklist.ui.screen.settings.settingsDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
-import com.example.grocerychecklist.util.DataSyncWorker
+import com.example.grocerychecklist.util.DatabaseSyncUtils
 
 class MainActivity : ComponentActivity() {
 
@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
                 // State to track if we've determined the start destination
                 var isStartDestinationDetermined by remember { mutableStateOf(false) }
                 var startDestination by remember { mutableStateOf<Routes>(Routes.AuthMain) }
+                val isUploading by DatabaseSyncUtils.isUploading.collectAsState()
 
                 LaunchedEffect(key1 = Unit) {
                     val hasUser = GroceryChecklistApp.appModule.accountService.hasUser()
@@ -88,6 +89,15 @@ class MainActivity : ComponentActivity() {
                         Routes.DashboardMain
                     }
                     isStartDestinationDetermined = true
+
+                    Log.d("DataSync", isUploading.toString())
+
+                    if (!isUploading) {
+                        DatabaseSyncUtils.downloadDatabase(
+                            applicationContext,
+                            AppDatabase.getDatabase(applicationContext)
+                        )
+                    }
                 }
 
                 if (isStartDestinationDetermined) {
@@ -126,15 +136,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onStop() {
-        Log.d("DataSync", "App is in the background.")
-
-        val workRequest = OneTimeWorkRequest.Builder(DataSyncWorker::class.java).build()
-        WorkManager.getInstance(this).enqueue(workRequest)
-
-        super.onStop()
     }
 }
 
