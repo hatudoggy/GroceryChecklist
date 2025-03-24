@@ -11,11 +11,16 @@ import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.ItemRepository
 import com.example.grocerychecklist.ui.screen.Navigator
+import com.example.grocerychecklist.util.BackupManager
 
 
 class AppModuleImpl(
     private val appContext: Context
 ): AppModule {
+
+    private val backupManager: BackupManager by lazy {
+        BackupManager(appContext)
+    }
 
     override val db: AppDatabase by lazy {
         AppDatabase.getDatabase(appContext)
@@ -37,23 +42,23 @@ class AppModuleImpl(
     }
 
     override val checklistRepository: ChecklistRepository by lazy {
-        ChecklistRepository(db.checklistDAO())
+        ChecklistRepository(db.checklistDAO(), backupManager)
     }
 
     override val checklistItemRepository: ChecklistItemRepository by lazy {
-        ChecklistItemRepository(db.checklistItemDAO(), db.itemDAO())
+        ChecklistItemRepository(db.checklistItemDAO(), db.itemDAO(), backupManager)
     }
 
     override val itemRepository: ItemRepository by lazy {
-        ItemRepository(db.itemDAO())
+        ItemRepository(db.itemDAO(), backupManager)
     }
 
     override val historyRepository: HistoryRepository by lazy {
-        HistoryRepository(db.historyDAO())
+        HistoryRepository(db.historyDAO(), backupManager)
     }
 
     override val historyItemRepository: HistoryItemRepository by lazy {
-        HistoryItemRepository(db.historyItemDAO())
+        HistoryItemRepository(db.historyItemDAO(), backupManager)
     }
 
 }

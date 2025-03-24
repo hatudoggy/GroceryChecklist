@@ -5,13 +5,15 @@ import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.util.BackupManager
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class HistoryItemRepository(
-    private val historyItemDAO: HistoryItemDAO
+    private val historyItemDAO: HistoryItemDAO,
+    private val backupManager: BackupManager
 ) {
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM")
 
@@ -40,7 +42,7 @@ class HistoryItemRepository(
 
         val historyItemId = historyItemDAO.insertBatch(historyItems)
 
-
+        backupManager.triggerBackup()
 
         return historyItemId
     }
@@ -68,7 +70,7 @@ class HistoryItemRepository(
 
         val historyItemId = historyItemDAO.insertBatch(historyItems)
 
-
+        backupManager.triggerBackup()
 
         return historyItemId
     }

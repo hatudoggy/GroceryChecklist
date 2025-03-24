@@ -4,6 +4,7 @@ import com.example.grocerychecklist.data.dao.ItemDAO
 import com.example.grocerychecklist.data.mapper.ItemInput
 import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.util.BackupManager
 import kotlinx.coroutines.flow.Flow
 
 enum class ItemOrder {
@@ -11,7 +12,8 @@ enum class ItemOrder {
 }
 
 class ItemRepository(
-    private val itemDAO: ItemDAO
+    private val itemDAO: ItemDAO,
+    private val backupManager: BackupManager
 ) {
 
     suspend fun addItem(itemInput: ItemInput): Long {
@@ -30,7 +32,7 @@ class ItemRepository(
 
         val itemId = itemDAO.insert(item)
 
-
+        backupManager.triggerBackup()
 
         return itemId
     }
@@ -50,13 +52,12 @@ class ItemRepository(
         )
 
         itemDAO.update(updatedItem)
-
-
+        backupManager.triggerBackup()
     }
 
     suspend fun deleteItem(item: Item) {
         itemDAO.delete(item)
-
+        backupManager.triggerBackup()
     }
 
     suspend fun getItem(id: Long): Item {
