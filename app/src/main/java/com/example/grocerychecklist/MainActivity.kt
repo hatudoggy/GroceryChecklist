@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,7 +25,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.ui.component.BottomBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
@@ -35,7 +35,13 @@ import com.example.grocerychecklist.ui.screen.history.historyDestination
 import com.example.grocerychecklist.ui.screen.item.itemDestination
 import com.example.grocerychecklist.ui.screen.settings.settingsDestination
 import com.example.grocerychecklist.ui.theme.GroceryChecklistTheme
+import com.example.grocerychecklist.util.AuthUtils
+import com.example.grocerychecklist.util.DataState
 import com.example.grocerychecklist.util.DatabaseSyncUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -49,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
 //        Used to clear DB data
         val dbRepo = GroceryChecklistApp.appModule.databaseRepository
-        lifecycleScope.launch (Dispatchers.IO){
+        lifecycleScope.launch(Dispatchers.IO) {
             dbRepo.clearRoomDB()
         }
 
@@ -79,9 +85,10 @@ class MainActivity : ComponentActivity() {
                 // State to track if we've determined the start destination
                 var isStartDestinationDetermined by remember { mutableStateOf(false) }
                 var startDestination by remember { mutableStateOf<Routes>(Routes.AuthMain) }
-                val isUploading by DatabaseSyncUtils.isUploading.collectAsState()
+                val dataState by DatabaseSyncUtils.dataState.collectAsState()
+                val isDoneLoading = dataState == DataState.IDLE
 
-                LaunchedEffect(key1 = Unit) {
+                LaunchedEffect(key1 = AuthUtils.getCurrentUser()) {
                     val hasUser = GroceryChecklistApp.appModule.accountService.hasUser()
                     startDestination = if (!hasUser) {
                         Routes.AuthMain
@@ -90,17 +97,18 @@ class MainActivity : ComponentActivity() {
                     }
                     isStartDestinationDetermined = true
 
-                    Log.d("DataSync", isUploading.toString())
-
-                    if (!isUploading) {
-                        DatabaseSyncUtils.downloadDatabase(
-                            applicationContext,
-                            AppDatabase.getDatabase(applicationContext)
-                        )
+                    if (AuthUtils.isUserLoggedIn()) {
+                        // Suspends until dataState is IDLE
+                        snapshotFlow { dataState }
+                            .filter { it == DataState.IDLE }
+                            .first()
+                        
+                        // Fetch data after suspension
+                        DatabaseSyncUtils.fetchData()
                     }
                 }
 
-                if (isStartDestinationDetermined) {
+                if (isStartDestinationDetermined && isDoneLoading) {
                     Scaffold(
                         bottomBar = {
                             if (currentRoute in bottomNavRoutes) {

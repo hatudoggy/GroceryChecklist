@@ -83,6 +83,15 @@ class ItemMainViewModel(
 
     private fun loadItems() {
         viewModelScope.launch {
+            // Just refresh the items from Firestore
+//            itemRepository.fetchItemsFromFirestoreAndInsertToRoom(
+//                onSuccess = {
+//                    Log.d("ItemMainViewModel", "Items fetched and inserted successfully")
+//                },
+//                onFailure = { exception ->
+//                    Log.e("ItemMainViewModel", "Error fetching items: ${exception.message}")
+//                }
+//            )
             itemRepository.getItems(ItemOrder.CreatedAt)
                 .catch { emit(emptyList<Item>()) }
                 .collect { itemList -> _state.update { it.copy(items = itemList) } }

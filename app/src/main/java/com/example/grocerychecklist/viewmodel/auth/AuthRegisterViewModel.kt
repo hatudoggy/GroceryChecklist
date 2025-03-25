@@ -1,18 +1,19 @@
+
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import android.util.Patterns
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
+import com.example.grocerychecklist.util.DatabaseSyncUtils
 import com.example.grocerychecklist.util.NetworkUtils
 import com.example.grocerychecklist.util.TIMEOUT_ERROR
+import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterState
 import com.example.grocerychecklist.viewmodel.util.MIN_PASS_LENGTH
@@ -24,9 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.net.SocketTimeoutException
 import java.util.regex.Pattern
-import kotlinx.coroutines.withTimeout
 
 private const val ERROR_TAG = "AuthRegisterViewModel"
 
@@ -154,6 +155,7 @@ class AuthRegisterViewModel(
                 _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
+                DatabaseSyncUtils.saveUnsyncedData()
             }
         }
     }
@@ -183,6 +185,7 @@ class AuthRegisterViewModel(
                 _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
+                DatabaseSyncUtils.saveUnsyncedData()
             }
         }
     }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.edit
+import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.data.AppDatabase
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -17,14 +18,46 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
+enum class DataState {
+    IDLE,            // Default state, nothing happening
+    FETCHING,        // Fetching data
+    SAVING_UNSYNCED  // Saving unsynced data
+}
+
 object DatabaseSyncUtils {
-    private val _isUploading = MutableStateFlow(false)
-    val isUploading: StateFlow<Boolean> = _isUploading
+    private val _dataState = MutableStateFlow(DataState.IDLE)
+    val dataState: StateFlow<DataState> = _dataState
+
+    suspend fun fetchData() {
+        _dataState.value = DataState.FETCHING
+
+        appModule.itemRepository.fetchItemsFromFirestoreAndInsertToRoom(
+            onSuccess = {
+                _dataState.value = DataState.IDLE
+            },
+            onFailure = {
+                _dataState.value = DataState.IDLE
+            }
+        )
+    }
+
+    suspend fun saveUnsyncedData() {
+        _dataState.value = DataState.SAVING_UNSYNCED
+
+        appModule.itemRepository.saveUnsyncedItems(
+            onSuccess = {
+                _dataState.value = DataState.IDLE
+            },
+            onFailure = {
+                _dataState.value = DataState.IDLE
+            }
+        )
+    }
 
     private fun setUploadInProgress(context: Context, inProgress: Boolean) {
-        _isUploading.value = inProgress
+        _dataState.value = DataState.IDLE
         val sharedPrefs = context.getSharedPreferences("BackupPrefs", Context.MODE_PRIVATE)
-        sharedPrefs.edit() { putBoolean("isUploading", inProgress) }
+        sharedPrefs.edit() { putBoolean("isFetchingData", inProgress) }
     }
 
     suspend fun uploadDatabase(context: Context, database: AppDatabase): String? = withContext(Dispatchers.IO) {

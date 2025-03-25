@@ -33,5 +33,8 @@ interface ItemDAO: BaseDAO<Item> {
     @Query("DELETE FROM item WHERE id = :itemId")
     suspend fun deleteItemById(itemId: Long): Int
 
+    @Query("DELETE FROM item")
+    suspend fun clearAll()
+
     //fun aggregateTotalItems(): Int
 }

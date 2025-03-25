@@ -12,6 +12,7 @@ import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.ItemRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.util.BackupManager
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 class AppModuleImpl(
@@ -20,6 +21,10 @@ class AppModuleImpl(
 
     private val backupManager: BackupManager by lazy {
         BackupManager(appContext)
+    }
+
+    private val firestore: FirebaseFirestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     override val db: AppDatabase by lazy {
@@ -50,7 +55,7 @@ class AppModuleImpl(
     }
 
     override val itemRepository: ItemRepository by lazy {
-        ItemRepository(db.itemDAO(), backupManager)
+        ItemRepository(db.itemDAO(), firestore)
     }
 
     override val historyRepository: HistoryRepository by lazy {

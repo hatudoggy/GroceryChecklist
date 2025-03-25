@@ -1,32 +1,31 @@
 package com.example.grocerychecklist.viewmodel.auth
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import android.util.Patterns
-import androidx.compose.animation.core.copy
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.util.ERROR_TAG
-import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
+import com.example.grocerychecklist.util.DatabaseSyncUtils
+import com.example.grocerychecklist.util.ERROR_TAG
 import com.example.grocerychecklist.util.NetworkUtils
 import com.example.grocerychecklist.util.TIMEOUT_ERROR
+import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
 import com.example.grocerychecklist.viewmodel.util.MIN_PASS_LENGTH
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.TimeoutCancellationException
 
 class AuthLoginViewModel(
     private val navigator: Navigator,
@@ -92,8 +91,9 @@ class AuthLoginViewModel(
             }
             catch (e: Exception) {
                 _uiState.update { it.copy(error = "Invalid email or password", isLoading = false) }
-            }finally {
+            } finally {
                 _uiState.update { it.copy(isLoading = false) }
+                DatabaseSyncUtils.saveUnsyncedData()
             }
         }
     }
@@ -125,6 +125,7 @@ class AuthLoginViewModel(
                 _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             }finally {
                 _uiState.update { it.copy(isLoading = false) }
+                DatabaseSyncUtils.saveUnsyncedData()
             }
         }
     }
