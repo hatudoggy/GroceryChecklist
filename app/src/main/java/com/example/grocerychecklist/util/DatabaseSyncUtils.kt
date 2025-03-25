@@ -30,28 +30,31 @@ object DatabaseSyncUtils {
 
     suspend fun fetchData() {
         _dataState.value = DataState.FETCHING
-
-        appModule.itemRepository.fetchItemsFromFirestoreAndInsertToRoom(
-            onSuccess = {
-                _dataState.value = DataState.IDLE
-            },
-            onFailure = {
-                _dataState.value = DataState.IDLE
-            }
-        )
+        try {
+            val itemsFetchResult =
+                runCatching { appModule.itemRepository.fetchItemsFromFirestoreAndInsertToRoom() }
+            val checklistFetchResult =
+                runCatching { appModule.checklistRepository.fetchChecklistsFromFirestoreAndInsertToRoom() }
+        } catch (e: Exception) {
+            Log.e("DataSync", "Failed to fetch data", e)
+        } finally {
+            _dataState.value = DataState.IDLE
+        }
     }
 
     suspend fun saveUnsyncedData() {
         _dataState.value = DataState.SAVING_UNSYNCED
 
-        appModule.itemRepository.saveUnsyncedItems(
-            onSuccess = {
-                _dataState.value = DataState.IDLE
-            },
-            onFailure = {
-                _dataState.value = DataState.IDLE
-            }
-        )
+        try {
+            val itemsSaveUnsyncedResult =
+                runCatching { appModule.itemRepository.saveUnsyncedItems() }
+            val checklistSaveUnsyncedResult =
+                runCatching { appModule.checklistRepository.saveUnsyncedChecklists() }
+        } catch (e: Exception) {
+            Log.e("DataSync", "Failed to save unsynced data", e)
+        } finally {
+            _dataState.value = DataState.IDLE
+        }
     }
 
     private fun setUploadInProgress(context: Context, inProgress: Boolean) {
@@ -60,45 +63,46 @@ object DatabaseSyncUtils {
         sharedPrefs.edit() { putBoolean("isFetchingData", inProgress) }
     }
 
-    suspend fun uploadDatabase(context: Context, database: AppDatabase): String? = withContext(Dispatchers.IO) {
-        setUploadInProgress(context, true)
+    suspend fun uploadDatabase(context: Context, database: AppDatabase): String? =
+        withContext(Dispatchers.IO) {
+            setUploadInProgress(context, true)
 
-        if (!AuthUtils.isUserLoggedIn()) {
-            Log.d("DataSync", "User is not logged in. Skipping upload.")
-            setUploadInProgress(context, false)
-            return@withContext null
+            if (!AuthUtils.isUserLoggedIn()) {
+                Log.d("DataSync", "User is not logged in. Skipping upload.")
+                setUploadInProgress(context, false)
+                return@withContext null
+            }
+
+            val databaseName = database.openHelper.databaseName
+            val databasePath = context.getDatabasePath(databaseName).absolutePath
+            val exportedFilePath = "${context.cacheDir}/$databaseName"
+            val storagePath = "databases/${AuthUtils.getAuth().currentUser!!.uid}/$databaseName"
+
+            try {
+                // Close the database before copying.
+                database.close()
+
+                copyDatabase(databasePath, exportedFilePath)
+                val uri = Uri.fromFile(File(exportedFilePath))
+                val downloadUrl = uploadToFirebaseStorage(uri, storagePath)
+
+                File(exportedFilePath).delete() // Clean up
+
+                setUploadInProgress(context, false)
+                downloadUrl
+            } catch (e: IOException) {
+                Log.e("DataSync", "Failed to export database", e)
+                setUploadInProgress(context, false)
+                null
+            } catch (e: Exception) {
+                Log.e("DataSync", "Firebase upload failed", e)
+                setUploadInProgress(context, false)
+                null
+            } finally {
+                // Reopen the database after the upload attempt.
+                AppDatabase.getDatabase(context)
+            }
         }
-
-        val databaseName = database.openHelper.databaseName
-        val databasePath = context.getDatabasePath(databaseName).absolutePath
-        val exportedFilePath = "${context.cacheDir}/$databaseName"
-        val storagePath = "databases/${AuthUtils.getAuth().currentUser!!.uid}/$databaseName"
-
-        try {
-            // Close the database before copying.
-            database.close()
-
-            copyDatabase(databasePath, exportedFilePath)
-            val uri = Uri.fromFile(File(exportedFilePath))
-            val downloadUrl = uploadToFirebaseStorage(uri, storagePath)
-
-            File(exportedFilePath).delete() // Clean up
-
-            setUploadInProgress(context, false)
-            downloadUrl
-        } catch (e: IOException) {
-            Log.e("DataSync", "Failed to export database", e)
-            setUploadInProgress(context, false)
-            null
-        } catch (e: Exception) {
-            Log.e("DataSync", "Firebase upload failed", e)
-            setUploadInProgress(context, false)
-            null
-        } finally {
-            // Reopen the database after the upload attempt.
-            AppDatabase.getDatabase(context)
-        }
-    }
 
     private fun copyDatabase(databasePath: String, exportedFilePath: String) {
         FileInputStream(databasePath).use { inputStream ->
@@ -123,29 +127,30 @@ object DatabaseSyncUtils {
         }
     }
 
-    suspend fun downloadDatabase(context: Context, database: AppDatabase) = withContext(Dispatchers.IO) {
-        if (!AuthUtils.isUserLoggedIn()) {
-            Log.d("DataSync", "User is not logged in. Skipping download.")
-            return@withContext
+    suspend fun downloadDatabase(context: Context, database: AppDatabase) =
+        withContext(Dispatchers.IO) {
+            if (!AuthUtils.isUserLoggedIn()) {
+                Log.d("DataSync", "User is not logged in. Skipping download.")
+                return@withContext
+            }
+
+            val databaseName = database.openHelper.databaseName
+            val storagePath = "databases/${AuthUtils.getAuth().currentUser!!.uid}/$databaseName"
+            val localFilePath = context.getDatabasePath(databaseName).absolutePath
+
+            try {
+                val storageRef = Firebase.storage.reference.child(storagePath)
+                val fileUri = Uri.fromFile(File(localFilePath))
+                storageRef.getFile(fileUri).await()
+
+                Log.d("DataSync", "Database downloaded successfully: $localFilePath")
+
+                // Ensure Room reloads the new database
+                restartRoomDatabase(context, database)
+            } catch (e: Exception) {
+                Log.e("DataSync", "Failed to download database", e)
+            }
         }
-
-        val databaseName = database.openHelper.databaseName
-        val storagePath = "databases/${AuthUtils.getAuth().currentUser!!.uid}/$databaseName"
-        val localFilePath = context.getDatabasePath(databaseName).absolutePath
-
-        try {
-            val storageRef = Firebase.storage.reference.child(storagePath)
-            val fileUri = Uri.fromFile(File(localFilePath))
-            storageRef.getFile(fileUri).await()
-
-            Log.d("DataSync", "Database downloaded successfully: $localFilePath")
-
-            // Ensure Room reloads the new database
-            restartRoomDatabase(context, database)
-        } catch (e: Exception) {
-            Log.e("DataSync", "Failed to download database", e)
-        }
-    }
 
     private fun restartRoomDatabase(context: Context, database: AppDatabase) {
         try {

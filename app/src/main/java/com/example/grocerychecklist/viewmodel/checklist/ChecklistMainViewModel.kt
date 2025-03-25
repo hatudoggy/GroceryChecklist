@@ -189,11 +189,11 @@ class ChecklistMainViewModel(
             is ChecklistMainEvent.AddChecklist -> {
                 viewModelScope.launch {
                     try {
-                        // Save the checklist to Room
-                        checklistRepository.addChecklist(event.checklist)
-
                         // Close the drawer and reset the state of the newChecklist variable
                         onEvent(ChecklistMainEvent.ToggleDrawer)
+
+                        // Save the checklist to Room
+                        checklistRepository.addChecklist(event.checklist)
 
                         // Reload the checklists
                         loadChecklists()
@@ -207,11 +207,11 @@ class ChecklistMainViewModel(
                 viewModelScope.launch {
                     try {
                         if (event.checklist?.id == null) return@launch
-                        // Delete the item
-                        checklistRepository.deleteChecklist(event.checklist)
-
                         // Close the Delete Dialog and reset the states
                         onEvent(ChecklistMainEvent.ToggleDeleteDialog)
+
+                        // Delete the item
+                        checklistRepository.deleteChecklist(event.checklist)
 
                         loadChecklists()
                     } catch (e: Exception) {
@@ -231,14 +231,14 @@ class ChecklistMainViewModel(
                             iconBackgroundColor = event.checklist.iconBackgroundColor
                         )
 
+                        // Close the drawer and reset states
+                        onEvent(ChecklistMainEvent.ToggleDrawer)
+
                         // Update the checklist
                         checklistRepository.updateChecklist(
                             event.checklist.id,
                             transformedChecklist
                         )
-
-                        // Close the drawer and reset states
-                        onEvent(ChecklistMainEvent.ToggleDrawer)
 
                         // Reload the checklists
                         loadChecklists()

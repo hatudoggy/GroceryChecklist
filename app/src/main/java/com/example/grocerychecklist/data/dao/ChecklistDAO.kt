@@ -15,4 +15,6 @@ interface ChecklistDAO: BaseDAO<Checklist> {
     @Query("SELECT * FROM checklist ORDER BY lastOpenedAt")
     fun getAllChecklistsOrderedByLastOpenedAt(): Flow<List<Checklist>>
 
+    @Query("DELETE FROM checklist")
+    suspend fun clearAll()
 }

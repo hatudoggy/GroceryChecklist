@@ -47,7 +47,7 @@ class AppModuleImpl(
     }
 
     override val checklistRepository: ChecklistRepository by lazy {
-        ChecklistRepository(db.checklistDAO(), backupManager)
+        ChecklistRepository(db.checklistDAO(), firestore)
     }
 
     override val checklistItemRepository: ChecklistItemRepository by lazy {

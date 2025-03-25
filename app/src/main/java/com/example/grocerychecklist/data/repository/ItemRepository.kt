@@ -136,7 +136,7 @@ class ItemRepository(
         }
     }
 
-    suspend fun saveUnsyncedItems(onSuccess: () -> Unit, onFailure: (Exception) -> Unit) = withContext(Dispatchers.IO) {
+    suspend fun saveUnsyncedItems() = withContext(Dispatchers.IO) {
         try {
             if (!AuthUtils.isUserLoggedIn()) {
                 throw Exception("User not logged in")
@@ -166,17 +166,14 @@ class ItemRepository(
             }
 
 
-            onSuccess()
         } catch (e: Exception) {
             e.printStackTrace()
-            onFailure(e)
         }
 
     }
 
     suspend fun fetchItemsFromFirestoreAndInsertToRoom(
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+
     ) = withContext(Dispatchers.IO) {
         try {
             if (!AuthUtils.isUserLoggedIn()) {
@@ -209,12 +206,9 @@ class ItemRepository(
             firestoreItems.forEach { item ->
                 itemDAO.insert(item)
             }
-
-            onSuccess()
         } catch (e: Exception) {
             println("Firestore Query Failed: ${e.localizedMessage}")
             e.printStackTrace()
-            onFailure(e)
         }
     }
 
