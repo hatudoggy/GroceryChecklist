@@ -21,4 +21,6 @@ interface ItemDAO: BaseDAO<Item> {
 
     suspend fun deleteItemById(itemId: Long): Int
 
+    suspend fun deleteItemByIds(vararg item: Item)
+
 }

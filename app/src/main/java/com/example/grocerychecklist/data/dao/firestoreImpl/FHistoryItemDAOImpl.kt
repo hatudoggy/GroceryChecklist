@@ -2,11 +2,11 @@ package com.example.grocerychecklist.data.dao.firestoreImpl
 
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
-import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import java.util.Locale
 
 class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
@@ -22,14 +22,14 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
     }
 
     override fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override fun getAllHistoryItemsOrderFilter(
         historyId: Long,
         order: ChecklistItemOrder
     ): Flow<List<HistoryItem>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override fun getAllHistoryItemsOrderAndCheckedFilter(
@@ -37,18 +37,18 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
         order: ChecklistItemOrder,
         isChecked: Boolean
     ): Flow<List<HistoryItem>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override fun getAllHistoryItemsByName(historyId: Long, qName: String): Flow<List<HistoryItem>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override fun getAllHistoryItemsByCategory(
         historyId: Long,
         category: Locale.Category
     ): Flow<List<HistoryItem>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override suspend fun aggregateTotalHistoryItems(historyId: Long): Int {
@@ -60,11 +60,11 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
     }
 
     override fun aggregateTotalPriceMonth(date: String): Flow<Double?> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
     override fun aggregateCategoryBreakdownMonth(date: String): Flow<List<HistoryItemAggregated>> {
-        TODO("Not yet implemented")
+        return emptyFlow()
     }
 
 

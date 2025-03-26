@@ -9,14 +9,40 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
+interface IFItemDAOImpl : ItemDAO {
+    suspend fun getItemByName(name: String): Item
+
+    suspend fun getItemByCategory(category: String): Item
+}
+
 class FItemDAOImpl : FBaseIUDDAOImpl<Item>(
     FirestoreCollections.ITEMS
-), ItemDAO {
+), IFItemDAOImpl {
+
+    private val fChecklistItemDaoImpl: FChecklistItemDAOImpl by lazy {
+        FChecklistItemDAOImpl()
+    }
 
     override suspend fun getItemById(itemId: Long): Item {
         val query = db.whereEqualTo("id", itemId).get().await()
         val snapshot = query.documents.firstOrNull()
             ?: throw NoSuchElementException("Checklist with id $itemId not found")
+
+        return fromFirestoreModel(snapshot)
+    }
+
+    override suspend fun getItemByName(name: String): Item {
+        val query = db.whereEqualTo("name", name).get().await()
+        val snapshot = query.documents.firstOrNull()
+            ?: throw NoSuchElementException("Item with name $name not found")
+
+        return fromFirestoreModel(snapshot)
+    }
+
+    override suspend fun getItemByCategory(category: String): Item {
+        val query = db.whereEqualTo("category", category).get().await()
+        val snapshot = query.documents.firstOrNull()
+            ?: throw NoSuchElementException("Item with category $category not found")
 
         return fromFirestoreModel(snapshot)
     }
@@ -64,11 +90,37 @@ class FItemDAOImpl : FBaseIUDDAOImpl<Item>(
             throw NoSuchElementException("Item with id $itemId not found")
         }
 
-        querySnapshot.documents.forEach {
-            db.document(it.reference.path).delete().await()
-        }
+        val itemToDelete = querySnapshot.documents.first()
+
+        // Firestore item model
+        val item = fromFirestoreModel(itemToDelete)
+
+        db.document(itemToDelete.id).delete().await()
+
+        // Also delete checklist item entries of this item
+        fChecklistItemDaoImpl.deleteChecklistByItemId(item.id)
 
         return querySnapshot.size()
+    }
+
+    override suspend fun deleteItemByIds(vararg item: Item) {
+        item.forEach { item ->
+            val querySnapshot = db.whereEqualTo("id", item.id).get().await()
+
+            if (querySnapshot.isEmpty) {
+                throw NoSuchElementException("Item with id ${item.id} not found")
+            }
+
+            val itemToDelete = querySnapshot.documents.first()
+
+            // Firestore item model
+            val item = fromFirestoreModel(itemToDelete)
+
+            db.document(itemToDelete.id).delete().await()
+
+            // Also delete checklist item entries of this item
+            fChecklistItemDaoImpl.deleteChecklistByItemId(item.id)
+        }
     }
 
     override fun toFirestoreModel(obj: Item): Map<String, Any?> {
@@ -81,5 +133,4 @@ class FItemDAOImpl : FBaseIUDDAOImpl<Item>(
 
         return doc.toItem()
     }
-
 }

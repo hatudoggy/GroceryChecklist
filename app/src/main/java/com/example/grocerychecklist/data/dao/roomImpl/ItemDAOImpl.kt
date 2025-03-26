@@ -32,5 +32,9 @@ interface ItemDAOImpl: BaseDAOImpl<Item> {
     @Query("DELETE FROM item WHERE id = :itemId")
     suspend fun deleteItemById(itemId: Long): Int
 
+    // Don't fucking use this
+    @Query("DELETE FROM item WHERE id IN (:itemIds)")
+    suspend fun deleteItemByIds(vararg itemIds: Long)
+
     //fun aggregateTotalItems(): Int
 }

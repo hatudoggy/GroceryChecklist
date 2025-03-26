@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 class ItemDAOManager(
     private val roomDAO: ItemDAOImpl,
     private val firestoreDAO: ItemDAO
-): ItemDAO {
+) : ItemDAO {
 
     private val useFirestore: Boolean
         get() = Firebase.auth.currentUser?.let { !it.isAnonymous } == true
@@ -80,6 +80,15 @@ class ItemDAOManager(
         }
     }
 
+    override suspend fun deleteItemByIds(vararg item: Item) {
+        if (useFirestore) {
+            firestoreDAO.deleteItemByIds(*item)
+        } else {
+            val itemIds = item.map { it.id }.toLongArray()
+            roomDAO.deleteItemByIds(*itemIds)
+        }
+    }
+
     override suspend fun insert(obj: Item): Long {
         return if (useFirestore) {
             firestoreDAO.insert(obj)
@@ -89,7 +98,7 @@ class ItemDAOManager(
     }
 
     override suspend fun update(obj: Item) {
-        if (useFirestore) {
+        return if (useFirestore) {
             firestoreDAO.update(obj)
         } else {
             roomDAO.update(obj)
@@ -97,8 +106,8 @@ class ItemDAOManager(
     }
 
     override suspend fun delete(vararg obj: Item) {
-        if (useFirestore) {
-            firestoreDAO.delete(*obj)
+        return if (useFirestore) {
+            firestoreDAO.deleteItemByIds(*obj)
         } else {
             roomDAO.delete(*obj)
         }
