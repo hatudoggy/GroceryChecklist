@@ -1,5 +1,4 @@
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import android.util.Patterns
 import androidx.credentials.Credential
@@ -38,13 +37,13 @@ class AuthRegisterViewModel(
     private val application: Application
 ) : ViewModel() {
 
-    // Use a single state flow to manage the entire UI state
-    private val _uiState = MutableStateFlow(AuthRegisterState())
-    val uiState: StateFlow<AuthRegisterState> = _uiState.asStateFlow()
+    // Use a single state flow to manage the entire state
+    private val _state = MutableStateFlow(AuthRegisterState())
+    val state: StateFlow<AuthRegisterState> = _state.asStateFlow()
 
     // Update the full name
     private fun updateFullName(newName: String) {
-        _uiState.update { currentState ->
+        _state.update { currentState ->
             currentState.copy(
                 fullName = newName,
                 error = null
@@ -53,12 +52,12 @@ class AuthRegisterViewModel(
     }
     // Update the email and validate it
     private fun updateEmail(newEmail: String) {
-        _uiState.update { currentState ->
+        _state.update { currentState ->
             val isValid = newEmail.isValidEmail()
             currentState.copy(
                 email = newEmail,
                 isEmailValid = isValid,
-                emailError = if (isValid) null else "Invalid email address",
+                emailError = if (isValid) null else if (newEmail.isBlank()) "Email cannot be empty" else "Invalid email address",
                 error = null
             ).validateForm()
         }
@@ -66,17 +65,37 @@ class AuthRegisterViewModel(
 
     // Update the password and validate it
     private fun updatePassword(newPassword: String) {
-        _uiState.update { currentState ->
-            val isValid = newPassword.isValidPassword()
+        _state.update { currentState ->
+            val passwordError = when {
+                newPassword.isBlank() -> "Password cannot be empty"
+                newPassword.length < MIN_PASS_LENGTH -> "Password must be at least $MIN_PASS_LENGTH characters"
+                else -> {
+                    val missingRequirements = mutableListOf<String>()
+                    if (!newPassword.matches(Regex(".*\\d.*"))) {
+                        missingRequirements.add("number")
+                    }
+                    if (!newPassword.matches(Regex(".*[a-z].*"))) {
+                        missingRequirements.add("lowercase")
+                    }
+                    if (!newPassword.matches(Regex(".*[A-Z].*"))) {
+                        missingRequirements.add("uppercase")
+                    }
+                    if (!newPassword.matches(Regex(".*[^a-zA-Z\\d\\s].*"))) {
+                        missingRequirements.add("special character")
+                    }
+
+                    if (missingRequirements.isNotEmpty()) {
+                        "Missing: ${missingRequirements.joinToString(", ")}"
+                    } else {
+                        null
+                    }
+                }
+            }
+
             currentState.copy(
                 password = newPassword,
-                isPasswordValid = isValid,
-                passwordError = when {
-                    newPassword.isBlank() -> "Password cannot be empty"
-                    newPassword.length < MIN_PASS_LENGTH -> "Password must be at least $MIN_PASS_LENGTH characters"
-                    !Pattern.compile(PASS_PATTERN).matcher(newPassword).matches() -> "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
-                    else -> null
-                },
+                isPasswordValid = passwordError == null,
+                passwordError = passwordError,
                 error = null
             ).validateForm()
         }
@@ -84,7 +103,7 @@ class AuthRegisterViewModel(
 
     // Update the confirm password and validate it
     private fun updateConfirmPassword(newConfirmPassword: String) {
-        _uiState.update { currentState ->
+        _state.update { currentState ->
             val isValid = newConfirmPassword == currentState.password
             currentState.copy(
                 confirmPassword = newConfirmPassword,
@@ -113,16 +132,16 @@ class AuthRegisterViewModel(
 
     private fun updateDisplayNameOnSignUp() {
         viewModelScope.launch {
-            val fullName = _uiState.value.fullName
+            val fullName = _state.value.fullName
             if (fullName.isNotBlank()) {
                 try {
                     withTimeout(5000) {
                         accountService.updateDisplayName(fullName)
                     }
                 } catch (e: SocketTimeoutException) {
-                    _uiState.update { it.copy(error = TIMEOUT_ERROR) }
+                    _state.update { it.copy(error = TIMEOUT_ERROR) }
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(error = DEFAULT_ERROR) }
+                    _state.update { it.copy(error = DEFAULT_ERROR) }
                 }
             }
         }
@@ -130,15 +149,15 @@ class AuthRegisterViewModel(
 
     private fun onSignUpClick() {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _state.update { it.copy(error = "No internet connection") }
             return
         }
 
         viewModelScope.launch {
             try {
-                _uiState.update { it.copy(isLoading = true, error = null) }
+                _state.update { it.copy(isLoading = true, error = null) }
                 withTimeout(5000) {
-                    val currentState = _uiState.value
+                    val currentState = _state.value
                     if (!currentState.isFormValid) {
                         throw IllegalArgumentException("Invalid form data")
                     }
@@ -147,26 +166,26 @@ class AuthRegisterViewModel(
                     navigator.navigate(Routes.DashboardMain)
                 }
             } catch (e: SocketTimeoutException) {
-                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
+                _state.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
             } catch (e: IllegalArgumentException) {
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
+                _state.update { it.copy(error = e.message, isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
+                _state.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
-                _uiState.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isLoading = false) }
             }
         }
     }
 
     private fun onSignUpWithGoogle(credential: Credential) {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _state.update { it.copy(error = "No internet connection") }
             return
         }
 
         viewModelScope.launch {
             try {
-                _uiState.update { it.copy(isLoading = true, error = null) }
+                _state.update { it.copy(isLoading = true, error = null) }
                 withTimeout(5000) {
                     if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
@@ -174,22 +193,22 @@ class AuthRegisterViewModel(
                         navigator.navigate(Routes.DashboardMain)
                     } else {
                         Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)
-                        _uiState.update { it.copy(error = UNEXPECTED_CREDENTIAL) }
+                        _state.update { it.copy(error = UNEXPECTED_CREDENTIAL) }
                     }
                 }
             } catch (e: SocketTimeoutException) {
-                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
+                _state.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
+                _state.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
             } finally {
-                _uiState.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isLoading = false) }
             }
         }
     }
 
     init {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _state.update { it.copy(error = "No internet connection") }
         }
     }
 
@@ -204,7 +223,7 @@ class AuthRegisterViewModel(
             is AuthRegisterEvent.PasswordChanged -> updatePassword(event.newPassword)
             is AuthRegisterEvent.ConfirmPasswordChanged -> updateConfirmPassword(event.newConfirmPassword)
             AuthRegisterEvent.TogglePasswordVisibility -> {
-                _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+                _state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
         }
     }

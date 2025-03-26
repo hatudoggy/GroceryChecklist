@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.grocerychecklist.GroceryChecklistApp
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.screen.util.CustomBackButtonHandler
@@ -56,7 +55,7 @@ fun NavGraphBuilder.authDestination() {
                     appModule.application)
             }
         )
-        val state by authRegisterViewModel.uiState.collectAsState()
+        val state by authRegisterViewModel.state.collectAsState()
         AuthRegisterScreen(
             state = state,
             onEvent = authRegisterViewModel::onEvent
