@@ -39,9 +39,11 @@ class AuthLoginViewModel(
 
     private fun updateEmail(newEmail: String) {
         _uiState.update { currentState ->
+            val isValid = newEmail.isValidEmail()
             currentState.copy(
                 email = newEmail,
-                isEmailValid = newEmail.isValidEmail(),
+                isEmailValid = isValid,
+                emailError = if (!isValid) "Invalid email address" else null,
                 error = null
             ).validateForm()
         }
@@ -49,9 +51,11 @@ class AuthLoginViewModel(
 
     private fun updatePassword(newPassword: String) {
         _uiState.update { currentState ->
+            val isValid = newPassword.isValidPassword()
             currentState.copy(
                 password = newPassword,
-                isPasswordValid = newPassword.isValidPassword(),
+                isPasswordValid = isValid,
+                passwordError = if (!isValid) "Invalid password" else null,
                 error = null
             ).validateForm()
         }
@@ -134,6 +138,7 @@ class AuthLoginViewModel(
     fun onEvent (event: AuthLoginEvent) {
         when (event) {
             AuthLoginEvent.NavigateBack -> navigator.navigate(Routes.AuthMain)
+            AuthLoginEvent.NavigateToRegister -> navigator.navigate(Routes.AuthRegister)
             AuthLoginEvent.Login -> onLogInClick()
             is AuthLoginEvent.GoogleLogIn -> onGoogleLoginClick(event.credential)
             is AuthLoginEvent.UpdateEmail -> updateEmail(event.newEmail)

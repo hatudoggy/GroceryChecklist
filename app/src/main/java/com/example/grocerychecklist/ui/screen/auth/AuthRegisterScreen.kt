@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -117,6 +118,9 @@ fun AuthRegisterScreen (
                     modifier = textFieldModifier,
                     singleLine = true,
                     leadingIcon = { Icon(imageVector = Icons.Default.Person, contentDescription = "Person Icon") },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next
+                    )
                 )
                 OutlinedTextField(
                     value = state.email,
@@ -124,9 +128,9 @@ fun AuthRegisterScreen (
                     label = { Text("Email") },
                     modifier = textFieldModifier,
                     singleLine = true,
-                    isError = state.emailError != null,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email Icon") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    isError = !state.isEmailValid,
                 )
                 OutlinedTextField(
                     value = state.password,
@@ -134,9 +138,9 @@ fun AuthRegisterScreen (
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    isError = state.passwordError != null,
                     leadingIcon = { Icon(imageVector = Icons.Default.Key, contentDescription = "Password Icon") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+                    isError = !state.isPasswordValid,
                     trailingIcon = {
                         val image = if (state.isPasswordVisible)
                             Icons.Filled.Visibility
@@ -156,10 +160,10 @@ fun AuthRegisterScreen (
                     label = { Text("Confirm Password") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    isError = state.confirmPasswordError != null,
                     leadingIcon = { Icon(imageVector = Icons.Default.Security, contentDescription = "Password Icon") },
-                    modifier = textFieldModifier
+                    modifier = textFieldModifier,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    isError = !state.isConfirmPasswordValid,
                 )
             }
 

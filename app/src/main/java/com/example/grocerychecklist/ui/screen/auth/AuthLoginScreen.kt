@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.ui.screen.auth
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +44,6 @@ import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthLoginState
-import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 
 
 @Composable
@@ -93,6 +95,9 @@ fun AuthLoginScreen (
                     value = state.email,
                     onValueChange = {onEvent(AuthLoginEvent.UpdateEmail(it))},
                     label = { Text("Email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    isError = !state.isEmailValid,
+                    supportingText = {state.emailError?.let { Text(it, color = Color.Red) }},
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -104,7 +109,9 @@ fun AuthLoginScreen (
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    isError = !state.isPasswordValid,
+                    supportingText = {state.passwordError?.let {Text(it, color = Color.Red)}},
                     trailingIcon = {
                         val image = if (passwordVisible)
                             Icons.Filled.Visibility
@@ -126,6 +133,7 @@ fun AuthLoginScreen (
             LoginButton(onEvent, state)
             SocialLoginDivider()
             GoogleLoginButton(onEvent)
+            SignUpPrompt(onEvent)
         }
         ToastComponent(message = state.error)
     }
@@ -142,7 +150,7 @@ private fun LoginButton(onEvent: (AuthLoginEvent) -> Unit, state: AuthLoginState
         modifier = Modifier
             .height(44.dp)
             .fillMaxWidth(),
-        enabled = state.email.isNotBlank() && state.password.isNotBlank() // Disable button if fields are empty
+        enabled = state.isEmailValid && state.isPasswordValid
     ) {
         Text("Login")
     }
@@ -172,6 +180,31 @@ private fun GoogleLoginButton(onEvent: (AuthLoginEvent) -> Unit) {
         modifier = Modifier.fillMaxWidth(),
     ) { credential ->
         onEvent(AuthLoginEvent.GoogleLogIn(credential))
+    }
+}
+
+@Composable
+private fun SignUpPrompt(onEvent: (AuthLoginEvent) -> Unit) {
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .padding(vertical = 28.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = "Don't have an account?",
+        )
+
+        Text(
+            text="Sign up now",
+            color = Color(0xFF2565BE),
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable {
+                onEvent(AuthLoginEvent.NavigateToRegister)
+            }
+        )
     }
 }
 

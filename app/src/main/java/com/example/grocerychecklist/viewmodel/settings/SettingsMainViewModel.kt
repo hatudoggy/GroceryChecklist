@@ -80,6 +80,19 @@ class SettingsMainViewModel(
         }
     }
 
+    private fun resetPassword() {
+        viewModelScope.launch {
+            _state.update {it.copy(isPasswordReset = false, error = null)}
+
+            try {
+                accountService.resetPassword()
+                _state.update { it.copy(isPasswordReset = true) }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun onEvent(event: SettingsMainEvent) {
         when (event) {
             SettingsMainEvent.ToggleBottomModal -> {
@@ -90,6 +103,17 @@ class SettingsMainViewModel(
             }
             SettingsMainEvent.SignOut -> {
                 signOut()
+            }
+            SettingsMainEvent.ResetPassword -> {
+                resetPassword()
+            }
+
+            SettingsMainEvent.ClearResetState -> {
+                _state.update { it.copy(isPasswordReset =  false) }
+            }
+
+            SettingsMainEvent.ClearErrorState -> {
+                _state.update { it.copy(error = null) }
             }
         }
     }
