@@ -5,7 +5,6 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.dao.HistoryDAO
-import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
@@ -13,14 +12,12 @@ import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.time.LocalDateTime
 
 class HistoryRepositoryTest {
 

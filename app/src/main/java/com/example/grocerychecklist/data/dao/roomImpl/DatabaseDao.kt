@@ -1,4 +1,4 @@
-package com.example.grocerychecklist.data.dao
+package com.example.grocerychecklist.data.dao.roomImpl
 
 import androidx.room.Dao
 import androidx.room.Query

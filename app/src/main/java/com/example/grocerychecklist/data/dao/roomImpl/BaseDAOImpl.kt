@@ -1,10 +1,12 @@
-package com.example.grocerychecklist.data
+package com.example.grocerychecklist.data.dao.roomImpl
 
+import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Update
 
-interface BaseDAO<T> {
+@Dao
+interface BaseDAOImpl<T> {
 
     @Insert
     suspend fun insert(obj: T): Long
