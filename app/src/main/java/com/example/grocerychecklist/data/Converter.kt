@@ -1,6 +1,7 @@
 package com.example.grocerychecklist.data
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -23,7 +24,7 @@ enum class IconOption(val iconName: String, val imageVector: ImageVector) {
     SNACKS("Snacks", Icons.Filled.Fastfood),
     FROZEN_FOOD("Frozen Food", Icons.Filled.AcUnit),
     CLEANING_SUPPLIES("Cleaning Supplies", Icons.Filled.CleanHands),
-    PAPER_GOODS("Paper Goods", Icons.Filled.ReceiptLong),
+    PAPER_GOODS("Paper Goods", Icons.AutoMirrored.Filled.ReceiptLong),
     PET_SUPPLIES("Pet Supplies", Icons.Filled.Pets),
     BABY_PRODUCTS("Baby Products", Icons.Filled.ChildCare),
     MEDICINE("Medicine", Icons.Filled.MedicalServices),

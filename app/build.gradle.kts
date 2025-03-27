@@ -4,6 +4,7 @@ plugins {
     kotlin("plugin.serialization") version "2.0.20"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -64,6 +65,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.dautovicharis.charts)
     implementation(libs.androidx.graphics.shapes.android)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -89,4 +95,19 @@ dependencies {
 
     //Material Icons
     implementation(libs.androidx.material.icons.extended)
+
+    // Worker
+    implementation(libs.androidx.work)
+
+    // Import the BoM for the Firebase platform
+    implementation(platform(libs.firebase.bom))
+
+    // Add the dependency for the Cloud Storage library
+    implementation(libs.firebase.storage)
+
+    // Declare the dependency for the Cloud Firestore library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation(libs.firebase.firestore)
+
+    implementation(libs.gson)
 }

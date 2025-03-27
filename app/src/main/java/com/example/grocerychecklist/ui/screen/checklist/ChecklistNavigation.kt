@@ -5,8 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
-import com.example.grocerychecklist.GroceryChecklistApp
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailViewModel
@@ -33,21 +31,28 @@ fun NavGraphBuilder.checklistDestination() {
     composable<Routes.ChecklistDetail> { entry ->
         val checklistDetailViewModel = viewModel<ChecklistDetailViewModel>(
             factory = viewModelFactory {
-                ChecklistDetailViewModel(appModule.navigator, entry)
+                ChecklistDetailViewModel(appModule.checklistRepository, appModule.checklistItemRepository, appModule.navigator, entry)
             }
         )
+        val state by checklistDetailViewModel.state.collectAsState()
         ChecklistDetailScreen(
+            state = state,
             onEvent = checklistDetailViewModel::onEvent
         )
     }
-    composable<Routes.ChecklistView> {
+    composable<Routes.ChecklistView> { entry ->
         val checklistViewViewModel = viewModel<ChecklistViewViewModel>(
             factory = viewModelFactory {
-                ChecklistViewViewModel(appModule.navigator)
+                ChecklistViewViewModel(
+                    appModule.navigator,
+                    appModule.checklistItemRepository,
+                    entry
+                )
             }
         )
+        val state by checklistViewViewModel.state.collectAsState()
         ChecklistViewScreen(
-            checklistViewViewModel,
+            state = state,
             onEvent = checklistViewViewModel::onEvent
         )
     }

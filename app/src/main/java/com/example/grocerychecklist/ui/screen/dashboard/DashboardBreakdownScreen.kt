@@ -1,6 +1,6 @@
 package com.example.grocerychecklist.ui.screen.dashboard
 
-import ItemCategory
+import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.border
@@ -22,14 +22,15 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,30 +45,51 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
-import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownViewModel
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownState
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardCategoryData
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardGraphData
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
+import ir.ehsannarmani.compose_charts.models.GridProperties
+import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardBreakdownScreen(
-    //state: DashboardBreakdownState,
-    viewModel: DashboardBreakdownViewModel,
+    state: DashboardBreakdownState,
     onEvent: (DashboardBreakdownEvent) -> Unit,
 ) {
-    // Accessing days from the ViewModel.
-    val days = viewModel.days
-    // Collecting dashboard category data from the ViewModel as a state.
-    val state by viewModel.dashboardCategoryData.collectAsState()
-    // Collecting the selected day from the ViewModel as a state.
-    val selectedDay by viewModel.selectedDay.collectAsState()
+    val barsData = if (state.dashboardGraphData.isNotEmpty()) {
+        state.dashboardGraphData.map {
+            Bars(
+                label = it.date,
+                values = listOf(
+                    Bars.Data(
+                        value = it.expenses,
+                        color = SolidColor(Color.Green)
+                    )
+                )
+            )
+        }
+    } else {
+        listOf(
+            Bars(
+                label = "No Data",
+                values = listOf(
+                    Bars.Data(
+                        value = 0f.toDouble(),
+                        color = SolidColor(Color.Green)
+                    )
+                )
+            )
+        )
+    }
 
     Scaffold(
         topBar = { TopBarComponent(
@@ -102,87 +124,53 @@ fun DashboardBreakdownScreen(
 
                 horizontalAlignment = Alignment.CenterHorizontally
 
-                ){
-                ColumnChart(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp, vertical = 8.dp),
-                    data = listOf(
-                        Bars(
-                            label = "Apr 1",
-                            values = listOf(
-                                Bars.Data(
-                                    value = 12.0, color = SolidColor(Color(0xFF6FA539))
-                                )
-                            )
-                        ),
-                        Bars(
-                            label = "Apr 14",
-                            values = listOf(
-                                Bars.Data(
-                                    value = 19.0, color = SolidColor(Color(0xFF6FA539))
-                                )
-                            )
-                        ),
-                        Bars(
-                            label = "Apr 28",
-                            values = listOf(
-                                Bars.Data(
-                                    value = 25.0, color = SolidColor(Color(0xFF6FA539))
-                                )
-                            )
-                        ),
-                        Bars(
-                            label = "May 5",
-                            values = listOf(
-                                Bars.Data(
-                                    value = 28.0, color = SolidColor(Color(0xFF6FA539))
-                                )
-                            )
-                        ),
-                        Bars(
-                            label = "May 19",
-                            values = listOf(
-                                Bars.Data(
-                                    value = 28.0, color = SolidColor(Color(0xFF6FA539))
-                                )
-                            )
-                        )
-                    ),
-
-                    barProperties = BarProperties(
-                        cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
-                        spacing = 1.dp,
-                        thickness = 36.dp
-                    ),
-
-                    labelHelperProperties = LabelHelperProperties(enabled = false),
-
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
-
-                    maxValue = 30.0
-                )
-            }
-
-            Column {
-                // State variables to manage the dropdown's expanded state and the selected option text.
-                // `expanded` controls the visibility of the dropdown menu.
-                var expanded by remember { mutableStateOf(false) }
-                var selectedOptionText by remember { mutableStateOf(selectedDay.first()) }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Categories",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
+                    key(state.dashboardGraphMaxValue) {
+                        ColumnChart(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 22.dp, vertical = 8.dp),
+                            data = barsData,
+
+                            barProperties = BarProperties(
+                                cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
+                                spacing = 1.dp,
+                                thickness = 36.dp
+                            ),
+
+                            labelHelperProperties = LabelHelperProperties(enabled = false),
+                            gridProperties = GridProperties(
+                                yAxisProperties = GridProperties.AxisProperties(
+                                    enabled = false
+                                )
+                            ),
+
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+
+                            maxValue = state.dashboardGraphMaxValue
+                        )
+                    }
+                }
+
+                Column {
+                    // State variables to manage the dropdown's expanded state and the selected option text.
+                    // `expanded` controls the visibility of the dropdown menu.
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedOptionText by remember { mutableStateOf(state.selectedDay) }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Categories",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
                         )
 
                     ExposedDropdownMenuBox(
@@ -208,44 +196,45 @@ fun DashboardBreakdownScreen(
                                 textAlign = TextAlign.End
                             ),
 
-                            modifier = Modifier.menuAnchor()
+                            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable),
                         )
 
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            days.forEach { selectionOption ->
+                            state.days.forEach { selectionOption ->
                                 DropdownMenuItem(
                                     onClick = {
                                         selectedOptionText = selectionOption
                                         expanded = false
-                                        viewModel.filterData(selectionOption)
+                                        onEvent(DashboardBreakdownEvent.SelectDay(selectionOption))
                                     },
                                     text = { Text(selectionOption) }
                                 )
                             }
                         }
                     }
+                    }
 
-                }
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
 
-                LazyColumn (
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-
-                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
+                        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
 
                     ) {
 
-                    // Iterating through each category data to display breakdown.
-                    items(state) { dashboardCategoryData ->
-                        DashboardCategoryBreakDownComponent(dashboardCategoryData)
+                        // Iterating through each category data to display breakdown.
+                        items(state.dashboardCategoryData) { dashboardCategoryData ->
+                            DashboardCategoryBreakDownComponent(dashboardCategoryData)
                     }
                 }
             }
         }
     }
+
+    ToastComponent(message = state.errorMessage)
 }
 
 
@@ -351,11 +340,21 @@ fun DashboardCategoryBreakDownComponent(data: DashboardCategoryData){
 @Preview(showBackground = true)
 @Composable
 fun DashboardBreakdownPreview() {
-    val navigator = Navigator()
-    val viewModel = DashboardBreakdownViewModel(navigator);
-
     DashboardBreakdownScreen(
-        viewModel = viewModel,
+        state = DashboardBreakdownState(
+            dashboardCategoryData = listOf(
+                DashboardCategoryData(
+                    category = ItemCategory.MEAT,
+                    percent = 0.4f,
+                    expenses = 1200.0
+                )
+            ),
+            dashboardGraphData = listOf(
+                DashboardGraphData(date="JANUARY", expenses=0.0),
+                DashboardGraphData(date="FEBRUARY", expenses=0.0),
+                DashboardGraphData(date="MARCH", expenses=250.0)),
+            dashboardGraphMaxValue = 1000.0,
+            ),
         onEvent = {}
     )
 }

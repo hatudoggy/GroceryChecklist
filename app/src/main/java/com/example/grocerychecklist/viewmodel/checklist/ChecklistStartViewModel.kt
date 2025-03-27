@@ -12,7 +12,7 @@ import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
-import com.example.grocerychecklist.viewmodel.SearchableViewModel
+import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -73,10 +73,14 @@ class ChecklistStartViewModel(
 
             is ChecklistStartEvent.SelectChip -> { _state.update { it.copy(selectedChip = event.type) } }
             is ChecklistStartEvent.ToggleItemCheck -> {
-                updateItems { list ->
-                    list.map { item ->
-                        if (item == event.item) item.copy(isChecked =  !item.isChecked) else item
+                _state.update { currentState ->
+                    val updatedList = currentState.checkedItems.toMutableList()
+                    if (isChecked(event.item)) {
+                        updatedList.removeAll { it.id == event.item.id }
+                    } else {
+                        updatedList.add(event.item)  // Add item
                     }
+                    currentState.copy(checkedItems = updatedList)
                 }
             }
 
@@ -116,8 +120,11 @@ class ChecklistStartViewModel(
                     try {
                         val checklist = checklistRepo.getChecklist(checklistId)
                         val historyId = historyRepo.addHistory(checklist)
+                        val mapChecked = event.items.map {
+                            it.copy(isChecked = isChecked(it))
+                        }
                         historyItemRepo.addHistoryItems(
-                            historyId, filterItemsChecked(FilterType.CHECKED, event.items)
+                            historyId, filterItemsChecked(FilterType.CHECKED, mapChecked)
                         )
 
                         onEvent(ChecklistStartEvent.CloseCheckout)
@@ -175,6 +182,8 @@ class ChecklistStartViewModel(
                 }
             }
             is ChecklistStartEvent.DeleteChecklistItem -> {
+                val item = _state.value.filteredItems.find { it.id == event.checklistId }
+                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
                 viewModelScope.launch {
                     try {
                         val id = repo.deleteChecklistItem(
@@ -188,6 +197,8 @@ class ChecklistStartViewModel(
                 }
             }
             is ChecklistStartEvent.DeleteChecklistItemAndItem -> {
+                val item = _state.value.filteredItems.find { it.id == event.itemId }
+                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
                 viewModelScope.launch {
                     try {
                         val id = repo.deleteChecklistItemAndItem(
@@ -207,14 +218,18 @@ class ChecklistStartViewModel(
     private fun filterItemsChecked(filter: FilterType, items: List<ChecklistData>): List<ChecklistData> {
         return when (filter) {
             FilterType.ALL -> items
-            FilterType.CHECKED -> items.filter { it.isChecked }
-            FilterType.UNCHECKED -> items.filter { !it.isChecked }
+            FilterType.CHECKED -> items.filter { isChecked(it) }
+            FilterType.UNCHECKED -> items.filter { !isChecked(it) }
         }
     }
 
     private fun computeTotalPrice(items: List<ChecklistData>): Double {
-        return items.filter { it.isChecked }
+        return items.filter { isChecked(it) }
             .sumOf { it.price.times(it.quantity) }
+    }
+
+    fun isChecked(item: ChecklistData): Boolean {
+        return _state.value.checkedItems.any { it.id == item.id }
     }
 }
 

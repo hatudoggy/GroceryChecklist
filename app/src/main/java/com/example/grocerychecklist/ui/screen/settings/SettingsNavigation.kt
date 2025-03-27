@@ -14,7 +14,11 @@ fun NavGraphBuilder.settingsDestination() {
     composable<Routes.SettingsMain> {
         val settingsMainViewModel = viewModel<SettingsMainViewModel>(
             factory = viewModelFactory {
-                SettingsMainViewModel(appModule.navigator)
+                SettingsMainViewModel(
+                    appModule.navigator,
+                    appModule.accountService,
+                    appModule.application
+                )
             }
         )
         val state = settingsMainViewModel.state.collectAsState().value

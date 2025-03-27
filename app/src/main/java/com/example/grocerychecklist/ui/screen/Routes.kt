@@ -4,6 +4,13 @@ import kotlinx.serialization.Serializable
 
 sealed interface Routes {
     @Serializable
+    data object AuthMain: Routes
+    @Serializable
+    data object AuthLogin: Routes
+    @Serializable
+    data object AuthRegister: Routes
+
+    @Serializable
     data object DashboardMain: Routes
     @Serializable
     data object DashboardBreakdown: Routes
@@ -13,7 +20,7 @@ sealed interface Routes {
     @Serializable
     data class ChecklistDetail(val checklistId: Long): Routes
     @Serializable
-    data object ChecklistView: Routes
+    data class ChecklistView(val checklistId: Long): Routes
     @Serializable
     data class ChecklistEdit(val checklistId: Long): Routes
     @Serializable

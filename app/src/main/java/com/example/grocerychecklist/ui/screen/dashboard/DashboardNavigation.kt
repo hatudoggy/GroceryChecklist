@@ -7,6 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.grocerychecklist.GroceryChecklistApp
 import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.screen.util.CustomBackButtonHandler
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownViewModel
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardMainViewModel
 import com.example.grocerychecklist.viewmodel.viewModelFactory
@@ -14,9 +15,14 @@ import com.example.grocerychecklist.viewmodel.viewModelFactory
 fun NavGraphBuilder.dashboardDestination(
 ) {
     composable<Routes.DashboardMain> {
+        CustomBackButtonHandler(GroceryChecklistApp.appModule.navigator, Routes.DashboardMain)
         val dashboardMainViewModel = viewModel<DashboardMainViewModel>(
             factory = viewModelFactory {
-                DashboardMainViewModel(GroceryChecklistApp.appModule.checklistRepository, GroceryChecklistApp.appModule.navigator)
+                DashboardMainViewModel(
+                    GroceryChecklistApp.appModule.historyRepository,
+                    GroceryChecklistApp.appModule.historyItemRepository,
+                    GroceryChecklistApp.appModule.navigator
+                )
             }
         )
         val state by dashboardMainViewModel.state.collectAsState()
@@ -28,13 +34,16 @@ fun NavGraphBuilder.dashboardDestination(
     composable<Routes.DashboardBreakdown> {
         val dashboardBreakdownViewModel = viewModel<DashboardBreakdownViewModel>(
             factory = viewModelFactory {
-                DashboardBreakdownViewModel(GroceryChecklistApp.appModule.navigator)
+                DashboardBreakdownViewModel(
+                    GroceryChecklistApp.appModule.navigator,
+                    GroceryChecklistApp.appModule.historyRepository,
+                    GroceryChecklistApp.appModule.historyItemRepository
+                )
             }
         )
-        //val state by dashboardBreakdownViewModel.state.collectAsState()
+        val state by dashboardBreakdownViewModel.state.collectAsState()
         DashboardBreakdownScreen(
-            //state = state,
-            viewModel = dashboardBreakdownViewModel,
+            state = state,
             onEvent = dashboardBreakdownViewModel::onEvent
         )
     }
