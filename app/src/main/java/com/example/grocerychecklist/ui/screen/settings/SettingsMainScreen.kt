@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.LightMode
@@ -29,8 +32,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -40,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -95,6 +104,9 @@ fun BlurredCardWithLoginPrompt(
     state: SettingsMainState,
     onEvent: (SettingsMainEvent) -> Unit
 ) {
+    var newEmail by remember { mutableStateOf("") }
+    var showEmailDialog by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth(),
@@ -122,10 +134,11 @@ fun BlurredCardWithLoginPrompt(
                     modifier = Modifier.padding(bottom = 5.dp)
                 )
                 SettingsButtonCard(
-                    icon = Icons.Default.Person,
-                    title = "Edit Profile",
-                    subTitle = if(state.isLoggedIn)"Change profile picture, number, e-mail" else "",
+                    icon = Icons.Default.Email,
+                    title = "Change Email",
+                    subTitle = if(state.isLoggedIn)"Update your e-mail" else "",
                     state = state,
+                    onClick = { showEmailDialog = true }
                 )
                 SettingsButtonCard(
                     icon = Icons.Default.Edit,
@@ -173,6 +186,67 @@ fun BlurredCardWithLoginPrompt(
             )
         }
 
+        if (showEmailDialog) {
+            AlertDialog(
+                onDismissRequest = { showEmailDialog = false},
+                title = { Text("Change Email")},
+                text = {
+                    TextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("New Email") }
+                    )
+                },
+                confirmButton = {
+                    TextButton({
+                        onEvent(SettingsMainEvent.UpdateEmail(newEmail))
+                        showEmailDialog = false
+                    }) {Text("Confirm")}
+                }
+            )
+        }
+
+        if (state.showReauthDialog) {
+            var password by remember { mutableStateOf("") }
+
+            AlertDialog(
+                onDismissRequest = { onEvent(SettingsMainEvent.ClearPendingEmail) },
+                title = { Text("Security Check") },
+                text = {
+                    Column {
+                        Text("For security, please confirm your password:")
+                        Spacer(Modifier.height(8.dp))
+                        TextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text("Current Password") },
+                            visualTransformation = PasswordVisualTransformation()
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton({
+                        onEvent(SettingsMainEvent.Reauthenticate(password))
+                    }) { Text("Confirm") }
+                }
+            )
+        }
+
+        if (state.isEmailUpdateSent) {
+            AlertDialog(
+                onDismissRequest = { onEvent(SettingsMainEvent.ClearEmailUpdateState) },
+                title = { Text("Verification Required") },
+                text = { Text("We've sent a confirmation email to your new address. Please check your inbox and verify the change.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = { onEvent(SettingsMainEvent.ClearEmailUpdateState) }
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
         if (state.error != null) {
             AlertDialog(
                 onDismissRequest = { onEvent(SettingsMainEvent.ClearErrorState) },
@@ -187,7 +261,6 @@ fun BlurredCardWithLoginPrompt(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
