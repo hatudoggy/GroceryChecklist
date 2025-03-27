@@ -6,7 +6,6 @@ import com.google.firebase.firestore.PropertyName
 import java.time.LocalDateTime
 
 data class ChecklistItemFirestore(
-    @get:PropertyName("id") @set:PropertyName("id")
     var id: Long = 0,
 
     @get:PropertyName("checklistId") @set:PropertyName("checklistId")
@@ -27,7 +26,7 @@ data class ChecklistItemFirestore(
     @get:PropertyName("updatedAt") @set:PropertyName("updatedAt")
     var updatedAt: Timestamp? = null,
 ) {
-    fun toChecklistItem(): ChecklistItem {
+    fun toChecklistItem(id: Long): ChecklistItem {
         return ChecklistItem(
             id = id,
             checklistId = checklistId,
@@ -42,7 +41,6 @@ data class ChecklistItemFirestore(
     companion object {
         fun fromChecklistItem(checklistItem: ChecklistItem):ChecklistItemFirestore {
             return ChecklistItemFirestore(
-                id = checklistItem.id,
                 checklistId = checklistItem.checklistId,
                 itemId = checklistItem.itemId,
                 order = checklistItem.order,
@@ -54,7 +52,6 @@ data class ChecklistItemFirestore(
 
     fun toMap(): Map<String, Any?> {
         return mapOf(
-            "id" to id,
             "checklistId" to checklistId,
             "itemId" to itemId,
             "order" to order,

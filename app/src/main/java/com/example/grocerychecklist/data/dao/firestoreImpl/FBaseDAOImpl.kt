@@ -8,8 +8,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 abstract class FBaseDAOImpl<T : Any>(
-    private val collectionPath: String,
-    private val idField: String = "id"
+    private val collectionPath: String
 ) {
     protected val currentUser: FirebaseUser
         get() = Firebase.auth.currentUser
@@ -22,6 +21,7 @@ abstract class FBaseDAOImpl<T : Any>(
             .collection(collectionPath)
 
     protected abstract fun toFirestoreModel(obj: T): Map<String, Any?>
-    protected abstract fun fromFirestoreModel(snapshot: DocumentSnapshot): T
+    protected abstract fun fromFirestoreModel(snapshot: DocumentSnapshot, id: Long): T
+    protected abstract fun getId(obj: T): Long
 
 }

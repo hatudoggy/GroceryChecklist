@@ -5,7 +5,6 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
 
 class ItemFirestore (
-    @get:PropertyName("id") @set:PropertyName("id")
     var id: Long = 0,
 
     @get:PropertyName("name") @set:PropertyName("name")
@@ -32,7 +31,7 @@ class ItemFirestore (
     @get:PropertyName("updatedAt") @set:PropertyName("updatedAt")
     var updatedAt: Timestamp? = null,
 ) {
-    fun toItem(): Item {
+    fun toItem(id: Long): Item {
         return Item(
             id = id,
             name = name,
@@ -49,7 +48,6 @@ class ItemFirestore (
     companion object {
         fun fromItem(item: Item): ItemFirestore {
             return ItemFirestore(
-                id = item.id,
                 name = item.name,
                 price = item.price,
                 category = item.category,
@@ -64,7 +62,6 @@ class ItemFirestore (
 
     fun toMap(): Map<String, Any?> {
         return mapOf(
-            "id" to id,
             "name" to name,
             "price" to price,
             "category" to category,

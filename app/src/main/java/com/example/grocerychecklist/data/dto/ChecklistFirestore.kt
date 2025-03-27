@@ -7,7 +7,6 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
 
 data class ChecklistFirestore(
-    @get:PropertyName("id") @set:PropertyName("id")
     var id: Long = 0,
 
     @get:PropertyName("name") @set:PropertyName("name")
@@ -34,7 +33,7 @@ data class ChecklistFirestore(
     @get:PropertyName("lastShopAt") @set:PropertyName("lastShopAt")
     var lastShopAt: Timestamp? = null,
 ) {
-    fun toChecklist(): Checklist {
+    fun toChecklist(id: Long): Checklist {
         return Checklist(
             id = id,
             name = name,
@@ -51,7 +50,6 @@ data class ChecklistFirestore(
     companion object {
         fun fromChecklist(checklist: Checklist): ChecklistFirestore {
             return ChecklistFirestore(
-                id = checklist.id,
                 name = checklist.name,
                 description = checklist.description,
                 icon = checklist.icon,
@@ -66,7 +64,6 @@ data class ChecklistFirestore(
 
     fun toMap(): Map<String, Any?> {
         return mapOf(
-            "id" to id,
             "name" to name,
             "description" to description,
             "icon" to icon.name,

@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.data.dao.firestoreImpl
 
+import android.util.Log
 import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.dto.ChecklistFirestore
 import com.example.grocerychecklist.data.model.Checklist
@@ -15,11 +16,10 @@ class FChecklistDAOImpl: FBaseIUDDAOImpl<Checklist>(
 ), ChecklistDAO {
 
     override suspend fun getChecklistById(checklistId: Long): Checklist {
-        val query = db.whereEqualTo("id", checklistId).get().await()
-        val snapshot = query.documents.firstOrNull()
-            ?: throw NoSuchElementException("Checklist with id $checklistId not found.")
-
-        return fromFirestoreModel(snapshot)
+        val snapshot = db.document(checklistId.toString()).get().await()
+        if (!snapshot.exists())
+            throw NoSuchElementException("Checklist with id $checklistId not found.")
+        return fromFirestoreModel(snapshot, snapshot.id.toLong())
     }
 
     override fun getAllChecklistsOrderedByLastOpenedAt(): Flow<List<Checklist>> {
@@ -27,17 +27,22 @@ class FChecklistDAOImpl: FBaseIUDDAOImpl<Checklist>(
             .orderBy("lastOpenedAt", Query.Direction.DESCENDING)
             .snapshots()
             .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it) }
+                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
             }
     }
 
     override fun toFirestoreModel(obj: Checklist): Map<String, Any?> {
-        return ChecklistFirestore.fromChecklist(obj).toMap()
+        val firestoreModel = ChecklistFirestore.fromChecklist(obj).toMap()
+        return firestoreModel - "id"
     }
 
-    override fun fromFirestoreModel(snapshot: DocumentSnapshot): Checklist {
+    override fun fromFirestoreModel(snapshot: DocumentSnapshot, id: Long): Checklist {
         val doc = snapshot.toObject(ChecklistFirestore::class.java)
             ?: throw IllegalStateException("Failed to parse checklist data.")
-        return doc.toChecklist()
+        return doc.toChecklist(id)
+    }
+
+    override fun getId(obj: Checklist): Long {
+        return obj.id
     }
 }

@@ -2,6 +2,7 @@ package com.example.grocerychecklist.data.dao.firestoreImpl
 
 import com.example.grocerychecklist.data.dao.BaseDAO
 import com.example.grocerychecklist.data.mapper.FirestoreIdConverter
+import com.example.grocerychecklist.util.IdGenerator
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.CollectionReference
@@ -12,7 +13,6 @@ import kotlinx.coroutines.tasks.await
 
 abstract class FBaseIUDDAOImpl<T : Any>(
     private val collectionPath: String,
-    private val idField: String = "id"
 ) : BaseDAO<T>  {
     protected val currentUser: FirebaseUser
         get() = Firebase.auth.currentUser
@@ -25,34 +25,26 @@ abstract class FBaseIUDDAOImpl<T : Any>(
             .collection(collectionPath)
 
     protected abstract fun toFirestoreModel(obj: T): Map<String, Any?>
-    protected abstract fun fromFirestoreModel(snapshot: DocumentSnapshot): T
+    protected abstract fun fromFirestoreModel(snapshot: DocumentSnapshot, id: Long): T
+    protected abstract fun getId(obj: T): Long
 
     override suspend fun insert(obj: T): Long {
+        val newId = IdGenerator.nextID()
         val firestoreModel = toFirestoreModel(obj)
-        val docRef = db.add(firestoreModel).await()
-        val docId = docRef.id
-        val hashedId = FirestoreIdConverter.toLong(docId)
-        db.document(docId).update(idField, hashedId).await()
-        return hashedId
+        db.document(newId.toString()).set(firestoreModel).await()
+        return newId
     }
 
     override suspend fun update(obj: T) {
+        val id = getId(obj)
         val firestoreModel = toFirestoreModel(obj)
-        val query = db.whereEqualTo(idField, firestoreModel[idField]).get().await()
-        val doc = query.documents.firstOrNull()
-            ?: throw NoSuchElementException("Document with ${firestoreModel[idField]} not found.")
-
-        doc.reference.set(firestoreModel).await()
+        db.document(id.toString()).set(firestoreModel).await()
     }
 
     override suspend fun delete(vararg obj: T) {
         obj.forEach { item ->
-            val firestoreModel = toFirestoreModel(item)
-            val query = db.whereEqualTo(idField, firestoreModel[idField]).get().await()
-            val doc = query.documents.firstOrNull()
-                ?: throw NoSuchElementException("Document with ${firestoreModel[idField]} not found.")
-
-            doc.reference.delete().await()
+            val id = getId(item)
+            db.document(id.toString()).delete().await()
         }
     }
 }
