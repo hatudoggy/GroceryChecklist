@@ -95,6 +95,10 @@ class AppModuleImpl(
 
     override val itemRepository: ItemRepository by lazy {
         ItemRepository(
+            ChecklistItemDAOManager(
+                db.checklistItemDAO(),
+                fChecklistItemDAO
+            ),
             ItemDAOManager(
                 db.itemDAO(),
                 fItemDAO

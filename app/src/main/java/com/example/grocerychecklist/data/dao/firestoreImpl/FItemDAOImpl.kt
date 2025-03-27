@@ -19,10 +19,6 @@ class FItemDAOImpl : FBaseIUDDAOImpl<Item>(
     FirestoreCollections.ITEMS
 ), IFItemDAOImpl {
 
-    private val fChecklistItemDaoImpl: FChecklistItemDAOImpl by lazy {
-        FChecklistItemDAOImpl()
-    }
-
     override suspend fun getItemById(itemId: Long): Item {
         val query = db.whereEqualTo("id", itemId).get().await()
         val snapshot = query.documents.firstOrNull()
@@ -90,37 +86,9 @@ class FItemDAOImpl : FBaseIUDDAOImpl<Item>(
             throw NoSuchElementException("Item with id $itemId not found")
         }
 
-        val itemToDelete = querySnapshot.documents.first()
-
-        // Firestore item model
-        val item = fromFirestoreModel(itemToDelete)
-
-        db.document(itemToDelete.id).delete().await()
-
-        // Also delete checklist item entries of this item
-        fChecklistItemDaoImpl.deleteChecklistByItemId(item.id)
+        db.document(querySnapshot.documents.first().id).delete()
 
         return querySnapshot.size()
-    }
-
-    override suspend fun deleteItemByIds(vararg item: Item) {
-        item.forEach { item ->
-            val querySnapshot = db.whereEqualTo("id", item.id).get().await()
-
-            if (querySnapshot.isEmpty) {
-                throw NoSuchElementException("Item with id ${item.id} not found")
-            }
-
-            val itemToDelete = querySnapshot.documents.first()
-
-            // Firestore item model
-            val item = fromFirestoreModel(itemToDelete)
-
-            db.document(itemToDelete.id).delete().await()
-
-            // Also delete checklist item entries of this item
-            fChecklistItemDaoImpl.deleteChecklistByItemId(item.id)
-        }
     }
 
     override fun toFirestoreModel(obj: Item): Map<String, Any?> {

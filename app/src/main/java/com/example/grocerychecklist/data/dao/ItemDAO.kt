@@ -20,7 +20,4 @@ interface ItemDAO: BaseDAO<Item> {
     fun getAllItemsByCategory(category: String): Flow<List<Item>>
 
     suspend fun deleteItemById(itemId: Long): Int
-
-    suspend fun deleteItemByIds(vararg item: Item)
-
 }

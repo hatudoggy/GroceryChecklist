@@ -62,6 +62,9 @@ interface ChecklistItemDAOImpl: BaseDAOImpl<ChecklistItem> {
     @Query("DELETE FROM checklistitem WHERE id = :checklistId")
     suspend fun deleteChecklistById(checklistId: Long): Int
 
+    @Query("DELETE FROM checklistitem WHERE itemId = :itemId")
+    suspend fun deleteChecklistByItemId(itemId: Long): Int
+
     @Query("SELECT COUNT(*) FROM checklistitem WHERE checklistId = :checklistId")
     suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
 

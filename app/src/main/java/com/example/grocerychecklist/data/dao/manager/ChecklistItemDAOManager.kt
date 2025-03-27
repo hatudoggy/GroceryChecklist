@@ -97,6 +97,14 @@ class ChecklistItemDAOManager(
         }
     }
 
+    override suspend fun deleteChecklistByItemId(itemId: Long): Int {
+        return if (useFirestore) {
+            firestoreDAO.deleteChecklistByItemId(itemId)
+        } else {
+            roomDAO.deleteChecklistByItemId(itemId)
+        }
+    }
+
     override suspend fun aggregateTotalChecklistItems(checklistId: Long): Int {
         return if (useFirestore) {
             firestoreDAO.aggregateTotalChecklistItems(checklistId)

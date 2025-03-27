@@ -80,15 +80,6 @@ class ItemDAOManager(
         }
     }
 
-    override suspend fun deleteItemByIds(vararg item: Item) {
-        if (useFirestore) {
-            firestoreDAO.deleteItemByIds(*item)
-        } else {
-            val itemIds = item.map { it.id }.toLongArray()
-            roomDAO.deleteItemByIds(*itemIds)
-        }
-    }
-
     override suspend fun insert(obj: Item): Long {
         return if (useFirestore) {
             firestoreDAO.insert(obj)
@@ -107,7 +98,7 @@ class ItemDAOManager(
 
     override suspend fun delete(vararg obj: Item) {
         return if (useFirestore) {
-            firestoreDAO.deleteItemByIds(*obj)
+            firestoreDAO.delete(*obj)
         } else {
             roomDAO.delete(*obj)
         }

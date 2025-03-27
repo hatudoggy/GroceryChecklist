@@ -14,14 +14,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
-interface IFChecklistItemDAOImpl : ChecklistItemDAO {
-    suspend fun deleteChecklistByItemId(itemId: Long): Int
-}
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class FChecklistItemDAOImpl : FBaseIUDDAOImpl<ChecklistItem>(
     FirestoreCollections.CHECKLIST_ITEMS
-), IFChecklistItemDAOImpl {
+), ChecklistItemDAO {
 
     private val fItemDAOImpl: FItemDAOImpl by lazy {
         FItemDAOImpl()
@@ -175,7 +171,7 @@ class FChecklistItemDAOImpl : FBaseIUDDAOImpl<ChecklistItem>(
         val querySnapshot = db.whereEqualTo("itemId", itemId).get().await()
 
         if (querySnapshot.isEmpty) {
-            return 0 // Prevent the app from crashing OML
+            throw NoSuchElementException("Checklist with id $itemId not found.")
         }
 
         db.document(querySnapshot.documents.first().id).delete()
