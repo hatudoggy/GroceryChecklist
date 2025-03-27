@@ -96,6 +96,16 @@ class AccountService{
         Firebase.auth.sendPasswordResetEmail(email.toString()).await()
     }
 
+    suspend fun updateEmail(newEmail: String) {
+        Firebase.auth.currentUser!!.verifyBeforeUpdateEmail(newEmail).await()
+    }
+
+    suspend fun reauthenticate(password: String) {
+        val user = Firebase.auth.currentUser!!
+        val credential = EmailAuthProvider.getCredential(user.email!!, password)
+        user.reauthenticate(credential).await()
+    }
+
     private fun FirebaseUser?.toAppUser(): User {
         return if (this == null) User() else User(
             id = this.uid,
