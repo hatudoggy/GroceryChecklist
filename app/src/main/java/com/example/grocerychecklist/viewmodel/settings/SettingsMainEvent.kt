@@ -8,4 +8,10 @@ sealed interface SettingsMainEvent {
     data object ResetPassword: SettingsMainEvent
     data object ClearResetState: SettingsMainEvent
     data object ClearErrorState: SettingsMainEvent
+
+    data class PromptReauthentication(val newEmail: String) : SettingsMainEvent
+    data class Reauthenticate(val password: String) : SettingsMainEvent
+    data object ClearPendingEmail : SettingsMainEvent
+    data class UpdateEmail(val newEmail: String): SettingsMainEvent
+    data object ClearEmailUpdateState : SettingsMainEvent
 }
