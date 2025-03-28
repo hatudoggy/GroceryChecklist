@@ -1,7 +1,7 @@
 package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.AppDatabase
-import com.example.grocerychecklist.data.dao.DatabaseDao
+import com.example.grocerychecklist.data.dao.roomImpl.DatabaseDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

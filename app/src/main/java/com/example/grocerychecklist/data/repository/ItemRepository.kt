@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.data.repository
 
+import com.example.grocerychecklist.data.dao.ChecklistItemDAO
 import com.example.grocerychecklist.data.dao.ItemDAO
 import com.example.grocerychecklist.data.mapper.ItemInput
 import com.example.grocerychecklist.data.model.Item
@@ -13,6 +14,7 @@ enum class ItemOrder {
 }
 
 class ItemRepository(
+    private val checklistItemDAO: ChecklistItemDAO,
     private val itemDAO: ItemDAO
 ) {
 
@@ -52,6 +54,7 @@ class ItemRepository(
 
     suspend fun deleteItem(item: Item) {
         itemDAO.delete(item)
+        checklistItemDAO.deleteChecklistByItemId(item.id)
     }
 
     suspend fun getItem(id: Long): Item {
