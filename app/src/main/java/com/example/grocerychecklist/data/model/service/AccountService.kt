@@ -1,5 +1,7 @@
 package com.example.grocerychecklist.data.model.service
 
+import com.example.grocerychecklist.data.dao.firestoreImpl.FirestoreCollections
+import com.example.grocerychecklist.data.model.AuthUser
 import com.example.grocerychecklist.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -8,13 +10,14 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class AccountService{
-    val currentUser: Flow<User?>
+    val currentAuthUser: Flow<AuthUser?>
         get() = callbackFlow {
             val listener =
                 FirebaseAuth.AuthStateListener { auth ->
@@ -31,7 +34,7 @@ class AccountService{
         return Firebase.auth.currentUser != null
     }
 
-    fun getUserProfile(): User {
+    fun getUserProfile(): AuthUser {
         return Firebase.auth.currentUser.toAppUser()
     }
 
@@ -52,11 +55,12 @@ class AccountService{
     suspend fun linkAccountWithGoogle(idToken: String) {
         val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
         Firebase.auth.currentUser!!.linkWithCredential(firebaseCredential).await()
+        createUserDocumentIfNotExists()
     }
 
     suspend fun linkAccountWithEmail(email: String, password: String) {
-        val credential = EmailAuthProvider.getCredential(email, password)
-        Firebase.auth.currentUser!!.linkWithCredential(credential).await()
+        Firebase.auth.createUserWithEmailAndPassword(email, password).await()
+        createUserDocumentIfNotExists()
     }
 
     suspend fun signInWithGoogle(idToken: String) {
@@ -96,18 +100,24 @@ class AccountService{
         Firebase.auth.sendPasswordResetEmail(email.toString()).await()
     }
 
-    suspend fun updateEmail(newEmail: String) {
-        Firebase.auth.currentUser!!.verifyBeforeUpdateEmail(newEmail).await()
+    private suspend fun createUserDocumentIfNotExists() {
+        val currentUser = Firebase.auth.currentUser
+        val userId = currentUser?.uid ?: return
+        val userRef = Firebase.firestore.collection(FirestoreCollections.USERS).document(userId)
+
+        val snapshot = userRef.get().await()
+        if (!snapshot.exists()) {
+            val newUser = User(
+                email = currentUser.email ?: "",
+                displayName = currentUser.displayName ?: ""
+            )
+            userRef.set(newUser).await()
+        }
+
     }
 
-    suspend fun reauthenticate(password: String) {
-        val user = Firebase.auth.currentUser!!
-        val credential = EmailAuthProvider.getCredential(user.email!!, password)
-        user.reauthenticate(credential).await()
-    }
-
-    private fun FirebaseUser?.toAppUser(): User {
-        return if (this == null) User() else User(
+    private fun FirebaseUser?.toAppUser(): AuthUser {
+        return if (this == null) AuthUser() else AuthUser(
             id = this.uid,
             email = this.email ?: "",
             provider = this.providerId,
