@@ -99,7 +99,8 @@ fun AuthLoginScreen (
                     isError = !state.isEmailValid,
                     supportingText = {state.emailError?.let { Text(it, color = Color.Red) }},
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    singleLine = true
                 )
 
                 var passwordVisible by rememberSaveable() { mutableStateOf(false) }
@@ -124,7 +125,7 @@ fun AuthLoginScreen (
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
                 )
             }
 

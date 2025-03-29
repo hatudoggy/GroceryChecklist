@@ -1,13 +1,13 @@
 package com.example.grocerychecklist.viewmodel.settings
 
 import android.app.Application
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.data.model.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.NetworkUtils
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -81,12 +81,67 @@ class SettingsMainViewModel(
     }
 
     private fun resetPassword() {
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _state.update { it.copy(error = "No internet connection") }
+            return
+        }
+
         viewModelScope.launch {
             _state.update {it.copy(isPasswordReset = false, error = null)}
 
             try {
                 accountService.resetPassword()
                 _state.update { it.copy(isPasswordReset = true) }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private var pendingEmail: String? = null
+
+    private fun updateEmail(newEmail: String) {
+        if (!NetworkUtils.isInternetAvailable(application)) {
+            _state.update { it.copy(error = "No internet connection") }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                accountService.updateEmail(newEmail)
+                _state.update {
+                    it.copy(
+                        isEmailUpdateSent = true,
+                        pendingEmail = null,
+                        showReauthDialog = false
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is FirebaseAuthRecentLoginRequiredException) {
+                    pendingEmail = newEmail
+                    _state.update { it.copy(showReauthDialog = true) }
+                } else {
+                    _state.update { it.copy(error = e.message) }
+                }
+            }
+        }
+    }
+
+    private fun reauthenticate(password: String) {
+        viewModelScope.launch {
+            try {
+                accountService.reauthenticate(password)
+
+                pendingEmail?.let { email ->
+                    accountService.updateEmail(email)
+                    _state.update {
+                        it.copy(
+                            isEmailUpdateSent = true,
+                            pendingEmail = null,
+                            showReauthDialog = false
+                        )
+                    }
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -115,6 +170,27 @@ class SettingsMainViewModel(
             SettingsMainEvent.ClearErrorState -> {
                 _state.update { it.copy(error = null) }
             }
+
+            SettingsMainEvent.ClearEmailUpdateState -> {
+                _state.update { it.copy(isEmailUpdateSent = false) }
+            }
+
+            SettingsMainEvent.ClearPendingEmail -> {
+                pendingEmail= null
+                _state.update { it.copy(showReauthDialog = false) }
+            }
+
+            is SettingsMainEvent.UpdateEmail -> updateEmail(event.newEmail)
+
+            is SettingsMainEvent.PromptReauthentication -> {
+                pendingEmail = event.newEmail
+                _state.update { it.copy(showReauthDialog = true) }
+            }
+
+            is SettingsMainEvent.Reauthenticate -> reauthenticate(event.password)
+
+
+
         }
     }
 }

@@ -11,6 +11,10 @@ data class SettingsMainState (
     val isSigningOut: Boolean = false,
     val error: String? = null,
     val isPasswordReset: Boolean = false,
+    val isEmailUpdateSent: Boolean = false,
+    val pendingEmail: String? = null,
+    val showReauthDialog: Boolean = false,
+    val showEmailDialog: Boolean = false,
 
     // UI Checks
     val isBottomModalOpen: Boolean = false
