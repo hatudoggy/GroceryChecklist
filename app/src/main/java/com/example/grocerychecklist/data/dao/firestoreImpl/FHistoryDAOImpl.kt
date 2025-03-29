@@ -1,8 +1,10 @@
 package com.example.grocerychecklist.data.dao.firestoreImpl
 
+import android.util.Log
 import com.example.grocerychecklist.data.dao.HistoryDAO
 import com.example.grocerychecklist.data.dto.HistoryFirestore
 import com.example.grocerychecklist.data.dto.HistoryItemAggregatedFirestore
+import com.example.grocerychecklist.data.dto.toTimestamp
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.mapper.HistoryPriced
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class FHistoryDAOImpl: FBaseDAOImpl<History>(
     FirestoreCollections.HISTORIES
@@ -119,12 +122,27 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
         startDate: LocalDateTime,
         endDate: LocalDateTime
     ): Flow<List<History>> {
+        val startTimestamp = startDate.toTimestamp()
+        val endTimestamp = endDate.toTimestamp()
+
         return db
-            .whereGreaterThanOrEqualTo("createdAt", startDate)
-            .whereLessThan("createdAt", endDate)
+            .whereGreaterThanOrEqualTo("createdAt", startTimestamp)
+            .whereLessThan("createdAt", endTimestamp)
             .snapshots()
             .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
+                querySnapshot.documents.mapNotNull { document ->
+                    val id = document.id.toLongOrNull()
+                    if (id == null) {
+                        Log.d("FHistoryDAOImpl", "Warning: Document ID is not a valid Long: ${document.id}")
+                        return@mapNotNull null
+                    }
+                    try {
+                        fromFirestoreModel(document, id)
+                    } catch (e: Exception) {
+                        Log.e("FHistoryDAOImpl", "Error converting document to History: ${document.id}, Error: ${e.message}")
+                        null
+                    }
+                }
             }
     }
 
