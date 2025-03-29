@@ -54,13 +54,22 @@ class AccountService{
 
     suspend fun linkAccountWithGoogle(idToken: String) {
         val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-        Firebase.auth.currentUser!!.linkWithCredential(firebaseCredential).await()
-        createUserDocumentIfNotExists()
+        try {
+            Firebase.auth.currentUser!!.linkWithCredential(firebaseCredential).await()
+            createUserDocumentIfNotExists()
+        } catch (e: Exception) {
+            throw Exception("User is already linked with another account.")
+        }
     }
 
     suspend fun linkAccountWithEmail(email: String, password: String) {
-        Firebase.auth.createUserWithEmailAndPassword(email, password).await()
-        createUserDocumentIfNotExists()
+        try {
+            Firebase.auth.createUserWithEmailAndPassword(email, password).await()
+            createUserDocumentIfNotExists()
+        } catch (e: Exception) {
+            throw Exception("User is already linked with another account.")
+        }
+
     }
 
     suspend fun signInWithGoogle(idToken: String) {

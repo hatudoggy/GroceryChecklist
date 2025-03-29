@@ -1,5 +1,9 @@
 package com.example.grocerychecklist.ui.screen.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,7 +67,8 @@ fun AuthLoginScreen (
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
+                .padding(top = 0.dp, bottom = 24.dp)
         ) {
             Text(
                 "Login to",
@@ -97,7 +102,6 @@ fun AuthLoginScreen (
                     label = { Text("Email") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     isError = !state.isEmailValid,
-                    supportingText = {state.emailError?.let { Text(it, color = Color.Red) }},
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -111,7 +115,6 @@ fun AuthLoginScreen (
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     isError = !state.isPasswordValid,
-                    supportingText = {state.passwordError?.let {Text(it, color = Color.Red)}},
                     trailingIcon = {
                         val image = if (passwordVisible)
                             Icons.Filled.Visibility
@@ -126,13 +129,34 @@ fun AuthLoginScreen (
                     modifier = Modifier
                         .fillMaxWidth()
                 )
+
+                // Error texts
+                Column {
+                    val errors = listOf(
+                        state.emailError,
+                        state.passwordError,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    errors.forEach { error ->
+                        AnimatedVisibility(
+                            visible = error != null,
+                            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                            exit = fadeOut(animationSpec = tween(durationMillis = 300))
+                        ) {
+                            error?.let {
+                                Text(text = "- $it", color = Color.Red, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
 
             Spacer(Modifier.height(24.dp))
 
             LoginButton(onEvent, state)
             SocialLoginDivider()
-            GoogleLoginButton(onEvent)
+            GoogleLoginButton(onEvent, state)
             SignUpPrompt(onEvent)
         }
         ToastComponent(message = state.error)
@@ -143,14 +167,14 @@ fun AuthLoginScreen (
 private fun LoginButton(onEvent: (AuthLoginEvent) -> Unit, state: AuthLoginState) {
     Button(
         onClick = {
-            if (state.email.isNotBlank() && state.password.isNotBlank()) {
+            if (state.isFormValid) {
                 onEvent(AuthLoginEvent.Login)
             }
         },
         modifier = Modifier
             .height(44.dp)
             .fillMaxWidth(),
-        enabled = state.isEmailValid && state.isPasswordValid
+        enabled = state.isFormValid
     ) {
         Text("Login")
     }
@@ -172,12 +196,13 @@ private fun SocialLoginDivider() {
 }
 
 @Composable
-private fun GoogleLoginButton(onEvent: (AuthLoginEvent) -> Unit) {
+private fun GoogleLoginButton(onEvent: (AuthLoginEvent) -> Unit, state: AuthLoginState) {
     GoogleButton(
         text = "Login to google",
         loadingText = "Logging In",
         progressIndicatorColor = PrimaryGreen,
         modifier = Modifier.fillMaxWidth(),
+        isLoading = state.isLoading
     ) { credential ->
         onEvent(AuthLoginEvent.GoogleLogIn(credential))
     }

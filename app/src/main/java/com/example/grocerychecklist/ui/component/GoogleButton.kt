@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun GoogleButton(
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     text: String = "Sign Up with Google",
     loadingText: String = "Creating Account...",
     icon: Int = R.drawable.ic_google_logo,
@@ -55,7 +56,6 @@ fun GoogleButton(
     progressIndicatorColor: Color = MaterialTheme.colorScheme.primary,
     onRequestResult: (Credential) -> Unit
 ) {
-    var clicked by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -63,7 +63,6 @@ fun GoogleButton(
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
             .clickable {
-                clicked = !clicked
                 run { coroutineScope.launch { launchCredManButtonUI(context, onRequestResult) } }
             },
         shape = shape,
@@ -93,8 +92,8 @@ fun GoogleButton(
                 tint = Color.Unspecified
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = if (clicked) loadingText else text)
-            if (clicked) {
+            Text(text = if (isLoading) loadingText else text)
+            if (isLoading) {
                 Spacer(modifier = Modifier.width(16.dp))
                 CircularProgressIndicator(
                     modifier = Modifier

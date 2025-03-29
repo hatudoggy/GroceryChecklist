@@ -42,7 +42,7 @@ class ChecklistMainViewModel(
     private var searchJob: Job? = null
     private val _state = MutableStateFlow(ChecklistMainState())
     val state: StateFlow<ChecklistMainState> = _state.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(500), ChecklistMainState()
+        viewModelScope, SharingStarted.WhileSubscribed(5000), ChecklistMainState()
     )
 
     init {
@@ -253,7 +253,7 @@ class ChecklistMainViewModel(
     private fun loadChecklists() {
         viewModelScope.launch {
             checklistRepository.getChecklists().catch {
-                emit(emptyList<Checklist>())
+                emit(emptyList())
             }.collect { checklists ->
                 _state.update { it.copy(checklists = checklists, filterableChecklist = checklists) }
             }

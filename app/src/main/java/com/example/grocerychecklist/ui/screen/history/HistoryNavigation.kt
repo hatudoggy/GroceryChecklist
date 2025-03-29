@@ -3,10 +3,8 @@ package com.example.grocerychecklist.ui.screen.history
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.grocerychecklist.GroceryChecklistApp
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
@@ -14,7 +12,7 @@ import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
 import com.example.grocerychecklist.viewmodel.viewModelFactory
 
 
-fun NavGraphBuilder.historyDestination(navController: NavController) {
+fun NavGraphBuilder.historyDestination() {
     composable<Routes.HistoryMain> {
 
         val historyMainViewModel = viewModel<HistoryMainViewModel>(
@@ -37,7 +35,8 @@ fun NavGraphBuilder.historyDestination(navController: NavController) {
                 HistoryDetailViewModel(
                     appModule.navigator,
                     entry,
-                    appModule.historyItemRepository
+                    appModule.historyItemRepository,
+                    appModule.checklistRepository
                 )
             }
         )

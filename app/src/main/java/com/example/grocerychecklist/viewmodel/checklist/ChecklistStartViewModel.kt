@@ -61,8 +61,14 @@ class ChecklistStartViewModel(
 
     init {
         viewModelScope.launch {
-            repo.getChecklistItems(checklistId, ChecklistItemOrder.Name)
-                .collect { setItems(checklistDataMapper(it)) }
+            launch {
+                _state.update { it.copy(checklistName = checklistRepo.getChecklist(checklistId).name)
+                } }
+
+            launch {
+                repo.getChecklistItems(checklistId, ChecklistItemOrder.Name)
+                    .collect { setItems(checklistDataMapper(it)) }
+            }
         }
     }
 

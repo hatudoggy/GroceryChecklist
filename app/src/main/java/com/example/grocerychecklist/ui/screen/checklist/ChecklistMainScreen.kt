@@ -177,14 +177,11 @@ fun ChecklistMainScreen(
 
     // Main screen content
     Scaffold(
-        modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
-                onClick = {
-                    onEvent(ChecklistMainEvent.ToggleDrawer)
-                },
+                onClick = {onEvent(ChecklistMainEvent.ToggleDrawer)},
                 containerColor = PrimaryGreenSurface
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
@@ -195,7 +192,7 @@ fun ChecklistMainScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .padding(8.dp)
         ) {
             RoundedTextField(
                 leadingIcon = {
@@ -226,7 +223,7 @@ fun ChecklistMainScreen(
                         item {
                             ButtonCardComponent(
                                 name = item.name,
-                                description = if (item.description.isNotBlank()) item.description else "No Description",
+                                description = item.description.ifBlank { "No Description" },
                                 date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
                                     .toString(),
                                 icon = item.icon.imageVector,
@@ -279,6 +276,7 @@ fun BottomSheetChecklist(
     BottomSheet(
         isOpen = isOpen,
         onClose = onClose,
+        skipExpand = true,
     ) {
 
         Column(
@@ -375,7 +373,6 @@ fun BottomSheetChecklist(
                     onClick = { onEvent(ChecklistMainEvent.ToggleDrawer) }
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
-                println(state.editingChecklist)
                 Button(
                     enabled = state.editingChecklist?.name?.trim()
                         ?.isNotEmpty() == true || state.newChecklist.name.trim().isNotEmpty(),

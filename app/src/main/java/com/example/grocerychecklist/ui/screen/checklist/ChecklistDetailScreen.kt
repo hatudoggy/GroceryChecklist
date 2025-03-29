@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
 import com.example.grocerychecklist.data.model.Checklist
+import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.LightGray
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailEvent
@@ -76,7 +77,7 @@ fun ChecklistDetailScreen(
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
-                        .padding(horizontal = 40.dp),
+                        .padding(horizontal = 32.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -90,7 +91,7 @@ fun ChecklistDetailScreen(
                     CheckListStats(
                         quantity = itemCount.toString(),
                         totalPrice = totalPrice.toString(),
-                        lastShopAt = checklist.lastShopAt
+                        lastShopAt = checklist.lastShopAt?.let { DateUtility.formatDateWithDay(it) } ?: "N/A"
                     )
 
                     CheckListButtons(onEvent = onEvent)
@@ -140,20 +141,17 @@ fun CheckListOverview(
 fun CheckListStats(
     quantity: String,
     totalPrice: String,
-    lastShopAt: LocalDateTime?,
+    lastShopAt: String,
     modifier: Modifier = Modifier
 ) {
-
-    val formattedDate = lastShopAt?.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()))
-        ?: "N/A"
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        CheckListStatColumn(quantity, "Items")
-        CheckListStatColumn("₱$totalPrice", "Total")
-        CheckListStatColumn(formattedDate, "Last Shop")
+        CheckListStatColumn(quantity, "Items", Modifier.weight(1f))
+        CheckListStatColumn("₱$totalPrice", "Total", Modifier.weight(1f))
+        CheckListStatColumn(lastShopAt, "Last Shop", Modifier.weight(1f))
     }
 }
 
@@ -171,14 +169,17 @@ fun CheckListStatColumn(
             text = value,
             color = Color(0xFF6FA539),
             fontWeight = FontWeight.SemiBold,
-            fontSize = 22.sp
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 0.dp)
         )
 
         Text(
             text = attribute,
             color = Color.Gray,
             textAlign = TextAlign.Center,
-            fontSize = 11.sp
+            fontSize = 11.sp,
+            modifier = Modifier.padding(horizontal = 0.dp)
         )
     }
 }
@@ -189,7 +190,7 @@ fun CheckListButtons(
     onEvent: (ChecklistDetailEvent) -> Unit
 ) {
     Column(
-        modifier = modifier.padding(vertical = 16.dp),
+        modifier = modifier.padding(vertical = 16.dp, horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                             dashboardDestination()
                             checklistDestination()
                             itemDestination()
-                            historyDestination(navController)
+                            historyDestination()
                             settingsDestination()
                         }
                     }

@@ -1,10 +1,10 @@
 package com.example.grocerychecklist.ui.screen.auth
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
@@ -40,7 +39,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +48,7 @@ import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.component.launchCredManBottomSheet
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
+import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterState
 
@@ -83,17 +83,12 @@ fun AuthRegisterScreen (
         ) {
             Column (modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Create a",
-                    fontSize = 36 .sp,
+                    "Create a new account",
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Medium,
                     color = PrimaryGreen,
                 )
-                Text(
-                    "new account",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PrimaryGreen,
-                )
+
                 Spacer(Modifier.height(8.dp))
 //                Text(
 //                    "Register to get started",
@@ -199,7 +194,8 @@ fun AuthRegisterScreen (
             ) {
                 SignUpButton(onEvent, state)
                 SocialSignUpDivider()
-                GoogleSignUpButton(onEvent)
+                GoogleSignUpButton(onEvent, state)
+                LoginPrompt(onEvent)
             }
         }
         ToastComponent(message = state.error)
@@ -215,9 +211,7 @@ private fun SignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegist
         modifier = Modifier
             .height(48.dp)
             .fillMaxWidth(),
-        enabled = state.isEmailValid &&
-                state.isPasswordValid &&
-                state.isConfirmPasswordValid
+        enabled = state.isFormValid
     ) {
         Text("Register", fontSize = 16.sp)
     }
@@ -239,7 +233,7 @@ private fun SocialSignUpDivider(){
 }
 
 @Composable
-fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit){
+fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegisterState){
     GoogleButton(
         text = "Sign up with Google",
         loadingText = "Signing Up",
@@ -247,8 +241,34 @@ fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit){
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
+        isLoading = state.isLoading
     ){ credential ->
         onEvent(AuthRegisterEvent.GoogleSignUp(credential))
+    }
+}
+
+@Composable
+private fun LoginPrompt(onEvent: (AuthRegisterEvent) -> Unit) {
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .padding(vertical = 28.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = "Already Signed Up?",
+        )
+
+        Text(
+            text="Login now",
+            color = Color(0xFF2565BE),
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable {
+                onEvent(AuthRegisterEvent.NavigateToLogin)
+            }
+        )
     }
 }
 

@@ -167,8 +167,6 @@ fun ChecklistEditScreen(
     )
 
     Scaffold(
-        modifier = Modifier.padding(vertical = 0.dp),
-        contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
@@ -197,7 +195,7 @@ fun ChecklistEditScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Main Grocery",
+                    state.checklistName,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )

@@ -4,6 +4,7 @@ import androidx.credentials.Credential
 
 sealed interface AuthRegisterEvent {
     data object NavigateBack: AuthRegisterEvent
+    data object NavigateToLogin: AuthRegisterEvent
     data object EmailSignUp: AuthRegisterEvent
     data object TogglePasswordVisibility : AuthRegisterEvent
     data class GoogleSignUp(val credential: Credential): AuthRegisterEvent

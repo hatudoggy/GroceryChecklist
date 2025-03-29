@@ -199,7 +199,7 @@ class AuthRegisterViewModel(
             } catch (e: SocketTimeoutException) {
                 _state.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
             } catch (e: Exception) {
-                _state.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
+                _state.update { it.copy(error = e.message ?: DEFAULT_ERROR, isLoading = false) }
             } finally {
                 _state.update { it.copy(isLoading = false) }
             }
@@ -215,6 +215,7 @@ class AuthRegisterViewModel(
     fun onEvent (event: AuthRegisterEvent) {
         when (event) {
             AuthRegisterEvent.NavigateBack -> navigator.popBackStack()
+            AuthRegisterEvent.NavigateToLogin -> navigator.navigate(Routes.AuthLogin)
             AuthRegisterEvent.EmailSignUp -> onSignUpClick()
 
             is AuthRegisterEvent.GoogleSignUp -> onSignUpWithGoogle(event.credential)
