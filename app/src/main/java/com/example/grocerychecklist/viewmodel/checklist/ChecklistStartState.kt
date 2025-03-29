@@ -2,6 +2,7 @@ package com.example.grocerychecklist.viewmodel.checklist
 
 
 data class ChecklistStartState (
+    val checklistName: String = "",
     // Items state
     val items: List<ChecklistData> = emptyList(),
     val filteredItems: List<ChecklistData> = emptyList(),

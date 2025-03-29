@@ -5,6 +5,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
+import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
@@ -19,7 +20,8 @@ import kotlin.text.contains
 
 class ChecklistViewViewModel(
     private val navigator: Navigator,
-    private val repository: ChecklistItemRepository,
+    private val checklistRepository: ChecklistRepository,
+    private val checklistItemRepository: ChecklistItemRepository,
     entry: NavBackStackEntry,
 ): SearchableViewModel<ChecklistData>(matchesSearch = { item, query -> item.name.contains(query, ignoreCase = true)}) {
 
@@ -32,7 +34,7 @@ class ChecklistViewViewModel(
         currentState.copy(checklistItems = items, searchQuery = query)
     }.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(500),
+        SharingStarted.WhileSubscribed(5000),
         ChecklistViewState()
     )
 
@@ -42,8 +44,14 @@ class ChecklistViewViewModel(
 
     private fun loadChecklistItems() {
         viewModelScope.launch {
-            repository.getChecklistItems(checklistId, ChecklistItemOrder.Name)
-                .collect {setItems(checklistDataMapper(it))}
+            launch {
+                _state.update { it.copy(checklistName = checklistRepository.getChecklist(checklistId).name) }
+            }
+
+            launch{
+                checklistItemRepository.getChecklistItems(checklistId, ChecklistItemOrder.Name)
+                    .collect { setItems(checklistDataMapper(it)) }
+            }
         }
     }
 

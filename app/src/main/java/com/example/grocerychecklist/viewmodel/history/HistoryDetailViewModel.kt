@@ -6,18 +6,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
+import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
+import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,9 +28,10 @@ import kotlinx.coroutines.launch
 class HistoryDetailViewModel(
     private val navigator: Navigator,
     entry: NavBackStackEntry,
-    private val historyRepository: HistoryItemRepository
+    private val historyRepository: HistoryItemRepository,
+    private val checklistRepository: ChecklistRepository
 ) : ViewModel() {
-      private val historyId = entry.toRoute<Routes.HistoryDetail>().historyId
+    private val historyId = entry.toRoute<Routes.HistoryDetail>().historyId
     
     private val _state = MutableStateFlow(HistoryDetailState())
     val state: StateFlow<HistoryDetailState> = _state.stateIn(
@@ -39,6 +40,7 @@ class HistoryDetailViewModel(
 
     init {
         loadHistoryItems()
+        loadHistoryDetails()
     }
 
     private fun loadHistoryItems() {
@@ -56,6 +58,18 @@ class HistoryDetailViewModel(
                     }
                     setHistoryItems(historyDataDetails)
                 }
+        }
+    }
+
+    private fun loadHistoryDetails() {
+        viewModelScope.launch {
+            val history = historyRepository.getHistoryItems(historyId, ChecklistItemOrder.Name).first().first()
+            _state.update { currentState ->
+                currentState.copy(
+                    checklistName = checklistRepository.getChecklist(history.checklistItemId).name,
+                    date = DateUtility.formatDateWithDay(history.createdAt)
+                )
+            }
         }
     }
 

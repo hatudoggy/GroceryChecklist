@@ -45,6 +45,7 @@ fun NavGraphBuilder.checklistDestination() {
             factory = viewModelFactory {
                 ChecklistViewViewModel(
                     appModule.navigator,
+                    appModule.checklistRepository,
                     appModule.checklistItemRepository,
                     entry
                 )
@@ -60,7 +61,7 @@ fun NavGraphBuilder.checklistDestination() {
         val checklistEditViewModel = viewModel<ChecklistEditViewModel>(
             factory = viewModelFactory {
                 ChecklistEditViewModel(
-                    appModule.navigator, entry, appModule.checklistItemRepository
+                    appModule.navigator, entry, appModule.checklistRepository, appModule.checklistItemRepository
                 )
             }
         )

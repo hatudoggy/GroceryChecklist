@@ -15,8 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,13 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.grocerychecklist.ui.component.CategorySelector
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailState
-import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
 
 @Composable
 fun HistoryDetailScreen(
@@ -53,7 +49,7 @@ fun HistoryDetailScreen(
                 .fillMaxHeight()
                 .padding(innerPadding)
         ) {
-            HistoryListHeader(title = "Main Grocery", date = "August 25, 2024")
+            HistoryListHeader(checklist = state.checklistName, date = state.date)
 
             // Category selector component that allows the user to filter the list by categories.
             CategorySelector(
@@ -81,7 +77,7 @@ fun HistoryDetailScreen(
 
 
 @Composable
-fun HistoryListHeader(title: String, date: String) {
+fun HistoryListHeader(checklist: String, date: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -90,7 +86,7 @@ fun HistoryListHeader(title: String, date: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = title,
+            text = checklist,
             style = TextStyle(
                 fontSize = 24.sp,
                 fontWeight = FontWeight(500),

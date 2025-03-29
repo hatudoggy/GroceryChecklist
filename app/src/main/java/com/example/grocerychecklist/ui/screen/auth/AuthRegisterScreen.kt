@@ -1,5 +1,10 @@
 package com.example.grocerychecklist.ui.screen.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -30,7 +39,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +48,7 @@ import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.component.launchCredManBottomSheet
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
+import com.example.grocerychecklist.viewmodel.auth.AuthLoginEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterEvent
 import com.example.grocerychecklist.viewmodel.auth.AuthRegisterState
 
@@ -50,7 +60,7 @@ fun AuthRegisterScreen (
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = "google_sign_up") {
         launchCredManBottomSheet(context) { result ->
             onEvent(AuthRegisterEvent.GoogleSignUp(result))
         }
@@ -68,41 +78,41 @@ fun AuthRegisterScreen (
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
+                .padding(top = 0.dp, bottom = 24.dp)
         ) {
-            Text(
-                "Create a",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = PrimaryGreen,
-            )
-            Text(
-                "new account",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = PrimaryGreen,
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Register to get started",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
+            Column (modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Create a new account",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PrimaryGreen,
+                )
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
+//                Text(
+//                    "Register to get started",
+//                    fontSize = 16.sp,
+//                    color = Color.Gray
+//                )
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             //Form section
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                val textFieldModifier = Modifier
+                    .fillMaxWidth()
+
                 OutlinedTextField(
                     value = state.fullName,
                     onValueChange = { onEvent(AuthRegisterEvent.FullNameChanged(it)) },
                     label = { Text("Full Name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = textFieldModifier,
                     singleLine = true,
+                    leadingIcon = { Icon(imageVector = Icons.Default.Person, contentDescription = "Person Icon") },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next
                     )
@@ -111,11 +121,11 @@ fun AuthRegisterScreen (
                     value = state.email,
                     onValueChange = { onEvent(AuthRegisterEvent.EmailChanged(it)) },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = textFieldModifier,
                     singleLine = true,
+                    leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email Icon") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     isError = !state.isEmailValid,
-                    supportingText = { state.emailError?.let { Text(it, color = Color.Red) } }
                 )
                 OutlinedTextField(
                     value = state.password,
@@ -123,9 +133,9 @@ fun AuthRegisterScreen (
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    leadingIcon = { Icon(imageVector = Icons.Default.Key, contentDescription = "Password Icon") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
                     isError = !state.isPasswordValid,
-                    supportingText = { state.passwordError?.let { Text(it, color = Color.Red) } },
                     trailingIcon = {
                         val image = if (state.isPasswordVisible)
                             Icons.Filled.Visibility
@@ -137,7 +147,7 @@ fun AuthRegisterScreen (
                             Icon(imageVector = image, contentDescription = description)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = textFieldModifier
                 )
                 OutlinedTextField(
                     value = state.confirmPassword,
@@ -145,17 +155,48 @@ fun AuthRegisterScreen (
                     label = { Text("Confirm Password") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
+                    leadingIcon = { Icon(imageVector = Icons.Default.Security, contentDescription = "Password Icon") },
+                    modifier = textFieldModifier,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     isError = !state.isConfirmPasswordValid,
-                    supportingText = { state.confirmPasswordError?.let { Text(it, color = Color.Red) } }
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            // Error texts
+            Column {
+                val errors = listOf(
+                    state.emailError,
+                    state.passwordError,
+                    state.confirmPasswordError
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                errors.forEach { error ->
+                    AnimatedVisibility(
+                        visible = error != null,
+                        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                        exit = fadeOut(animationSpec = tween(durationMillis = 300))
+                    ) {
+                        error?.let {
+                            Text(text = "- $it", color = Color.Red, fontSize = 12.sp)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-            SignUpButton(onEvent, state)
-            SocialSignUpDivider()
-            GoogleSignUpButton(onEvent)
+            // Flexible space to push buttons to bottom
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Buttons section with proper bottom padding
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                SignUpButton(onEvent, state)
+                SocialSignUpDivider()
+                GoogleSignUpButton(onEvent, state)
+                LoginPrompt(onEvent)
+            }
         }
         ToastComponent(message = state.error)
     }
@@ -168,13 +209,11 @@ private fun SignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegist
             onEvent(AuthRegisterEvent.EmailSignUp)
         },
         modifier = Modifier
-            .height(44.dp)
+            .height(48.dp)
             .fillMaxWidth(),
-        enabled = state.isEmailValid &&
-                state.isPasswordValid &&
-                state.isConfirmPasswordValid
+        enabled = state.isFormValid
     ) {
-        Text("Register")
+        Text("Register", fontSize = 16.sp)
     }
 }
 
@@ -182,7 +221,7 @@ private fun SignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegist
 private fun SocialSignUpDivider(){
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 16.dp)
+        modifier = Modifier.padding(vertical = 4.dp)
     ) {
         HorizontalDivider(Modifier.weight(1f))
         Text(
@@ -194,14 +233,42 @@ private fun SocialSignUpDivider(){
 }
 
 @Composable
-fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit){
+fun GoogleSignUpButton(onEvent: (AuthRegisterEvent) -> Unit, state: AuthRegisterState){
     GoogleButton(
         text = "Sign up with Google",
         loadingText = "Signing Up",
         progressIndicatorColor = PrimaryGreen,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        isLoading = state.isLoading
     ){ credential ->
         onEvent(AuthRegisterEvent.GoogleSignUp(credential))
+    }
+}
+
+@Composable
+private fun LoginPrompt(onEvent: (AuthRegisterEvent) -> Unit) {
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .padding(vertical = 28.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = "Already Signed Up?",
+        )
+
+        Text(
+            text="Login now",
+            color = Color(0xFF2565BE),
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable {
+                onEvent(AuthRegisterEvent.NavigateToLogin)
+            }
+        )
     }
 }
 

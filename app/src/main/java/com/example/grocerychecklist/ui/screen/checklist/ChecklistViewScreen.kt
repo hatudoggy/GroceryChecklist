@@ -66,7 +66,7 @@ fun ChecklistViewScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Main Grocery",
+                    state.checklistName,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )

@@ -43,7 +43,7 @@ class DateUtility {
         }
 
         fun formatDateWithDay(createdAt: LocalDateTime): String {
-            val formatter = DateTimeFormatter.ofPattern("MMM dd yyyy")
+            val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
             return createdAt.toLocalDate().format(formatter)
         }
 
