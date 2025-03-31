@@ -1,7 +1,7 @@
 package com.example.grocerychecklist.data.dao.firestoreImpl
 
+import android.util.Log
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
-import com.example.grocerychecklist.data.dto.HistoryFirestore
 import com.example.grocerychecklist.data.dto.HistoryItemAggregatedFirestore
 import com.example.grocerychecklist.data.dto.HistoryItemFirestore
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
@@ -11,13 +11,13 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.util.IdGenerator
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.snapshots
-import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import java.time.Month
 import java.util.Locale
 
 class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
@@ -27,76 +27,55 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
     override suspend fun insertBatch(historyItems: List<HistoryItem>): List<Long> {
         if (historyItems.isEmpty()) return emptyList()
 
-        val firestore = Firebase.firestore
-        val batch = firestore.batch()
-
         val historyId = historyItems.first().historyId.toString()
-        val historyRef = firestore
-            .collection(FirestoreCollections.USERS)
-            .document(currentUser.uid)
-            .collection(FirestoreCollections.HISTORIES)
-            .document(historyId)
 
         val generatedIds = historyItems.map { item ->
             val newItemId = IdGenerator.nextID()
             val itemRef = db.document(newItemId.toString())
             val firestoreModel = toFirestoreModel(item.copy(historyId = historyId.toLong()))
-            batch.set(itemRef, firestoreModel)
-
+            itemRef.set(firestoreModel).await()
             newItemId
         }
-
-        val totalPrice = historyItems.sumOf { it.price * it.quantity }
-        val totalItems = historyItems.sumOf { it.quantity }
-
-        val aggregatedItems = historyItems
-            .groupBy { it.category }
-            .map { (category, items) ->
-                mapOf(
-                    "category" to category,
-                    "sumOfPrice" to items.sumOf { it.price * it.quantity },
-                    "totalItems" to items.sumOf { it.quantity }
-                )
-            }
-
-        batch.update(historyRef, mapOf(
-            "totalPrice" to totalPrice,
-            "totalItems" to totalItems,
-            "aggregatedItems" to aggregatedItems
-        ))
-
-        batch.commit().await()
 
         return generatedIds
     }
 
     override suspend fun getHistoryItemById(historyItemId: Long): HistoryItem {
-        val snapshot = db.document(historyItemId.toString()).get().await()
+        val documentReference = db.document("$historyItemId")
+        val snapshot = documentReference.get().await()
         if (!snapshot.exists())
             throw NoSuchElementException("History Item with id $historyItemId not found.")
         return fromFirestoreModel(snapshot, snapshot.id.toLong())
     }
 
-    override fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>> {
-        return db
-            .whereEqualTo("historyId", historyId)
+    private fun getHistoryItemsFlow(
+        queryModifier: (Query) -> Query
+    ): Flow<List<HistoryItem>> {
+        return queryModifier(db)
             .snapshots()
             .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
+                querySnapshot.toHistoryItemList()
             }
+    }
+
+    private fun QuerySnapshot.toHistoryItemList(): List<HistoryItem> {
+        return this.documents.map { fromFirestoreModel(it, it.id.toLong()) }
+    }
+
+    override fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>> {
+        return getHistoryItemsFlow { query ->
+            query.whereEqualTo("historyId", historyId)
+        }
     }
 
     override fun getAllHistoryItemsOrderFilter(
         historyId: Long,
         order: ChecklistItemOrder
     ): Flow<List<HistoryItem>> {
-        return db
+        return getHistoryItemsFlow { query -> query
             .whereEqualTo("historyId", historyId)
             .orderBy(order.order, Query.Direction.DESCENDING)
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
-            }
+        }
     }
 
     override fun getAllHistoryItemsOrderAndCheckedFilter(
@@ -104,115 +83,73 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
         order: ChecklistItemOrder,
         isChecked: Boolean
     ): Flow<List<HistoryItem>> {
-        return db
+        return getHistoryItemsFlow { query -> query
             .whereEqualTo("historyId", historyId)
             .whereEqualTo("isChecked", isChecked)
             .orderBy(order.order, Query.Direction.DESCENDING)
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
-            }
+        }
     }
 
     override fun getAllHistoryItemsByName(historyId: Long, qName: String): Flow<List<HistoryItem>> {
-        return db
+        return getHistoryItemsFlow { query -> query
             .whereEqualTo("historyId", historyId)
             .whereEqualTo("name", qName)
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
-            }
+        }
     }
 
     override fun getAllHistoryItemsByCategory(
         historyId: Long,
         category: Locale.Category
     ): Flow<List<HistoryItem>> {
-        return db
+        return getHistoryItemsFlow { query -> query
             .whereEqualTo("historyId", historyId)
             .whereEqualTo("category", category)
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents.map { fromFirestoreModel(it, it.id.toLong()) }
-            }
+        }
     }
 
     override suspend fun aggregateTotalHistoryItems(historyId: Long): Int {
-        val historyRef = Firebase.firestore
-            .collection(FirestoreCollections.USERS).document(currentUser.uid)
-            .collection(FirestoreCollections.HISTORIES).document(historyId.toString())
-
-        val snapshot = historyRef.get().await()
-        if (!snapshot.exists())
-            throw NoSuchElementException("History with id $historyId not found.")
-        val doc = snapshot.toObject(HistoryFirestore::class.java)
-            ?: throw IllegalStateException("Failed to parse history item data.")
-        return doc.totalItems
-            ?: throw IllegalStateException("Total Items doesn't have a value")
+        return getHistoryDocument(historyId).size()
     }
 
     override suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double {
-        val historyRef = Firebase.firestore
-            .collection(FirestoreCollections.USERS).document(currentUser.uid)
-            .collection(FirestoreCollections.HISTORIES).document(historyId.toString())
-
-        val snapshot = historyRef.get().await()
-        if (!snapshot.exists())
-            throw NoSuchElementException("History with id $historyId not found.")
-        val doc = snapshot.toObject(HistoryFirestore::class.java)
-            ?: throw IllegalStateException("Failed to parse history item data.")
-        return doc.totalPrice
-            ?: throw IllegalStateException("Total Price doesn't have a value")
+        return getHistoryDocument(historyId).documents.sumOf { document ->
+            document.getDouble("price") ?: 0.0
+        }
     }
 
-    override fun aggregateTotalPriceMonth(date: String): Flow<Double?> {
-        val historyRef = Firebase.firestore
-            .collection(FirestoreCollections.USERS).document(currentUser.uid)
-            .collection(FirestoreCollections.HISTORIES)
+    // Helper function to reduce code duplication
+    private suspend fun getHistoryDocument(historyId: Long): QuerySnapshot {
+        return db.whereEqualTo("historyId", historyId).get().await()
+    }
 
-        return historyRef
-            .whereGreaterThanOrEqualTo("createdAt", DateUtility.getStartOfMonthTimestamp(date))
-            .whereLessThan("createdAt", DateUtility.getEndOfMonthTimestamp(date))
+    override fun aggregateTotalPriceMonth(month: Month): Flow<Double?> {
+        return db
+            .whereGreaterThanOrEqualTo("createdAt", DateUtility.getStartOfMonthTimestamp(month))
+            .whereLessThan("createdAt", DateUtility.getEndOfMonthTimestamp(month))
             .snapshots()
             .map { querySnapshot ->
                 querySnapshot.documents.sumOf { document ->
-                    document.getDouble("totalPrice") ?: 0.0
+                    document.getDouble("price") ?: 0.0
                 }
             }
     }
 
-    override fun aggregateCategoryBreakdownMonth(date: String): Flow<List<HistoryItemAggregated>> {
-        val historyRef = Firebase.firestore
-            .collection(FirestoreCollections.USERS).document(currentUser.uid)
-            .collection(FirestoreCollections.HISTORIES)
+    override fun aggregateCategoryBreakdownMonth(month: Month): Flow<List<HistoryItemAggregated>> {
+        val historyItems = getHistoryItemsFlow { query -> query
+            .whereGreaterThanOrEqualTo("createdAt", DateUtility.getStartOfMonthTimestamp(month))
+            .whereLessThan("createdAt", DateUtility.getEndOfMonthTimestamp(month))
+        }
 
-        return historyRef
-            .whereGreaterThanOrEqualTo("createdAt", DateUtility.getStartOfMonthTimestamp(date))
-            .whereLessThan("createdAt", DateUtility.getEndOfMonthTimestamp(date))
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents
-                    .flatMap { documentSnapshot ->
-                        val aggregatedItemsList = documentSnapshot.get("aggregatedItems")
-                                as? List<*> ?: emptyList<HistoryItemAggregatedFirestore>()
-
-                        aggregatedItemsList.mapNotNull { item ->
-                            try {
-                                val firestoreItem = Gson().fromJson(Gson().toJson(item),
-                                    HistoryItemAggregatedFirestore::class.java)
-                                firestoreItem.toDomainModel()
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }
-                    }
-                    .groupBy { it.category }
-                    .map { (category, items) ->
-                        val totalSum = items.sumOf { it.sumOfPrice }
-                        val totalItemCount = items.sumOf { it.totalItems }
-                        HistoryItemAggregated(totalSum, totalItemCount, category)
-                    }
-            }
+        return historyItems.map {
+            it.groupBy { item -> item.category }
+                .map { (category, items) ->
+                    HistoryItemAggregated(
+                        items.sumOf { item -> item.price },
+                        items.size,
+                        category
+                    )
+                }
+        }
     }
 
 

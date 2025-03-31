@@ -1,6 +1,5 @@
 package com.example.grocerychecklist.data.dao.firestoreImpl
 
-import android.util.Log
 import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.dto.ChecklistFirestore
 import com.example.grocerychecklist.data.model.Checklist

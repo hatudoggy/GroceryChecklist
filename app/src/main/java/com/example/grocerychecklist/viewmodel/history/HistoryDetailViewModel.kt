@@ -35,7 +35,7 @@ class HistoryDetailViewModel(
     
     private val _state = MutableStateFlow(HistoryDetailState())
     val state: StateFlow<HistoryDetailState> = _state.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(500), HistoryDetailState()
+        viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryDetailState()
     )
 
     init {

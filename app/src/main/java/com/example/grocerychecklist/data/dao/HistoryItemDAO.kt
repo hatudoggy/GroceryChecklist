@@ -4,6 +4,8 @@ import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+import java.time.Month
 import java.util.Locale.Category
 
 interface HistoryItemDAO {
@@ -26,8 +28,8 @@ interface HistoryItemDAO {
 
     suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
 
-    fun aggregateTotalPriceMonth(date: String): Flow<Double?>
+    fun aggregateTotalPriceMonth(month: Month): Flow<Double?>
 
-    fun aggregateCategoryBreakdownMonth(date: String): Flow<List<HistoryItemAggregated>>
+    fun aggregateCategoryBreakdownMonth(month: Month): Flow<List<HistoryItemAggregated>>
 
 }

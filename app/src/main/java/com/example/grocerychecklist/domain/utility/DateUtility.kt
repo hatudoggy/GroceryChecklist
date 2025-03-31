@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.domain.utility
 
+import com.example.grocerychecklist.data.dto.toTimestamp
 import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -60,14 +61,22 @@ class DateUtility {
             return getStartOfDay(LocalDateTime.now().minusDays(7))
         }
 
-        fun getThisMonthStartDay(): LocalDateTime {
-            val firstDayOfMonth = LocalDateTime.now().withDayOfMonth(1)
+        fun getMonthStartDay(month: Month): LocalDateTime {
+            val firstDayOfMonth = LocalDateTime.now().withDayOfMonth(1).withMonth(month.value)
             return getStartOfDay(firstDayOfMonth)
         }
 
-        fun getThisMonthEndDay(): LocalDateTime {
-            val lastDayOfMonth = LocalDateTime.now().plusMonths(1).minusDays(1)
+        fun getMonthEndDay(month: Month): LocalDateTime {
+            val lastDayOfMonth = LocalDateTime.now().plusMonths(1).minusDays(1).withMonth(month.value)
             return getEndOfDay(lastDayOfMonth)
+        }
+
+        fun getThisMonthStartDay(): LocalDateTime {
+            return getMonthStartDay(getCurrentMonth())
+        }
+
+        fun getThisMonthEndDay(): LocalDateTime {
+            return getMonthEndDay(getCurrentMonth())
         }
 
         fun getCurrentMonth(): Month {
@@ -79,19 +88,12 @@ class DateUtility {
             return targetMonth
         }
 
-        fun getStartOfMonthTimestamp(date: String): Timestamp {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-            val startOfMonth = LocalDate.parse("$date-01", formatter).atStartOfDay()
-            return Timestamp(startOfMonth.toInstant(ZoneOffset.UTC).epochSecond, 0)
+        fun getStartOfMonthTimestamp(month: Month): Timestamp {
+            return getMonthStartDay(month).toTimestamp()
         }
 
-        fun getEndOfMonthTimestamp(date: String): Timestamp {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-            val endOfMonth = LocalDate.parse("$date-01", formatter)
-                .plusMonths(1).atStartOfDay()
-            return Timestamp(endOfMonth.toInstant(ZoneOffset.UTC).epochSecond, 0)
+        fun getEndOfMonthTimestamp(month: Month): Timestamp {
+            return getMonthEndDay(month).toTimestamp()
         }
     }
 }

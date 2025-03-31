@@ -1,4 +1,4 @@
-package com.example.grocerychecklist.data.model.service
+package com.example.grocerychecklist.data.service
 
 import com.example.grocerychecklist.data.dao.firestoreImpl.FirestoreCollections
 import com.example.grocerychecklist.data.model.AuthUser
@@ -34,14 +34,19 @@ class AccountService{
         return Firebase.auth.currentUser != null
     }
 
+    fun isAnonymous(): Boolean {
+        return Firebase.auth.currentUser?.isAnonymous ?: false
+    }
+
     fun getUserProfile(): AuthUser {
         return Firebase.auth.currentUser.toAppUser()
     }
 
     suspend fun createAnonymousAccount() {
-        if (Firebase.auth.currentUser == null) {
-            Firebase.auth.signInAnonymously().await()
-        }
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser == null || !currentUser.isAnonymous) {
+            if (currentUser != null) Firebase.auth.signOut() // Sign out if a non-anonymous user is signed in
+            Firebase.auth.signInAnonymously().await()        }
     }
 
     suspend fun updateDisplayName(newDisplayName: String) {
@@ -81,22 +86,8 @@ class AccountService{
         Firebase.auth.signInWithEmailAndPassword(email, password).await()
     }
 
-    suspend fun signOut() {
+    fun signOut() {
         Firebase.auth.signOut()
-
-        // If user is anonymous, do not sign them out
-        if (Firebase.auth.currentUser?.isAnonymous == true) return
-
-        Firebase.auth.signOut()
-
-        // Optional: Automatically sign back in anonymously if no user exists
-        if (Firebase.auth.currentUser == null) {
-            createAnonymousAccount()
-        }
-    }
-
-    suspend fun deleteAccount() {
-        Firebase.auth.currentUser!!.delete().await()
     }
 
     suspend fun resetPassword() {

@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.util.ERROR_TAG
 import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
-import com.example.grocerychecklist.data.model.service.AccountService
+import com.example.grocerychecklist.data.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR

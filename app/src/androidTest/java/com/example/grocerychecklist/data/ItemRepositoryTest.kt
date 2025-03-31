@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.grocerychecklist.data.dao.ChecklistItemDAO
 import com.example.grocerychecklist.data.dao.ItemDAO
 import com.example.grocerychecklist.data.repository.ItemOrder
 import com.example.grocerychecklist.data.repository.ItemRepository
@@ -23,6 +24,7 @@ class ItemRepositoryTest {
     private lateinit var db: AppDatabase
     private lateinit var itemRepository: ItemRepository
     private lateinit var itemDAO: ItemDAO
+    private lateinit var checklistItemDao: ChecklistItemDAO
 
     @Before
     fun createDb() {
@@ -33,7 +35,7 @@ class ItemRepositoryTest {
         ).allowMainThreadQueries().build()
 
         itemDAO = db.itemDAO()
-        itemRepository = ItemRepository(itemDAO)
+        itemRepository = ItemRepository(checklistItemDao, itemDAO)
     }
 
     @After

@@ -11,8 +11,10 @@ import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.screen.Navigator
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -49,7 +51,11 @@ class DashboardBreakdownViewModel(
     private val historyItemRepo: HistoryItemRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(DashboardBreakdownState())
-    val state: StateFlow<DashboardBreakdownState> = _state
+    val state: StateFlow<DashboardBreakdownState> = _state.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        DashboardBreakdownState()
+    )
 
     init {
         viewModelScope.launch {

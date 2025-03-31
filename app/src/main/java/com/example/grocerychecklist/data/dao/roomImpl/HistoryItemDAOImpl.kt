@@ -4,55 +4,67 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import kotlinx.coroutines.flow.Flow
+import java.time.Month
 import java.util.Locale.Category
 
 @Dao
-interface HistoryItemDAOImpl {
+interface HistoryItemDAOImpl : HistoryItemDAO {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBatch(historyItems: List<HistoryItem>): List<Long>
+    override suspend fun insertBatch(historyItems: List<HistoryItem>): List<Long>
 
     @Query("SELECT * FROM historyitem WHERE id = :historyItemId LIMIT 1")
-    suspend fun getHistoryItemById(historyItemId: Long): HistoryItem
+    override suspend fun getHistoryItemById(historyItemId: Long): HistoryItem
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId")
-    fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>>
+    override fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId ORDER BY :order")
-    fun getAllHistoryItemsOrderFilter(historyId: Long, order: ChecklistItemOrder): Flow<List<HistoryItem>>
+    override fun getAllHistoryItemsOrderFilter(historyId: Long, order: ChecklistItemOrder): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId AND isChecked = :isChecked ORDER BY :order")
-    fun getAllHistoryItemsOrderAndCheckedFilter(historyId: Long, order: ChecklistItemOrder, isChecked: Boolean): Flow<List<HistoryItem>>
+    override fun getAllHistoryItemsOrderAndCheckedFilter(historyId: Long, order: ChecklistItemOrder, isChecked: Boolean): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId AND name = :qName")
-    fun getAllHistoryItemsByName(historyId: Long, qName: String): Flow<List<HistoryItem>>
+    override fun getAllHistoryItemsByName(historyId: Long, qName: String): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId AND category = :category")
-    fun getAllHistoryItemsByCategory(historyId: Long, category: Category): Flow<List<HistoryItem>>
+    override fun getAllHistoryItemsByCategory(historyId: Long, category: Category): Flow<List<HistoryItem>>
 
     @Query("SELECT COUNT(*) FROM historyitem WHERE historyId = :historyId")
-    suspend fun aggregateTotalHistoryItems(historyId: Long): Int
+    override suspend fun aggregateTotalHistoryItems(historyId: Long): Int
 
     @Query("""
         SELECT SUM(price)
         FROM historyitem
         WHERE historyId = :historyId
     """)
-    suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
+    override suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
 
-    @Query("""
+
+    override fun aggregateTotalPriceMonth(month: Month): Flow<Double?>{
+        return aggregateTotalPriceMonth(month.value)
+    }
+
+    @Query(
+        """
         SELECT SUM(price * quantity)
         FROM historyItem
         INNER JOIN history ON historyItem.historyId = history.id
-        WHERE strftime('%Y-%m', datetime(history.createdAt, 'unixepoch')) = :date
+        WHERE CAST(strftime('%m', datetime(history.createdAt, 'unixepoch')) AS INTEGER) = :monthValue
         AND historyItem.isChecked = 1
-    """)
-    fun aggregateTotalPriceMonth(date: String): Flow<Double?>
+    """
+    )
+    fun aggregateTotalPriceMonth(monthValue: Int): Flow<Double?>
 
+    override fun aggregateCategoryBreakdownMonth(month: Month): Flow<List<HistoryItemAggregated>> {
+        return aggregateCategoryBreakdownMonth(month.value)
+    }
 
     @Query("""
         SELECT 
@@ -61,10 +73,10 @@ interface HistoryItemDAOImpl {
             historyItem.category AS category
         FROM historyItem
         INNER JOIN history ON historyItem.historyId = history.id
-        WHERE strftime('%Y-%m', datetime(history.createdAt, 'unixepoch')) = :date
+        WHERE CAST(strftime('%m', datetime(history.createdAt, 'unixepoch')) AS INTEGER) = :monthValue
         AND historyItem.isChecked = 1
         GROUP BY historyItem.category
         ORDER BY sumOfPrice DESC
     """)
-    fun aggregateCategoryBreakdownMonth(date: String): Flow<List<HistoryItemAggregated>>
+    fun aggregateCategoryBreakdownMonth(monthValue: Int): Flow<List<HistoryItemAggregated>>
 }

@@ -3,27 +3,28 @@ package com.example.grocerychecklist.data.dao.roomImpl
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.example.grocerychecklist.data.dao.ChecklistItemDAO
 import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ChecklistItemDAOImpl: BaseDAOImpl<ChecklistItem> {
+interface ChecklistItemDAOImpl: ChecklistItemDAO {
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE id = :checklistItemId LIMIT 1")
-    suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull
+    override suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId")
-    fun getAllChecklistItems(checklistId: Long): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItems(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId ORDER BY `order`")
-    fun getAllChecklistItemsOrderedByOrder(checklistId: Long): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItemsOrderedByOrder(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId ORDER BY `order`")
-    fun getAllChecklistItemsBaseOrderedByOrder(checklistId: Long): Flow<List<ChecklistItem>>
+    override fun getAllChecklistItemsBaseOrderedByOrder(checklistId: Long): Flow<List<ChecklistItem>>
 
     @Transaction
     @Query("""
@@ -32,11 +33,11 @@ interface ChecklistItemDAOImpl: BaseDAOImpl<ChecklistItem> {
         WHERE checklistItem.checklistId = :checklistId
         ORDER BY item.name
     """)
-    fun getAllChecklistItemsOrderedByName(checklistId: Long): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItemsOrderedByName(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId")
-    fun getAllChecklistItemsOrderedByPrice(checklistId: Long): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItemsOrderedByPrice(checklistId: Long): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("""
@@ -45,7 +46,7 @@ interface ChecklistItemDAOImpl: BaseDAOImpl<ChecklistItem> {
         WHERE checklistItem.checklistId = :checklistId
         AND item.name = :qName
     """)
-    fun getAllChecklistItemsByName(checklistId: Long, qName: String): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItemsByName(checklistId: Long, qName: String): Flow<List<ChecklistItemFull>>
 
     @Transaction
     @Query("""
@@ -54,25 +55,25 @@ interface ChecklistItemDAOImpl: BaseDAOImpl<ChecklistItem> {
         WHERE checklistItem.checklistId = :checklistId
         AND item.category = :category
     """)
-    fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>
+    override fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>
 
     @Query("SELECT MAX(`order`) FROM checklistitem WHERE checklistId = :checklistId")
-    suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
+    override suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
 
     @Query("DELETE FROM checklistitem WHERE id = :checklistId")
-    suspend fun deleteChecklistById(checklistId: Long): Int
+    override suspend fun deleteChecklistById(checklistId: Long): Int
 
     @Query("DELETE FROM checklistitem WHERE itemId = :itemId")
-    suspend fun deleteChecklistByItemId(itemId: Long): Int
+    override suspend fun deleteChecklistByItemId(itemId: Long): Int
 
     @Query("SELECT COUNT(*) FROM checklistitem WHERE checklistId = :checklistId")
-    suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
+    override suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
 
     @Query("""
-        SELECT SUM(item.price)
+        SELECT SUM(item.price * checklistitem.quantity)
         FROM checklistitem
         JOIN item on checklistitem.itemId = item.id
         WHERE checklistitem.checklistId = :checklistId
     """)
-    suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double?
+    override suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double?
 }

@@ -3,7 +3,7 @@ package com.example.grocerychecklist.viewmodel.settings
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.data.model.service.AccountService
+import com.example.grocerychecklist.data.service.AccountService
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.NetworkUtils

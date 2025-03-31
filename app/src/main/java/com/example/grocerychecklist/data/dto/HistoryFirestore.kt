@@ -27,15 +27,6 @@ data class HistoryFirestore(
 
     @get:PropertyName("createdAt") @set:PropertyName("createdAt")
     var createdAt: Timestamp? = null,
-
-    @get:PropertyName("totalPrice") @set:PropertyName("totalPrice")
-    var totalPrice: Double? = null,
-
-    @get:PropertyName("totalItems") @set:PropertyName("totalItems")
-    var totalItems: Int? = null,
-
-    @get:PropertyName("aggregatedItems") @set:PropertyName("aggregatedItems")
-    var aggregatedItems: List<Map<String, Any>> = emptyList()
 ) {
     fun toHistory(id: Long): History {
         return History(
@@ -51,10 +42,7 @@ data class HistoryFirestore(
 
     companion object {
         fun fromHistory(
-            history: History,
-            totalPrice: Double? = null,
-            totalItems: Int? = null,
-            aggregatedItems: List<Map<String, Any>> = emptyList()
+            history: History
         ): HistoryFirestore {
             return HistoryFirestore(
                 checklistId = history.checklistId,
@@ -63,9 +51,6 @@ data class HistoryFirestore(
                 icon = history.icon,
                 iconColor = history.iconColor,
                 createdAt = history.createdAt.toTimestamp(),
-                totalPrice = totalPrice,
-                totalItems = totalItems,
-                aggregatedItems = aggregatedItems
             )
         }
     }
@@ -78,9 +63,6 @@ data class HistoryFirestore(
             "icon" to icon.name,
             "iconColor" to iconColor.name,
             "createdAt" to createdAt,
-            "totalPrice" to totalPrice,
-            "totalItems" to totalItems,
-            "aggregatedItems" to aggregatedItems
         )
     }
 }
