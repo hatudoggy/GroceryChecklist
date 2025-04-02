@@ -2,19 +2,12 @@ package com.example.grocerychecklist.viewmodel.checklist
 
 
 data class ChecklistStartState (
-    val checklistName: String = "",
     // Items state
-    val items: List<ChecklistData> = emptyList(),
-    val filteredItems: List<ChecklistData> = emptyList(),
-    val checkedItems: List<ChecklistData> = emptyList(),
-    val searchQuery: String = "",
     val selectedItem: ChecklistData? = null,
+    val checkedItems: List<ChecklistData> = emptyList(),
 
     // Filter state
     val selectedChip: FilterType = FilterType.ALL,
-
-    // Pricing
-    val totalPrice: Double = 0.00,
 
     // UI Toggles
     val isDrawerOpen: Boolean = false,
@@ -23,3 +16,11 @@ data class ChecklistStartState (
     val isEditingItem: Boolean = false,
     val isCheckoutOpen: Boolean = false,
 )
+
+sealed interface ChecklistStartUIState {
+    data class Success(
+        val filteredItems: List<ChecklistData>
+    ): ChecklistStartUIState
+    object Error: ChecklistStartUIState
+    object Loading: ChecklistStartUIState
+}

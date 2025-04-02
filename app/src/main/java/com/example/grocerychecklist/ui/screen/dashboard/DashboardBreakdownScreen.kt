@@ -234,7 +234,7 @@ fun DashboardBreakdownScreen(
         }
     }
 
-    ToastComponent(message = state.errorMessage)
+    ToastComponent(message = state.errorMessage, onDismiss = { })
 }
 
 

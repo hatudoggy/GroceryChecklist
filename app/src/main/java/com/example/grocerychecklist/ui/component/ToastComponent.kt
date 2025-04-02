@@ -8,12 +8,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun ToastComponent(message: String?) {
+fun ToastComponent(
+    message: String?,
+    onDismiss: () -> Unit
+) {
     val context = LocalContext.current
     LaunchedEffect(key1 = message) {
         if (message != null) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+        onDismiss()
     }
 }
 

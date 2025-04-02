@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -38,6 +39,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.R
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.ActionMenu
@@ -57,6 +63,7 @@ import com.example.grocerychecklist.ui.component.BottomSheetChecklistItem
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.ChipComponent
+import com.example.grocerychecklist.ui.component.ErrorComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.ErrorText
 import com.example.grocerychecklist.ui.theme.ErrorTonal
@@ -64,6 +71,7 @@ import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartUIState
 import com.example.grocerychecklist.viewmodel.checklist.FilterType
 
 
@@ -76,9 +84,14 @@ data class ChecklistStartFormInputs (
 
 @Composable
 fun ChecklistStartScreen(
+    checklistName: String,
     state: ChecklistStartState,
+    uiState: ChecklistStartUIState,
     onEvent: (ChecklistStartEvent) -> Unit,
 ) {
+    var shouldRefresh by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
     BottomSheetChecklistItem(
         selectedItem = state.selectedItem,
         isOpen = state.isDrawerOpen,
@@ -168,9 +181,9 @@ fun ChecklistStartScreen(
     )
 
     BottomSheetCheckout(
-        checkedItems = state.items.filter { item -> state.checkedItems.any { it.id == item.id} },
-        totalPrice = state.totalPrice,
-        onCheckoutClick = { onEvent(ChecklistStartEvent.ProceedCheckout(state.items)) },
+        checkedItems = state.checkedItems,
+        totalPrice = state.checkedItems.sumOf { it.price * it.quantity },
+        onCheckoutClick = { onEvent(ChecklistStartEvent.ProceedCheckout(state.checkedItems)) },
         isOpen = state.isCheckoutOpen,
         onClose = { onEvent(ChecklistStartEvent.CloseCheckout) },
     )
@@ -207,7 +220,7 @@ fun ChecklistStartScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    state.checklistName,
+                    checklistName,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -247,26 +260,40 @@ fun ChecklistStartScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            LazyColumn(
-                modifier = Modifier.weight(1f)
-            ) {
-                items(state.filteredItems) { item ->
-                    // Create and display a ChecklistItemComponent for each item in the filtered list.
-                    ChecklistItemComponent(
-                        name = item.name,
-                        variant = ChecklistItemComponentVariant.ChecklistRadioItem,
-                        category = item.category,
-                        price = item.price,
-                        quantity = item.quantity.toDouble(),
-                        measurement = item.measurement,
-                        isChecked = state.checkedItems.any { it.id == item.id },
-                        // When the checked state changes, update the ViewModel accordingly.
-                        // Use onCheckedChange instead of onClick for handling the checkbox state.
-                        onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
-                        onLongPress = { onEvent(ChecklistStartEvent.OpenActionMenu(item)) }
-                    )
+
+            when(uiState) {
+                ChecklistStartUIState.Loading -> {
+
+                }
+                ChecklistStartUIState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                        ErrorComponent(errorMessage = R.string.checklist_error, onRetry = { shouldRefresh = true })
+                    }
+                }
+                is ChecklistStartUIState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(uiState.filteredItems) { item ->
+                            // Create and display a ChecklistItemComponent for each item in the filtered list.
+                            ChecklistItemComponent(
+                                name = item.name,
+                                variant = ChecklistItemComponentVariant.ChecklistRadioItem,
+                                category = item.category,
+                                price = item.price,
+                                quantity = item.quantity.toDouble(),
+                                measurement = item.measurement,
+                                isChecked = state.checkedItems.any { it.id == item.id },
+                                // When the checked state changes, update the ViewModel accordingly.
+                                // Use onCheckedChange instead of onClick for handling the checkbox state.
+                                onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
+                                onLongPress = { onEvent(ChecklistStartEvent.OpenActionMenu(item)) }
+                            )
+                        }
+                    }
                 }
             }
+
             Spacer(Modifier.height(16.dp))
 
             Row(
@@ -291,7 +318,7 @@ fun ChecklistStartScreen(
                     )
                     Row {
                         Text(
-                            converter(Currency.PHP, state.totalPrice, false),
+                            converter(Currency.PHP, state.checkedItems.sumOf { it.price * it.quantity }, false),
                             fontSize = 18.sp,
                             color = Color.White
                         )
@@ -438,7 +465,9 @@ fun ChecklistStartScreenPreview() {
     )
 
     ChecklistStartScreen(
+        checklistName = "Mock Checklist",
         state = mockState,
+        uiState = ChecklistStartUIState.Loading,
         onEvent = {}
     )
 }

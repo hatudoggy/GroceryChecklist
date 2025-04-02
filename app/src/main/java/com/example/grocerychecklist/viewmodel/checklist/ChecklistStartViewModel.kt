@@ -10,13 +10,17 @@ import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
+import com.example.grocerychecklist.data.repository.Result
+import com.example.grocerychecklist.data.repository.asResult
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.util.SearchableViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,34 +48,43 @@ class ChecklistStartViewModel(
     val checklistId = entry.toRoute<Routes.ChecklistStart>().checklistId
 
     private val _state = MutableStateFlow(ChecklistStartState())
-    val state: StateFlow<ChecklistStartState> = combine(
-        _state, allItems, filteredItems, searchQuery
-    ) { currentState, items, filteredItems, query ->
-        currentState.copy(
-            items = items,
-            filteredItems = filterItemsChecked(currentState.selectedChip, filteredItems),
-            searchQuery = query,
-            totalPrice = computeTotalPrice(items)
-        )
-    }.stateIn(
+    val state: StateFlow<ChecklistStartState> = _state.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(500),
         ChecklistStartState()
     )
 
-    init {
-        viewModelScope.launch {
-            launch {
-                _state.update { it.copy(checklistName = checklistRepo.getChecklist(checklistId).name)
-                } }
+    val uiState: StateFlow<ChecklistStartUIState> = checklistStartUIState(
+        checklistId,
+        repo
+    ).stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(500),
+        ChecklistStartUIState.Loading
+    )
 
-            launch {
-                repo.getChecklistItems(checklistId, ChecklistItemOrder.Name)
-                    .collect { setItems(checklistDataMapper(it)) }
+    private fun checklistStartUIState(
+        checklistId: Long,
+        cItemRepository: ChecklistItemRepository,
+    ): Flow<ChecklistStartUIState> {
+        val items = cItemRepository.getChecklistItems(checklistId, ChecklistItemOrder.Name)
+        setItems(checklistDataMapper(items))
+
+        return items
+            .asResult()
+            .map { result ->
+                when (result) {
+                    is Result.Success -> {
+                        ChecklistStartUIState.Success(
+                            checklistDataMapper(result.data)
+                        )
+                    }
+
+                    is Result.Loading -> ChecklistStartUIState.Loading
+                    is Result.Error -> ChecklistStartUIState.Error
+                }
             }
-        }
     }
-
 
     fun onEvent(event: ChecklistStartEvent) {
         when (event) {
@@ -125,12 +138,12 @@ class ChecklistStartViewModel(
                 viewModelScope.launch {
                     try {
                         val checklist = checklistRepo.getChecklist(checklistId)
-                        val historyId = historyRepo.addHistory(checklist)
+                        val historyId = historyRepo.addHistory(checklist.first())
                         val mapChecked = event.items.map {
                             it.copy(isChecked = isChecked(it))
                         }
                         historyItemRepo.addHistoryItems(
-                            historyId, filterItemsChecked(FilterType.CHECKED, mapChecked)
+                            historyId, mapChecked
                         )
 
                         onEvent(ChecklistStartEvent.CloseCheckout)
@@ -188,9 +201,10 @@ class ChecklistStartViewModel(
                 }
             }
             is ChecklistStartEvent.DeleteChecklistItem -> {
-                val item = _state.value.filteredItems.find { it.id == event.checklistId }
-                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
                 viewModelScope.launch {
+                    val item = filteredItems.first().find { it.id == event.checklistId }
+                    if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
+
                     try {
                         val id = repo.deleteChecklistItem(
                             event.checklistId,
@@ -203,9 +217,10 @@ class ChecklistStartViewModel(
                 }
             }
             is ChecklistStartEvent.DeleteChecklistItemAndItem -> {
-                val item = _state.value.filteredItems.find { it.id == event.itemId }
-                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
                 viewModelScope.launch {
+                    val item = filteredItems.first().find { it.id == event.itemId }
+                    if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
+
                     try {
                         val id = repo.deleteChecklistItemAndItem(
                             event.checklistId,

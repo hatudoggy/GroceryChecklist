@@ -9,4 +9,6 @@ data class HistoryMainState (
     val cards: List<HistoryMapped> = emptyList(),
     val cardStates: MutableMap<Long, Boolean> = mutableStateMapOf(),
     val monthsList: MutableList<String> = mutableStateListOf(),
+    val isLoading: Boolean = false,
+    val error: String? = null
 )

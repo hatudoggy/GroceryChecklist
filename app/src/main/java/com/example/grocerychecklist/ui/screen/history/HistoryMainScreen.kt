@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -27,7 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +51,7 @@ import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.history.HistoryMainEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryMainState
 import com.example.grocerychecklist.viewmodel.history.HistoryMainViewModel
@@ -61,99 +66,136 @@ data class HistoryDataDetails(
     val totalPrice: Double = price * quantity
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HistoryMainScreen(
     state: HistoryMainState,
     onEvent: (HistoryMainEvent) -> Unit,
 ) {
+
     Scaffold(
         modifier = Modifier.padding(vertical = 0.dp),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopBarComponent(title = "History") },
     ) { innerPadding ->
-
-        if (!state.cards.isEmpty()) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-            ) {
-
-                state.monthsList.forEach { month ->
-                    val displayMonth =
-                        if (DateUtility.isCurrentMonth(month)) "This Month" else month
-
-                    item {
-                        Text(
-                            text = displayMonth, color = Color.Gray,
-                            fontWeight = FontWeight.SemiBold
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            when {
+                state.isLoading -> {
+                    // Loading indicator
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = PrimaryGreen
                         )
-                        Spacer(modifier = Modifier.height(2.5.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Loading history...",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
                     }
+                }
+                state.cards.isNotEmpty() -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                    ) {
+                        state.monthsList.forEach { month ->
+                            val displayMonth =
+                                if (DateUtility.isCurrentMonth(month)) "This Month" else month
 
-                    items(state.cards) { data ->
-                        val cardClickedState = state.cardStates[data.history.id]
-                        val isCardClicked = cardClickedState == true
+                            item {
+                                Text(
+                                    text = displayMonth, color = Color.Gray,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(2.5.dp))
+                            }
 
-                        if (DateUtility.areDatesMatching(
-                                month,
-                                DateUtility.formatDate(data.history.createdAt)
-                            )
-                        ) {
-                            CollapsibleComponent(
-                                isCardClicked,
-                                cardComponent = {
-                                    ButtonCardComponent(
-                                        name = data.history.name,
-                                        expense = data.totalPrice,
-                                        date = DateUtility.formatDateWithDay(data.history.createdAt),
-                                        icon = data.history.icon.imageVector,
-                                        iconBackgroundColor = data.history.iconColor.color,
-                                        variant = ButtonCardComponentVariant.History,
-                                        onClick = {
-                                            onEvent(HistoryMainEvent.ToggleCard(data.history.id))
-                                        },
-                                        isClicked = isCardClicked
+                            items(state.cards) { data ->
+                                val cardClickedState = state.cardStates[data.history.id]
+                                val isCardClicked = cardClickedState == true
+
+                                if (DateUtility.areDatesMatching(
+                                        month,
+                                        DateUtility.formatDate(data.history.createdAt)
                                     )
-                                },
-                                collapsedComponent = {
-                                    HistoryCollapsedComponent(data, onEvent)
+                                ) {
+                                    CollapsibleComponent(
+                                        isCardClicked,
+                                        cardComponent = {
+                                            ButtonCardComponent(
+                                                name = data.history.name,
+                                                expense = data.totalPrice,
+                                                date = DateUtility.formatDateWithDay(data.history.createdAt),
+                                                icon = data.history.icon.imageVector,
+                                                iconBackgroundColor = data.history.iconColor.color,
+                                                variant = ButtonCardComponentVariant.History,
+                                                onClick = {
+                                                    onEvent(HistoryMainEvent.ToggleCard(data.history.id))
+                                                },
+                                                isClicked = isCardClicked
+                                            )
+                                        },
+                                        collapsedComponent = {
+                                            HistoryCollapsedComponent(data, onEvent)
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
                                 }
-                            )
-                            Spacer(modifier = Modifier.height(5.dp))
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(5.dp))
+                            }
                         }
                     }
-
-                    item {
-                        Spacer(modifier = Modifier.height(5.dp))
+                }
+                else -> {
+                    // Empty state
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Empty Checklist",
+                                modifier = Modifier.size(32.dp),
+                            )
+                            Text(
+                                text = "No History Items",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.DarkGray
+                            )
+                        }
                     }
-
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.History,
-                        contentDescription = "Empty Checklist",
-                        modifier = Modifier.size(32.dp),
-                    )
-                    Text(
-                        text = "No History Items",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray
-                    )
-                }
 
+            // Show error message if there is one
+            state.error?.let { errorMessage ->
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                )
             }
         }
     }

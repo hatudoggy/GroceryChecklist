@@ -42,7 +42,9 @@ class ChecklistMainViewModel(
     private var searchJob: Job? = null
     private val _state = MutableStateFlow(ChecklistMainState())
     val state: StateFlow<ChecklistMainState> = _state.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), ChecklistMainState()
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ChecklistMainState()
     )
 
     init {

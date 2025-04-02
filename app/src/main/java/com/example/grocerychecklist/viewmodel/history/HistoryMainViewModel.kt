@@ -8,6 +8,7 @@ import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +21,11 @@ class HistoryMainViewModel(
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(HistoryMainState())
+    private val _state = MutableStateFlow(HistoryMainState(isLoading = true))
     val state: StateFlow<HistoryMainState> = _state.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryMainState()
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        HistoryMainState(isLoading = true)
     )
 
     init {
@@ -65,12 +68,33 @@ class HistoryMainViewModel(
 
     private fun loadHistoryData() {
         viewModelScope.launch {
-            val unsortedCards =
-                historyRepository.getAggregatedHistory().stateIn(viewModelScope).value
-            _state.value = _state.value.copy(
-                // Sort the cards by date in descending order
-                cards = sortHistoryData(unsortedCards)
-            )
+            _state.update {
+                it.copy(isLoading = true)
+            }
+
+            try {
+                // Added a small delay to ensure loading indicator is visible
+                delay(300)
+
+                historyRepository.getAggregatedHistory()
+                    .collect { unsortedCards ->
+                        val sortedCards = sortHistoryData(unsortedCards)
+                        _state.update {
+                            it.copy(
+                                cards = sortedCards,
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Unknown error loading history"
+                    )
+                }
+            }
         }
     }
 }

@@ -65,8 +65,9 @@ class HistoryDetailViewModel(
         viewModelScope.launch {
             val history = historyRepository.getHistoryItems(historyId, ChecklistItemOrder.Name).first().first()
             _state.update { currentState ->
+                var checklist = checklistRepository.getChecklist(history.checklistItemId)
                 currentState.copy(
-                    checklistName = checklistRepository.getChecklist(history.checklistItemId).name,
+                    checklistName = checklist.first().name,
                     date = DateUtility.formatDateWithDay(history.createdAt)
                 )
             }

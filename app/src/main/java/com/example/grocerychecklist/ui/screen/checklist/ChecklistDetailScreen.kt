@@ -12,22 +12,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,23 +43,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.R
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
-import com.example.grocerychecklist.data.model.Checklist
+import com.example.grocerychecklist.data.repository.ChecklistDetails
 import com.example.grocerychecklist.domain.utility.DateUtility
+import com.example.grocerychecklist.ui.component.ErrorComponent
+import com.example.grocerychecklist.ui.component.LoadingComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.LightGray
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailState
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun ChecklistDetailScreen(
     state: ChecklistDetailState,
     onEvent: (ChecklistDetailEvent) -> Unit,
 ) {
+    var shouldRefresh by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopBarComponent(
@@ -64,20 +73,20 @@ fun ChecklistDetailScreen(
     ) { innerPadding ->
         when (state) {
             is ChecklistDetailState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                    LoadingComponent(loadingMessage = R.string.checklist_loading)
                 }
             }
 
-            is ChecklistDetailState.Loaded -> {
-                val checklist = state.checklist
-                val totalPrice = state.totalPrice
-                val itemCount = state.itemCount
+            is ChecklistDetailState.Success -> {
+                val checklist = state.checklistDetails
 
                 Column(
                     modifier = Modifier
+                        .fillMaxSize()
                         .padding(innerPadding)
-                        .padding(horizontal = 32.dp),
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -89,8 +98,8 @@ fun ChecklistDetailScreen(
                     )
 
                     CheckListStats(
-                        quantity = itemCount.toString(),
-                        totalPrice = totalPrice.toString(),
+                        quantity = checklist.itemCount.toString(),
+                        totalPrice = checklist.totalPrice.toString(),
                         lastShopAt = checklist.lastShopAt?.let { DateUtility.formatDateWithDay(it) } ?: "N/A"
                     )
 
@@ -99,8 +108,8 @@ fun ChecklistDetailScreen(
             }
 
             is ChecklistDetailState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Failed to load checklist", color = Color.Red)
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                    ErrorComponent(errorMessage = R.string.checklist_error, onRetry = { shouldRefresh = true })
                 }
             }
         }
@@ -147,7 +156,8 @@ fun CheckListStats(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         CheckListStatColumn(quantity, "Items", Modifier.weight(1f))
         CheckListStatColumn("₱$totalPrice", "Total", Modifier.weight(1f))
@@ -200,20 +210,11 @@ fun CheckListButtons(
 
         CheckListButton(
             text = "View Checklist",
-            icon = Icons.Default.Visibility,
-            backgroundColor = LightGray,
-            textColor = Color.Black,
-            modifier = buttonModifier,
-            onClick = { onEvent(ChecklistDetailEvent.NavigateViewMode) }
-        )
-
-        CheckListButton(
-            text = "Edit Checklist",
             icon = Icons.Default.Edit,
             backgroundColor = LightGray,
             textColor = Color.Black,
             modifier = buttonModifier,
-            onClick = { onEvent(ChecklistDetailEvent.NavigateEditMode) }
+            onClick = { onEvent(ChecklistDetailEvent.NavigateViewMode) }
         )
 
         CheckListButton(
@@ -274,9 +275,9 @@ fun CheckListIcon(
 
 @Preview(showBackground = true)
 @Composable
-fun ChecklistDetailScreenPreview() {
-    val loadedState = ChecklistDetailState.Loaded(
-        checklist = Checklist(
+fun ChecklistDetailScreenLoadedPreview() {
+    val successState = ChecklistDetailState.Success(
+        ChecklistDetails(
             id = 1,
             name = "Grocery List",
             description = "Weekly shopping items",
@@ -285,17 +286,36 @@ fun ChecklistDetailScreenPreview() {
             lastShopAt = LocalDateTime.now(),
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
-            lastOpenedAt = LocalDateTime.now()
-        ),
-        totalPrice = 5430.24,
-        itemCount = 21
+            lastOpenedAt = LocalDateTime.now(),
+            totalPrice = 5430.24,
+            itemCount = 21
+        )
     )
-    // Different states to test
+
+    ChecklistDetailScreen(
+        state = successState,
+        onEvent = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChecklistDetailScreenLoadingPreview() {
     val loadingState = ChecklistDetailState.Loading
+
+    ChecklistDetailScreen(
+        state = loadingState,
+        onEvent = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChecklistDetailScreenErrorPreview() {
     val errorState = ChecklistDetailState.Error
 
     ChecklistDetailScreen(
-        state = loadedState,
+        state = errorState,
         onEvent = {}
     )
 }

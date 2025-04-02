@@ -1,10 +1,7 @@
 package com.example.grocerychecklist.viewmodel.auth
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
-import android.util.Patterns
-import androidx.compose.animation.core.copy
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
@@ -17,7 +14,8 @@ import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
 import com.example.grocerychecklist.util.NetworkUtils
 import com.example.grocerychecklist.util.TIMEOUT_ERROR
-import com.example.grocerychecklist.viewmodel.util.MIN_PASS_LENGTH
+import com.example.grocerychecklist.viewmodel.util.AuthFormValidator
+import com.example.grocerychecklist.viewmodel.util.SubmissionState
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,101 +35,84 @@ class AuthLoginViewModel(
     private val _uiState = MutableStateFlow(AuthLoginState())
     val uiState: StateFlow<AuthLoginState> = _uiState.asStateFlow()
 
-    private fun updateEmail(newEmail: String) {
+    private fun updateEmailField(newEmail: String) {
+        val emailValidation = AuthFormValidator.validateEmail(newEmail)
         _uiState.update { currentState ->
-            val isValid = newEmail.isValidEmail()
             currentState.copy(
                 email = newEmail,
-                isEmailValid = isValid,
-                emailError = if (!isValid) "Invalid email address" else null,
-                error = null
-            ).validateForm()
+                emailError = emailValidation.error
+            )
         }
     }
 
-    private fun updatePassword(newPassword: String) {
+    private fun updatePasswordField(newPassword: String) {
+        val passwordValidation = AuthFormValidator.validatePassword(newPassword)
         _uiState.update { currentState ->
-            val isValid = newPassword.isValidPassword()
             currentState.copy(
                 password = newPassword,
-                isPasswordValid = isValid,
-                passwordError = if (!isValid) "Invalid password" else null,
-                error = null
-            ).validateForm()
+                passwordError = passwordValidation.error
+            )
         }
     }
 
-    private fun AuthLoginState.validateForm(): AuthLoginState {
-        return this.copy(isFormValid = isEmailValid && isPasswordValid)
-    }
-
-    private fun String.isValidEmail(): Boolean {
-        return this.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(this).matches()
-    }
-
-    private fun String.isValidPassword(): Boolean {
-        return this.isNotBlank() && this.length >= MIN_PASS_LENGTH && this.matches(Regex("^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$"))
-    }
 
     private fun onLogInClick() {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _uiState.update { it.copy(submissionState = SubmissionState.Error("No internet connection")) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(submissionState = SubmissionState.Loading) }
+
             try{
                 withTimeout(5000){
                     accountService.signInWithEmail(_uiState.value.email, _uiState.value.password)
-                    navigator.navigate(Routes.DashboardMain)
+                    _uiState.update { it.copy(submissionState = SubmissionState.Success) }
                 }
             }
-            catch (e: TimeoutCancellationException) {
-                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
+            catch (_: TimeoutCancellationException) {
+                _uiState.update { it.copy(submissionState = SubmissionState.Error(TIMEOUT_ERROR)) }
             }
-            catch (e: Exception) {
-                _uiState.update { it.copy(error = "Invalid email or password", isLoading = false) }
-            }finally {
-                _uiState.update { it.copy(isLoading = false) }
+            catch (_: Exception) {
+                _uiState.update { it.copy(submissionState = SubmissionState.Error("Invalid email or password")) }
             }
         }
     }
 
     private fun onGoogleLoginClick(credential: Credential) {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _uiState.update { it.copy(submissionState = SubmissionState.Error("No internet connection")) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(submissionState = SubmissionState.Loading) }
+
             try {
                 withTimeout(5000) {
                     if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                         accountService.signInWithGoogle(googleIdTokenCredential.idToken)
-                        navigator.navigate(Routes.DashboardMain)
+                        _uiState.update { it.copy(submissionState = SubmissionState.Success) }
                     } else {
                         Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)
-                        _uiState.update { it.copy(error = UNEXPECTED_CREDENTIAL, isLoading = false) }
+                        _uiState.update { it.copy(submissionState = SubmissionState.Error(UNEXPECTED_CREDENTIAL)) }
                     }
                 }
             }
-            catch (e: TimeoutCancellationException) {
-                _uiState.update { it.copy(error = TIMEOUT_ERROR, isLoading = false) }
+            catch (_: TimeoutCancellationException) {
+                _uiState.update { it.copy(submissionState = SubmissionState.Error(TIMEOUT_ERROR)) }
             }
-            catch (e: Exception) {
-                _uiState.update { it.copy(error = DEFAULT_ERROR, isLoading = false) }
-            }finally {
-                _uiState.update { it.copy(isLoading = false) }
+            catch (_: Exception) {
+                _uiState.update { it.copy(submissionState = SubmissionState.Error(DEFAULT_ERROR)) }
             }
         }
     }
 
     init {
         if (!NetworkUtils.isInternetAvailable(application)) {
-            _uiState.update { it.copy(error = "No internet connection") }
+            _uiState.update { it.copy(submissionState = SubmissionState.Error("No internet connection")) }
         }
     }
 
@@ -139,10 +120,11 @@ class AuthLoginViewModel(
         when (event) {
             AuthLoginEvent.NavigateBack -> navigator.navigate(Routes.AuthMain)
             AuthLoginEvent.NavigateToRegister -> navigator.navigate(Routes.AuthRegister)
+            AuthLoginEvent.NavigateToDashboard -> navigator.navigate(Routes.DashboardMain)
             AuthLoginEvent.Login -> onLogInClick()
             is AuthLoginEvent.GoogleLogIn -> onGoogleLoginClick(event.credential)
-            is AuthLoginEvent.UpdateEmail -> updateEmail(event.newEmail)
-            is AuthLoginEvent.UpdatePassword -> updatePassword(event.newPassword)
+            is AuthLoginEvent.UpdateEmail -> updateEmailField(event.newEmail)
+            is AuthLoginEvent.UpdatePassword -> updatePasswordField(event.newPassword)
         }
     }
 }
