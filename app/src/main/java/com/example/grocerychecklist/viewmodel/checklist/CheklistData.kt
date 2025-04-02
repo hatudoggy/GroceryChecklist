@@ -5,6 +5,8 @@ import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.ui.component.Measurement
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 
 /**
@@ -35,6 +37,10 @@ data class ChecklistData(
     val updatedAt: LocalDateTime,
     var isChecked: Boolean = false
 )
+
+fun checklistDataMapper(items: Flow<List<ChecklistItemFull>>): Flow<List<ChecklistData>> {
+    return items.map { item -> item.map { checklistDataMapper(it) } }
+}
 
 fun checklistDataMapper(items: List<ChecklistItemFull>): List<ChecklistData> {
     return items.map { item ->

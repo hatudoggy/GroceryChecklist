@@ -9,6 +9,7 @@ import com.example.grocerychecklist.data.model.Item
 import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.take
 
 enum class ChecklistItemOrder(val order: String) {
@@ -148,12 +149,12 @@ class ChecklistItemRepository(
         return checklistItemDAO.getAllChecklistItemsByName(checklistId,searchQuery)
     }
 
-    suspend fun getTotalChecklistItems(checklistId: Long): Int {
-        return checklistItemDAO.aggregateTotalChecklistItems(checklistId)
+    fun getTotalChecklistItems(checklistId: Long): Flow<Int> {
+        return flow { checklistItemDAO.aggregateTotalChecklistItems(checklistId) }
     }
 
-    suspend fun getTotalChecklistItemPrice(checklistId: Long): Double {
-        return checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId) ?: 0.00
+    fun getTotalChecklistItemPrice(checklistId: Long): Flow<Double> {
+        return flow{ checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId) ?: 0.00 }
     }
 
 }

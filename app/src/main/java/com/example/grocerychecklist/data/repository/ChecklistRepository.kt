@@ -1,16 +1,20 @@
 package com.example.grocerychecklist.data.repository
 
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
 import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 
 class ChecklistRepository(
     private val checklistDAO: ChecklistDAO
 ) {
-
     suspend fun addChecklist(checklistInput: ChecklistInput): Long {
         val currentDateTime = DateUtility.getCurrentDateTime()
 
@@ -29,7 +33,7 @@ class ChecklistRepository(
     }
 
     suspend fun updateChecklist(id: Long, checklistInput: ChecklistInput) {
-        val checklist = checklistDAO.getChecklistById(id)
+        val checklist = checklistDAO.getChecklistById(id).first()
         val currentDateTime = DateUtility.getCurrentDateTime()
 
         val updatedChecklist = checklist.copy(
@@ -55,12 +59,13 @@ class ChecklistRepository(
 
     private suspend fun updateChecklistDate(checklistId: Long, lastOpenedAt: LocalDateTime? = null, lastShopAt: LocalDateTime? = null) {
         val checklist = checklistDAO.getChecklistById(checklistId)
-        checklist.let {
+        checklist.let { it.map {
             val newChecklist = it.copy(
                 lastOpenedAt = lastOpenedAt ?: it.lastOpenedAt,
                 lastShopAt = lastShopAt ?: it.lastShopAt
             )
             checklistDAO.update(newChecklist)
+         }
         }
     }
 
@@ -68,12 +73,29 @@ class ChecklistRepository(
         checklistDAO.delete(checklist)
     }
 
-    suspend fun getChecklist(id: Long): Checklist {
+    fun getChecklist(id: Long): Flow<Checklist> {
         return checklistDAO.getChecklistById(id)
+    }
+
+    fun getChecklistWithDetails(id: Long): Flow<ChecklistDetails> {
+        return checklistDAO.getChecklistWithDetails(id)
     }
 
     fun getChecklists(): Flow<List<Checklist>> {
         return checklistDAO.getAllChecklistsOrderedByLastOpenedAt()
     }
-
 }
+
+data class ChecklistDetails(
+    val id: Long,
+    val name: String,
+    val description: String,
+    val icon: IconOption,
+    val iconBackgroundColor: ColorOption,
+    val createdAt: LocalDateTime?,
+    val updatedAt: LocalDateTime?,
+    val lastOpenedAt: LocalDateTime?,
+    val lastShopAt: LocalDateTime?,
+    val itemCount: Int,
+    val totalPrice: Double
+)
