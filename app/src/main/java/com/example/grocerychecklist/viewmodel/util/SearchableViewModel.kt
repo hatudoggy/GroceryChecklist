@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 abstract class SearchableViewModel<T>(
@@ -17,7 +16,7 @@ abstract class SearchableViewModel<T>(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _allItems = MutableStateFlow<List<T>>(emptyList())
     private val allItems: StateFlow<List<T>> = _allItems.asStateFlow()
@@ -29,15 +28,11 @@ abstract class SearchableViewModel<T>(
         else items.filter { matchesSearch(it, query) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun setItems(items: List<T>) {
+    fun setItemsToBeFiltered(items: List<T>) {
         _allItems.value = items
     }
 
-    fun setItems(items: Flow<List<T>>) {
+    fun setItemsToBeFiltered(items: Flow<List<T>>) {
         viewModelScope.launch {
             items.collect {
                 _allItems.value = it

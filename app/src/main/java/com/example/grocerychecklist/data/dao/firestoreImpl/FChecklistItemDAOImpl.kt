@@ -23,16 +23,18 @@ class FChecklistItemDAOImpl : FBaseIUDDAOImpl<ChecklistItem>(
         FItemDAOImpl()
     }
 
-    override suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull {
-        val snapshot = db.document(checklistItemId.toString()).get().await()
-        if (!snapshot.exists())
-            throw NoSuchElementException("Checklist Item with id $checklistItemId not found.")
+    override fun getChecklistItemById(checklistItemId: Long): Flow<ChecklistItemFull> {
+        return flow {
+            val snapshot = db.document(checklistItemId.toString()).get().await()
+            if (!snapshot.exists())
+                throw NoSuchElementException("Checklist Item with id $checklistItemId not found.")
 
-        val checklistItem = fromFirestoreModel(snapshot, checklistItemId)
+            val checklistItem = fromFirestoreModel(snapshot, checklistItemId)
 
-        val item = fItemDAOImpl.getItemById(checklistItem.itemId)
+            val item = fItemDAOImpl.getItemById(checklistItem.itemId)
 
-        return ChecklistItemFull(checklistItem, item)
+            emit(ChecklistItemFull(checklistItem, item))
+        }
     }
 
     override fun getAllChecklistItems(checklistId: Long): Flow<List<ChecklistItemFull>> {
@@ -150,16 +152,22 @@ class FChecklistItemDAOImpl : FBaseIUDDAOImpl<ChecklistItem>(
         }
     }
 
-    override suspend fun getChecklistItemMaxOrder(checklistId: Long): Int {
-        val query = db.whereEqualTo("checklistId", checklistId)
-            .orderBy("order", Query.Direction.DESCENDING).limit(1).get().await()
+    override fun getChecklistItemMaxOrder(checklistId: Long): Flow<Int> {
+        return flow {
+            val query = db.whereEqualTo("checklistId", checklistId)
+                .orderBy("order", Query.Direction.DESCENDING).limit(1).get().await()
 
-        return query.documents.firstOrNull()?.getLong("order")?.toInt() ?: 0
+            emit(query.documents.firstOrNull()?.getLong("order")?.toInt() ?: 0)
+        }
     }
 
     override suspend fun deleteChecklistById(checklistId: Long): Int {
-        db.document(checklistId.toString()).delete()
-        return 1
+        try {
+            db.document(checklistId.toString()).delete()
+            return 1
+        } catch (e: Exception) {
+            return 0
+        }
     }
 
     override suspend fun deleteChecklistByItemId(itemId: Long): Int {
@@ -174,20 +182,26 @@ class FChecklistItemDAOImpl : FBaseIUDDAOImpl<ChecklistItem>(
         return querySnapshot.size()
     }
 
-    override suspend fun aggregateTotalChecklistItems(checklistId: Long): Int {
-        val querySnapshot = db.whereEqualTo("checklistId", checklistId).get().await()
+    override fun aggregateTotalChecklistItems(checklistId: Long): Flow<Int> {
+        return flow {
+            val querySnapshot = db.whereEqualTo("checklistId", checklistId).get().await()
 
-        return querySnapshot.size()
+            emit(querySnapshot.size())
+        }
     }
 
-    override suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double {
-        val querySnapshot = db.whereEqualTo("checklistId", checklistId).get().await()
+    override fun aggregateTotalChecklistItemPrice(checklistId: Long): Flow<Double> {
+        return flow {
+            val querySnapshot = db.whereEqualTo("checklistId", checklistId).get().await()
 
-        return querySnapshot.documents.sumOf {
-            val checklistItem = fromFirestoreModel(it, it.id.toLong())
-            val item = fItemDAOImpl.getItemById(checklistItem.itemId)
+            emit(
+                querySnapshot.documents.sumOf {
+                    val checklistItem = fromFirestoreModel(it, it.id.toLong())
+                    val item = fItemDAOImpl.getItemById(checklistItem.itemId)
 
-            item.price
+                    item.price
+                }
+            )
         }
     }
 

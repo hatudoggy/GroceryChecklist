@@ -26,13 +26,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetChecklistItem(
-    selectedItem: ChecklistData? = null,
+    selectedItem: ChecklistItemData? = null,
     isOpen: Boolean,
     onClose: () -> Unit,
     onAdd: (String, ItemCategory, Double, Int) -> Unit,

@@ -2,12 +2,10 @@ package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.HistoryItemDAO
 import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
-import com.example.grocerychecklist.data.model.ChecklistItemFull
 import com.example.grocerychecklist.data.model.HistoryItem
 import com.example.grocerychecklist.domain.utility.DateUtility
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 
@@ -42,31 +40,35 @@ class HistoryItemRepository(
 //        return historyItemDAO.insertBatch(historyItems)
 //    }
 
-    suspend fun addHistoryItems(historyId: Long, items: List<ChecklistData>): List<Long> {
+    suspend fun addHistoryItems(historyId: Long, items: List<ChecklistItemData>): Result<List<Long>> {
+        return try {
+            val currentDateTime = DateUtility.getCurrentDateTime()
 
-        val currentDateTime = DateUtility.getCurrentDateTime()
+            val historyItems = items.map { item ->
+                HistoryItem(
+                    historyId = historyId,
+                    checklistItemId = item.checklistId,
+                    name = item.name,
+                    price = item.price,
+                    category = item.category.name,
+                    measureType = item.measurement.name,
+                    measureValue = item.measurementValue,
+                    photoRef = item.photoRef,
+                    order = item.order,
+                    quantity = item.quantity,
+                    isChecked = item.isChecked,
+                    createdAt = currentDateTime
+                )
+            }
 
-        val historyItems = items.map { item ->
-            HistoryItem(
-                historyId = historyId,
-                checklistItemId = item.checklistId,
-                name = item.name,
-                price = item.price,
-                category = item.category.name,
-                measureType = item.measurement.name,
-                measureValue = item.measurementValue,
-                photoRef = item.photoRef,
-                order = item.order,
-                quantity = item.quantity,
-                isChecked = item.isChecked,
-                createdAt = currentDateTime
-            )
+            val ids = historyItemDAO.insertBatch(historyItems)
+            Result.Success(ids)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
-
-        return historyItemDAO.insertBatch(historyItems)
     }
 
-    suspend fun getHistoryItem(id: Long): HistoryItem {
+    suspend fun getHistoryItem(id: Long): Flow<HistoryItem?> {
         return historyItemDAO.getHistoryItemById(id)
     }
 
@@ -78,12 +80,12 @@ class HistoryItemRepository(
         return historyItemDAO.getAllHistoryItemsOrderAndCheckedFilter(historyId, groupBy, isChecked)
     }
 
-    suspend fun getTotalHistoryItems(historyId: Long): Int {
+    suspend fun getTotalHistoryItems(historyId: Long): Flow<Int?> {
         return historyItemDAO.aggregateTotalHistoryItems(historyId)
     }
 
-    suspend fun getTotalHistoryItemPrice(historyId: Long): Double {
-        return historyItemDAO.aggregateTotalHistoryItemPrice(historyId) ?: 0.00
+    suspend fun getTotalHistoryItemPrice(historyId: Long): Flow<Double?> {
+        return (historyItemDAO.aggregateTotalHistoryItemPrice(historyId))
     }
 
     fun getTotalItemPriceOnMonth(month: Month): Flow<Double?> {

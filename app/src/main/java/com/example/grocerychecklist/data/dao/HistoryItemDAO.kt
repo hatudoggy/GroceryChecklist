@@ -12,7 +12,7 @@ interface HistoryItemDAO {
 
     suspend fun insertBatch(historyItems: List<HistoryItem>): List<Long>
 
-    suspend fun getHistoryItemById(historyItemId: Long): HistoryItem
+    fun getHistoryItemById(historyItemId: Long): Flow<HistoryItem>
 
     fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>>
 
@@ -24,9 +24,9 @@ interface HistoryItemDAO {
 
     fun getAllHistoryItemsByCategory(historyId: Long, category: Category): Flow<List<HistoryItem>>
 
-    suspend fun aggregateTotalHistoryItems(historyId: Long): Int
+    fun aggregateTotalHistoryItems(historyId: Long): Flow<Int>
 
-    suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
+    fun aggregateTotalHistoryItemPrice(historyId: Long): Flow<Double?>
 
     fun aggregateTotalPriceMonth(month: Month): Flow<Double?>
 

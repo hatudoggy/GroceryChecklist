@@ -33,7 +33,6 @@ import com.example.grocerychecklist.ui.screen.checklist.ChecklistStartScreen
 import com.example.grocerychecklist.ui.theme.ErrorFilled
 import com.example.grocerychecklist.ui.theme.ErrorText
 import com.example.grocerychecklist.ui.theme.ErrorTonal
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
 
 
 @Composable

@@ -1,68 +1,57 @@
 package com.example.grocerychecklist.viewmodel.checklist
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.asResult
 import com.example.grocerychecklist.ui.screen.Navigator
-import com.example.grocerychecklist.ui.screen.Routes.ChecklistDetail
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import com.example.grocerychecklist.data.repository.Result
-import com.example.grocerychecklist.ui.screen.Routes.ChecklistEdit
 import com.example.grocerychecklist.ui.screen.Routes.ChecklistStart
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.timeout
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 
 class ChecklistDetailViewModel(
+    private val checklistId: Long,
     private val checklistRepository: ChecklistRepository,
     private val navigator: Navigator,
-    entry: NavBackStackEntry
 ): ViewModel() {
-    val checklistId = entry.toRoute<ChecklistDetail>().checklistId
-    var checklistName = ""
 
-    val state: StateFlow<ChecklistDetailState> = checklistDetailUIState(
-        checklistId = checklistId,
-        checklistRepository = checklistRepository
-    ).stateIn(
-        viewModelScope,
-        SharingStarted.Lazily,
-        ChecklistDetailState.Loading
-    )
+    val _state = MutableStateFlow<ChecklistDetailState>(ChecklistDetailState.Loading)
+    val state: StateFlow<ChecklistDetailState> = _state.asStateFlow()
 
-    @OptIn(FlowPreview::class)
-    private fun checklistDetailUIState(
-        checklistId: Long,
-        checklistRepository: ChecklistRepository,
-    ): Flow<ChecklistDetailState> {
-        return checklistRepository.getChecklistWithDetails(checklistId)
-            .timeout(10.seconds)
-            .asResult()
-            .map { result ->
-                when (result) {
-                    is Result.Success -> {
-                        checklistName = result.data.name
-                        ChecklistDetailState.Success(result.data)
+    private fun loadChecklist(){
+        viewModelScope.launch {
+            checklistRepository.getChecklistWithDetails(checklistId)
+                .asResult()
+                .collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            if (result.data != null) {
+                                _state.value = ChecklistDetailState.Success(result.data)
+                            } else {
+                                _state.value = ChecklistDetailState.Error("Checklist not found")
+                                Log.e("ChecklistDetailViewModel", "Checklist not found")
+                            }
+                        }
+                        is Result.Loading -> _state.value = ChecklistDetailState.Loading
+                        is Result.Error -> {
+                            _state.value = ChecklistDetailState.Error("Failed to load checklist")
+                            Log.e("ChecklistDetailViewModel", "Failed to load checklist", result.exception)
+                        }
                     }
-                    is Result.Loading -> ChecklistDetailState.Loading
-                    is Result.Error -> ChecklistDetailState.Error
                 }
-            }
+        }
     }
 
     fun onEvent(event: ChecklistDetailEvent) {
         when (event) {
-            ChecklistDetailEvent.NavigateBack -> {navigator.popBackStack()}
-            ChecklistDetailEvent.NavigateViewMode -> {navigator.navigate(ChecklistEdit(checklistId, checklistName = checklistName))}
-            ChecklistDetailEvent.NavigateStartMode -> {navigator.navigate(ChecklistStart(checklistId))}
+            is ChecklistDetailEvent.NavigateBack -> {navigator.popBackStack()}
+            is ChecklistDetailEvent.LoadData -> loadChecklist()
+            is ChecklistDetailEvent.NavigateStartMode -> {navigator.navigate(ChecklistStart(event.checklistId, event.checklistName))}
         }
     }
 }

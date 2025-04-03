@@ -33,7 +33,7 @@ import com.example.grocerychecklist.R
 @Composable
 fun ErrorComponent(
     modifier: Modifier = Modifier,
-    @StringRes errorMessage: Int,
+    errorMessage: String,
     onRetry: (() -> Unit)? = null
 ) {
     Column(
@@ -60,7 +60,7 @@ fun ErrorComponent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(errorMessage),
+            text = errorMessage,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
@@ -85,7 +85,7 @@ fun ErrorComponent(
 @Composable
 fun ErrorComponentPreview() {
     ErrorComponent(
-        errorMessage = R.string.checklist_error,
+        errorMessage = stringResource(R.string.checklist_error),
         onRetry = { /* Handle retry action */ }
     )
 }

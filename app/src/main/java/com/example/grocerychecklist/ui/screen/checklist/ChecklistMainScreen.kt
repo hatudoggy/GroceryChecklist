@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,43 +46,107 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.grocerychecklist.R
 import com.example.grocerychecklist.data.ColorOption
 import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.data.mapper.ChecklistInput
+import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.ui.component.ActionMenu
 import com.example.grocerychecklist.ui.component.BottomSheet
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
 import com.example.grocerychecklist.ui.component.ChecklistCategory
+import com.example.grocerychecklist.ui.component.ErrorComponent
+import com.example.grocerychecklist.ui.component.LoadingComponent
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent.*
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainUIState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainViewModel
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+@Composable
+internal fun ChecklistMainScreen(
+    viewModel: ChecklistMainViewModel
+){
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onEvent = viewModel::onEvent
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+
+    ChecklistMainScreen(
+        // States
+        state = state,
+        uiState = uiState,
+        searchQuery = searchQuery,
+
+        //General (Common Checklist) Events
+        loadChecklist = { onEvent(LoadChecklists) },
+        onSearch = { onEvent(SearchQueryEvent(it)) },
+        toggleDrawer = { onEvent(ToggleDrawer) },
+        toggleDeleteDialog = { onEvent(ToggleDeleteDialog) },
+        toggleActionMenu = { checklist -> onEvent(ToggleActionMenu(checklist)) },
+        onAddChecklist = { onEvent(AddChecklist(it)) },
+        onUpdateChecklist = { checklist -> onEvent(UpdateChecklist(checklist)) },
+        onDeleteChecklist = { checklist -> onEvent(DeleteChecklist(checklist)) },
+
+        //UI Events
+        toggleIconPicker = { onEvent(ToggleIconPicker) },
+        onSetEditingChecklist = { onEvent(SetEditingChecklist(it)) },
+        onSetNewChecklist = { onEvent(SetNewChecklist(it)) },
+        onNavigateChecklist = { id, name -> onEvent(NavigateChecklist(id, name)) },
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChecklistMainScreen(
+internal fun ChecklistMainScreen(
     state: ChecklistMainState,
-    onEvent: (ChecklistMainEvent) -> Unit,
+    uiState: ChecklistMainUIState,
+    searchQuery: String,
+
+    loadChecklist: () -> Unit,
+    onSearch: (String) -> Unit,
+    toggleDrawer: () -> Unit,
+    toggleDeleteDialog: () -> Unit,
+    toggleActionMenu: (Checklist) -> Unit,
+    onAddChecklist: (ChecklistInput) -> Unit,
+    onUpdateChecklist: (Checklist) -> Unit,
+    onDeleteChecklist: (Checklist) -> Unit,
+
+    toggleIconPicker: () -> Unit,
+    onSetEditingChecklist: (Checklist) -> Unit,
+    onSetNewChecklist: (ChecklistInput) -> Unit,
+    onNavigateChecklist: (Long, String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Create Checklist Bottom Sheet
     BottomSheetChecklist(
         isOpen = state.isDrawerOpen,
-        onClose = { onEvent(ChecklistMainEvent.ToggleDrawer) },
-        onEvent = onEvent,
-        state = state
+        onClose = toggleDrawer,
+        state = state,
+        toggleIconPicker = toggleIconPicker,
+        toggleDrawer = toggleDrawer,
+        onSetNewChecklist = onSetNewChecklist,
+        onSetEditingChecklist = onSetEditingChecklist,
+        onAddChecklist = onAddChecklist,
+        onUpdateChecklist = onUpdateChecklist,
     )
 
     DialogModal(
         isOpen = state.isIconPickerOpen,
-        onClose = { onEvent(ChecklistMainEvent.ToggleIconPicker) }
+        onClose = toggleIconPicker
     ) {
         Column(
             modifier = Modifier
@@ -101,29 +166,25 @@ fun ChecklistMainScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .clickable {
-                                if (state.editingChecklist != null)
-                                    onEvent(
-                                        ChecklistMainEvent.SetEditingChecklist(
-                                            state.editingChecklist.copy(
-                                                icon = IconOption.fromName(category.text)
-                                                    ?: IconOption.MAIN_GROCERY,
-                                                iconBackgroundColor = ColorOption.fromColor(category.color)
-                                                    ?: ColorOption.CopySkyGreen
-                                            )
+                                if (state.selectedChecklist != null && state.editingChecklist != null) {
+                                    SetEditingChecklist(
+                                        state.editingChecklist.copy(
+                                            icon = IconOption.fromName(category.text)
+                                                ?: IconOption.MAIN_GROCERY,
+                                            iconBackgroundColor = ColorOption.fromColor(category.color)
+                                                ?: ColorOption.CopySkyGreen
                                         )
                                     )
-                                else
-                                    onEvent(
-                                        ChecklistMainEvent.SetNewChecklist(
-                                            state.newChecklist.copy(
-                                                icon = IconOption.fromName(category.text)
-                                                    ?: IconOption.MAIN_GROCERY,
-                                                iconBackgroundColor = ColorOption.fromColor(category.color)
-                                                    ?: ColorOption.CopySkyGreen
-                                            )
+                                } else
+                                    SetNewChecklist(
+                                        state.newChecklist.copy(
+                                            icon = IconOption.fromName(category.text)
+                                                ?: IconOption.MAIN_GROCERY,
+                                            iconBackgroundColor = ColorOption.fromColor(category.color)
+                                                ?: ColorOption.CopySkyGreen
                                         )
                                     )
-                                onEvent(ChecklistMainEvent.ToggleIconPicker)
+                                toggleIconPicker
                             }
                     ) {
                         ButtonCardIconComponent(
@@ -139,40 +200,36 @@ fun ChecklistMainScreen(
     }
 
     // Edit, Delete Action Menu
-    ActionMenu(
-        isOpen = state.isActionMenuOpen,
-        onClose = { onEvent(ChecklistMainEvent.ToggleActionMenu(state.selectedChecklist)) },
-        onEditMenu = {
-            onEvent(ChecklistMainEvent.ToggleDrawer)
-            onEvent(ChecklistMainEvent.SetEditingChecklist(state.selectedChecklist))
-        },
-        onDeleteDialog = {
-            onEvent(ChecklistMainEvent.ToggleDeleteDialog)
-            onEvent(ChecklistMainEvent.SetDeletingChecklist(state.selectedChecklist))
-        }
-    )
-
-    // Delete Dialog
-    if (state.isDeleteDialogOpen) {
-        AlertDialog(
-            onDismissRequest = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) },
-            title = { Text("Delete Item?") },
-            text = { Text("Are you sure you want to delete this item?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onEvent(ChecklistMainEvent.DeleteChecklist(state.deletingChecklist))
-                    }
-                ) {
-                    Text("Delete", color = Color.Red)
-                }
+    if (state.selectedChecklist != null){
+        ActionMenu(
+            isOpen = state.isActionMenuOpen,
+            onClose = { toggleActionMenu(state.selectedChecklist) },
+            onEditMenu = {
+                toggleDrawer
             },
-            dismissButton = {
-                TextButton(onClick = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }) {
-                    Text("Cancel", color = Color.Black)
-                }
+            onDeleteDialog = {
+                toggleDeleteDialog
             }
         )
+
+        // Delete Dialog
+        if (state.isDeleteDialogOpen) {
+            AlertDialog(
+                onDismissRequest = { toggleDeleteDialog },
+                title = { Text("Delete Item?") },
+                text = { Text("Are you sure you want to delete this item?") },
+                confirmButton = {
+                    TextButton(onClick = { onDeleteChecklist(state.selectedChecklist) }) {
+                        Text("Delete", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = toggleDeleteDialog) {
+                        Text("Cancel", color = Color.Black)
+                    }
+                }
+            )
+        }
     }
 
     // Main screen content
@@ -181,7 +238,7 @@ fun ChecklistMainScreen(
         floatingActionButton = {
             FloatingActionButton(
                 shape = CircleShape,
-                onClick = {onEvent(ChecklistMainEvent.ToggleDrawer)},
+                onClick = toggleDrawer,
                 containerColor = PrimaryGreenSurface
             ) {
                 Icon(Icons.Filled.Add, "Add FAB")
@@ -210,54 +267,68 @@ fun ChecklistMainScreen(
                     ),
                 fontSize = 16.sp,
                 placeholderText = "Search",
-                value = state.searchQuery,
-                onValueChange = { e -> onEvent(ChecklistMainEvent.SearchChecklist(e)) }
+                value = searchQuery,
+                onValueChange = { onSearch(it) }
             )
             Spacer(Modifier.height(8.dp))
 
-            if (state.checklists.isNotEmpty()) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    state.checklists.forEach { item ->
-                        item {
-                            ButtonCardComponent(
-                                name = item.name,
-                                description = item.description.ifBlank { "No Description" },
-                                date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
-                                    .toString(),
-                                icon = item.icon.imageVector,
-                                iconBackgroundColor = item.iconBackgroundColor.color,
-                                variant = ButtonCardComponentVariant.Checklist,
-                                onClick = { onEvent(ChecklistMainEvent.NavigateChecklist(item.id)) },
-                                onLongPress = { onEvent(ChecklistMainEvent.ToggleActionMenu(item)) }
-                            )
-                        }
-                    }
+            when (uiState) {
+                is ChecklistMainUIState.Success -> {
+                    ChecklistMainSuccessUI(
+                        uiState = uiState,
+                        onNavigateChecklist = onNavigateChecklist,
+                        toggleActionMenu = toggleActionMenu,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                is ChecklistMainUIState.Empty -> {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Checklist,
-                            contentDescription = "Empty Checklist",
-                            modifier = Modifier.size(32.dp),
-                        )
-                        Text(
-                            text = "No Checklist Items",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Checklist,
+                                contentDescription = "Empty Checklist",
+                                modifier = Modifier.size(32.dp),
+                            )
+                            Text(
+                                text = "No Checklist Items",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.DarkGray
+                            )
+                        }
+
+                    }
+                }
+
+                is ChecklistMainUIState.Error -> {
+                    val errorMessage = uiState.message
+                    val defaultErrorMessage = stringResource(R.string.checklist_error)
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ErrorComponent(
+                            errorMessage = errorMessage ?: defaultErrorMessage,
+                            onRetry = { loadChecklist }
                         )
                     }
-
+                }
+                is ChecklistMainUIState.Loading -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LoadingComponent(loadingMessage = R.string.checklist_loading)
+                    }
                 }
             }
         }
@@ -270,7 +341,12 @@ fun ChecklistMainScreen(
 fun BottomSheetChecklist(
     isOpen: Boolean,
     onClose: () -> Unit,
-    onEvent: (ChecklistMainEvent) -> Unit,
+    toggleIconPicker: () -> Unit,
+    toggleDrawer: () -> Unit,
+    onSetEditingChecklist: (Checklist) -> Unit,
+    onSetNewChecklist: (ChecklistInput) -> Unit,
+    onAddChecklist: (ChecklistInput) -> Unit,
+    onUpdateChecklist: (Checklist) -> Unit,
     state: ChecklistMainState,
 ) {
     BottomSheet(
@@ -278,7 +354,6 @@ fun BottomSheetChecklist(
         onClose = onClose,
         skipExpand = true,
     ) {
-
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
@@ -299,9 +374,7 @@ fun BottomSheetChecklist(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable {
-                            onEvent(ChecklistMainEvent.ToggleIconPicker)
-                        }
+                        .clickable { toggleIconPicker }
                 ) {
                     ButtonCardIconComponent(
                         backgroundColor = state.editingChecklist?.iconBackgroundColor?.color
@@ -319,22 +392,9 @@ fun BottomSheetChecklist(
                     value = state.editingChecklist?.name ?: state.newChecklist.name,
                     onValueChange = { e ->
                         if (state.editingChecklist != null)
-                            onEvent(
-                                ChecklistMainEvent.SetEditingChecklist(
-                                    state.editingChecklist.copy(
-                                        name = e
-                                    )
-                                )
-                            )
+                            onSetEditingChecklist(state.editingChecklist.copy(name = e))
                         else
-                            onEvent(
-                                ChecklistMainEvent.SetNewChecklist(
-                                    state.newChecklist.copy(
-                                        name = e
-                                    )
-                                )
-                            )
-
+                            onSetNewChecklist(state.newChecklist.copy(name = e))
                     },
                     label = { Text("Name") }
                 )
@@ -346,22 +406,9 @@ fun BottomSheetChecklist(
                 value = state.editingChecklist?.description ?: state.newChecklist.description,
                 onValueChange = { e ->
                     if (state.editingChecklist != null)
-                        onEvent(
-                            ChecklistMainEvent.SetEditingChecklist(
-                                state.editingChecklist.copy(
-                                    description = e
-                                )
-                            )
-                        )
+                        onSetEditingChecklist(state.editingChecklist.copy(description = e))
                     else
-                        onEvent(
-                            ChecklistMainEvent.SetNewChecklist(
-                                state.newChecklist.copy(
-                                    description = e
-                                )
-                            )
-                        )
-
+                        onSetNewChecklist(state.newChecklist.copy(description = e))
                 },
             )
 
@@ -370,7 +417,7 @@ fun BottomSheetChecklist(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    onClick = { onEvent(ChecklistMainEvent.ToggleDrawer) }
+                    onClick = { toggleDrawer }
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
                 Button(
@@ -378,9 +425,9 @@ fun BottomSheetChecklist(
                         ?.isNotEmpty() == true || state.newChecklist.name.trim().isNotEmpty(),
                     onClick = {
                         if (state.editingChecklist != null)
-                            onEvent(ChecklistMainEvent.UpdateChecklist(state.editingChecklist))
+                            onUpdateChecklist(state.editingChecklist)
                         else
-                            onEvent(ChecklistMainEvent.AddChecklist(state.newChecklist))
+                            onAddChecklist(state.newChecklist)
 
                     },
                 ) { if (state.editingChecklist != null) Text("Edit") else Text("Add") }
@@ -414,14 +461,139 @@ fun DialogModal(
     }
 }
 
+@Composable
+private fun ChecklistMainSuccessUI(
+    uiState: ChecklistMainUIState.Success,
+    onNavigateChecklist: (Long, String) -> Unit,
+    toggleActionMenu: (Checklist) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val checklists = uiState.data
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        items(
+            items = checklists,
+            itemContent = { item ->
+                ButtonCardComponent(
+                    name = item.name,
+                    description = item.description.ifBlank { "No Description" },
+                    date = item.updatedAt?.format(DateTimeFormatter.ofPattern("MMM dd yyyy"))
+                        .toString(),
+                    icon = item.icon.imageVector,
+                    iconBackgroundColor = item.iconBackgroundColor.color,
+                    variant = ButtonCardComponentVariant.Checklist,
+                    onClick = { onNavigateChecklist(item.id, item.name) },
+                    onLongPress = { toggleActionMenu(item) }
+                )
+            }
+        )
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
-fun ChecklistMainScreenPreview() {
-    val state: ChecklistMainState = ChecklistMainState()
+fun ChecklistMainScreenPreviewEmpty() {
     ChecklistMainScreen(
-        state = state,
-        onEvent = {}
+        state = ChecklistMainState(),
+        uiState = ChecklistMainUIState.Empty,
+        searchQuery = "",
+        loadChecklist = {},
+        onSearch = {},
+        toggleDrawer = {},
+        toggleIconPicker = {},
+        toggleDeleteDialog = {},
+        toggleActionMenu = {},
+        onAddChecklist = {},
+        onUpdateChecklist = {},
+        onDeleteChecklist = {},
+        onSetEditingChecklist = {},
+        onSetNewChecklist = {},
+        onNavigateChecklist = { _, _ -> }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChecklistMainScreenPreviewLoading() {
+    ChecklistMainScreen(
+        state = ChecklistMainState(),
+        uiState = ChecklistMainUIState.Loading,
+        searchQuery = "",
+        loadChecklist = {},
+        onSearch = {},
+        toggleDrawer = {},
+        toggleIconPicker = {},
+        toggleDeleteDialog = {},
+        toggleActionMenu = {},
+        onAddChecklist = {},
+        onUpdateChecklist = {},
+        onDeleteChecklist = {},
+        onSetEditingChecklist = {},
+        onSetNewChecklist = {},
+        onNavigateChecklist = { _, _ -> }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChecklistMainScreenPreviewError() {
+    ChecklistMainScreen(
+        state = ChecklistMainState(),
+        uiState = ChecklistMainUIState.Error(
+            "Failed to load checklists"
+        ),
+        searchQuery = "",
+        loadChecklist = {},
+        onSearch = {},
+        toggleDrawer = {},
+        toggleIconPicker = {},
+        toggleDeleteDialog = {},
+        toggleActionMenu = {},
+        onAddChecklist = {},
+        onUpdateChecklist = {},
+        onDeleteChecklist = {},
+        onSetEditingChecklist = {},
+        onSetNewChecklist = {},
+        onNavigateChecklist = { _, _ -> }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChecklistMainScreenPreviewSuccess() {
+    ChecklistMainScreen(
+        state = ChecklistMainState(),
+        uiState = ChecklistMainUIState.Success(
+            data = listOf(
+                Checklist(
+                    id = 1,
+                    name = "Test Checklist",
+                    description = "This is a test checklist",
+                    icon = IconOption.MAIN_GROCERY,
+                    iconBackgroundColor = ColorOption.CopySkyGreen,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt =  LocalDateTime.now(),
+                    lastOpenedAt =  LocalDateTime.now(),
+                    lastShopAt =  LocalDateTime.now()
+                )
+            )
+        ),
+        searchQuery = "",
+        loadChecklist = {},
+        onSearch = {},
+        toggleDrawer = {},
+        toggleIconPicker = {},
+        toggleDeleteDialog = {},
+        toggleActionMenu = {},
+        onAddChecklist = {},
+        onUpdateChecklist = {},
+        onDeleteChecklist = {},
+        onSetEditingChecklist = {},
+        onSetNewChecklist = {},
+        onNavigateChecklist = { _, _ -> }
     )
 }
 

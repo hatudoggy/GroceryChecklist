@@ -24,19 +24,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,26 +51,43 @@ import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.LightGray
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailViewModel
 import java.time.LocalDateTime
 
 @Composable
-fun ChecklistDetailScreen(
-    state: ChecklistDetailState,
-    onEvent: (ChecklistDetailEvent) -> Unit,
-) {
-    var shouldRefresh by remember { mutableStateOf(false) }
+internal fun ChecklistDetailScreen(
+    viewModel: ChecklistDetailViewModel
+){
+    val state by viewModel.state.collectAsState()
+    val onEvent = viewModel::onEvent
+    ChecklistDetailScreen(
+        state = state,
+        onNavigateBackClick = { onEvent(ChecklistDetailEvent.NavigateBack) },
+        onStartShoppingClicked = { checklistId, checklistName -> onEvent(ChecklistDetailEvent.NavigateStartMode(checklistId, checklistName))},
+        loadChecklistDetails = { onEvent(ChecklistDetailEvent.LoadData) }
+    )
+}
 
+@Composable
+internal fun ChecklistDetailScreen(
+    state: ChecklistDetailState,
+    onNavigateBackClick: () -> Unit,
+    onStartShoppingClicked: (Long, String) -> Unit,
+    loadChecklistDetails: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopBarComponent(
                 title = "Checklist",
-                onNavigateBackClick = { onEvent(ChecklistDetailEvent.NavigateBack) }
+                onNavigateBackClick = onNavigateBackClick
             )
         }
     ) { innerPadding ->
         when (state) {
             is ChecklistDetailState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding), contentAlignment = Alignment.Center) {
                     LoadingComponent(loadingMessage = R.string.checklist_loading)
                 }
             }
@@ -103,13 +117,19 @@ fun ChecklistDetailScreen(
                         lastShopAt = checklist.lastShopAt?.let { DateUtility.formatDateWithDay(it) } ?: "N/A"
                     )
 
-                    CheckListButtons(onEvent = onEvent)
+                    CheckListButtons(
+                        onStartShoppingClicked = { onStartShoppingClicked(checklist.id, checklist.name)}
+                    )
                 }
             }
 
             is ChecklistDetailState.Error -> {
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                    ErrorComponent(errorMessage = R.string.checklist_error, onRetry = { shouldRefresh = true })
+                val errorMessage = state.message
+                val defaultErrorMessage = stringResource(id = R.string.checklist_error)
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding), contentAlignment = Alignment.Center) {
+                    ErrorComponent(errorMessage = errorMessage?: defaultErrorMessage, onRetry = loadChecklistDetails)
                 }
             }
         }
@@ -197,7 +217,7 @@ fun CheckListStatColumn(
 @Composable
 fun CheckListButtons(
     modifier: Modifier = Modifier,
-    onEvent: (ChecklistDetailEvent) -> Unit
+    onStartShoppingClicked: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.padding(vertical = 16.dp, horizontal = 24.dp),
@@ -214,7 +234,7 @@ fun CheckListButtons(
             backgroundColor = LightGray,
             textColor = Color.Black,
             modifier = buttonModifier,
-            onClick = { onEvent(ChecklistDetailEvent.NavigateViewMode) }
+            onClick = { onStartShoppingClicked }
         )
 
         CheckListButton(
@@ -223,7 +243,7 @@ fun CheckListButtons(
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = Color.White,
             modifier = buttonModifier,
-            onClick = { onEvent(ChecklistDetailEvent.NavigateStartMode) }
+            onClick = { onStartShoppingClicked }
         )
     }
 }
@@ -294,7 +314,9 @@ fun ChecklistDetailScreenLoadedPreview() {
 
     ChecklistDetailScreen(
         state = successState,
-        onEvent = {}
+        onNavigateBackClick = {},
+        onStartShoppingClicked = { _, _ -> },
+        loadChecklistDetails = {}
     )
 }
 
@@ -305,17 +327,23 @@ fun ChecklistDetailScreenLoadingPreview() {
 
     ChecklistDetailScreen(
         state = loadingState,
-        onEvent = {}
+        onNavigateBackClick = {},
+        onStartShoppingClicked = { _, _ -> },
+        loadChecklistDetails = {}
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ChecklistDetailScreenErrorPreview() {
-    val errorState = ChecklistDetailState.Error
+    val errorState = ChecklistDetailState.Error(
+        message = "Error loading checklist"
+    )
 
     ChecklistDetailScreen(
         state = errorState,
-        onEvent = {}
+        onNavigateBackClick = {},
+        onStartShoppingClicked = { _, _ -> },
+        loadChecklistDetails = {}
     )
 }

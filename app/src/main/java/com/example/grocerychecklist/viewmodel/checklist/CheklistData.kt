@@ -21,7 +21,7 @@ import java.time.LocalDateTime
  * @property measurement The unit of measurement for the quantity (e.g., KILOGRAM).
  * @property isChecked Whether the item has been checked off the list.
  */
-data class ChecklistData(
+data class ChecklistItemData(
     val id: Long,
     val itemId: Long,
     val checklistId: Long,
@@ -38,13 +38,13 @@ data class ChecklistData(
     var isChecked: Boolean = false
 )
 
-fun checklistDataMapper(items: Flow<List<ChecklistItemFull>>): Flow<List<ChecklistData>> {
+fun checklistDataMapper(items: Flow<List<ChecklistItemFull>>): Flow<List<ChecklistItemData>> {
     return items.map { item -> item.map { checklistDataMapper(it) } }
 }
 
-fun checklistDataMapper(items: List<ChecklistItemFull>): List<ChecklistData> {
+fun checklistDataMapper(items: List<ChecklistItemFull>): List<ChecklistItemData> {
     return items.map { item ->
-        ChecklistData(
+        ChecklistItemData(
             item.checklistItem.id,
             item.item.id,
             item.checklistItem.checklistId,
@@ -62,8 +62,8 @@ fun checklistDataMapper(items: List<ChecklistItemFull>): List<ChecklistData> {
     }
 }
 
-fun checklistDataMapper(item: ChecklistItemFull): ChecklistData {
-    return ChecklistData(
+fun checklistDataMapper(item: ChecklistItemFull): ChecklistItemData {
+    return ChecklistItemData(
         item.checklistItem.id,
         item.item.id,
         item.checklistItem.checklistId,
@@ -80,7 +80,7 @@ fun checklistDataMapper(item: ChecklistItemFull): ChecklistData {
     )
 }
 
-fun checklistDataMapper(checklistId: Long, items: List<ChecklistData>): List<ChecklistItemFull> {
+fun checklistDataMapper(checklistId: Long, items: List<ChecklistItemData>): List<ChecklistItemFull> {
     return items.map { item ->
         ChecklistItemFull(
             ChecklistItem(

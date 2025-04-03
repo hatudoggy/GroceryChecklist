@@ -18,11 +18,9 @@ sealed interface Routes {
     @Serializable
     data object ChecklistMain: Routes
     @Serializable
-    data class ChecklistDetail(val checklistId: Long): Routes
+    data class ChecklistDetail(val checklistId: Long, val checklistName: String): Routes
     @Serializable
-    data class ChecklistEdit(val checklistId: Long, val checklistName: String): Routes
-    @Serializable
-    data class ChecklistStart(val checklistId: Long): Routes
+    data class ChecklistStart(val checklistId: Long, val checklistName: String): Routes
 
     @Serializable
     data object ItemMain: Routes
@@ -30,7 +28,7 @@ sealed interface Routes {
     @Serializable
     data object HistoryMain: Routes
     @Serializable
-    data class HistoryDetail(val historyId: Long): Routes
+    data class HistoryDetail(val historyId: Long, val checklistName: String): Routes
 
     @Serializable
     data object SettingsMain: Routes

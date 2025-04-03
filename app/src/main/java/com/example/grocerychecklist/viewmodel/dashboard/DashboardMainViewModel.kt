@@ -65,7 +65,7 @@ class DashboardMainViewModel(
                 navigator.navigate(Routes.HistoryMain)
             }
             is DashboardMainEvent.NavigateHistoryDetail -> {
-                navigator.navigate(Routes.HistoryDetail(event.historyId))
+                navigator.navigate(Routes.HistoryDetail(event.historyId, event.checklistName))
             }
         }
     }

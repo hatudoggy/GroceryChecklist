@@ -1,6 +1,7 @@
 package com.example.grocerychecklist.ui.screen.history
 
 import HistoryItemComponent
+import ItemCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,20 +30,37 @@ import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.ui.component.CategorySelector
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.screen.Navigator
+import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailEvent
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailState
+import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
 
 @Composable
 fun HistoryDetailScreen(
-    state: HistoryDetailState,
-    onEvent: (HistoryDetailEvent) -> Unit
+    viewModel: HistoryDetailViewModel
+) {
+    val state by viewModel.state.collectAsState()
+    val onEvent = viewModel::onEvent
+
+    HistoryDetailScreen(
+        state = state,
+        onNavigateBackClick = { onEvent(HistoryDetailEvent.NavigateBack) },
+        onSelectCategory = { onEvent(HistoryDetailEvent.SelectCategory(it)) }
+    )
+}
+
+@Composable
+fun HistoryDetailScreen(
+    state : HistoryDetailState,
+    onNavigateBackClick: () -> Unit,
+    onSelectCategory: (ItemCategory) -> Unit,
 ) {
 
     Scaffold(
         topBar = {
             TopBarComponent(
                 title = "History",
-                onNavigateBackClick = { onEvent(HistoryDetailEvent.NavigateBack) }
+                onNavigateBackClick = { onNavigateBackClick }
             )
         },
     ) { innerPadding ->
@@ -54,7 +74,7 @@ fun HistoryDetailScreen(
             // Category selector component that allows the user to filter the list by categories.
             CategorySelector(
                 selectedCategories = state.selectedCategories,
-                onCategorySelected = { onEvent(HistoryDetailEvent.SelectCategory(it)) }
+                onCategorySelected = { onSelectCategory(it)}
             )
 
 
@@ -64,10 +84,9 @@ fun HistoryDetailScreen(
                     .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
-                // Iterates over the list of history items.
                 items(state.filteredItems) { historyItem ->
                     HistoryItemComponent(historyItem = historyItem)
+
                 }
             }
             TotalSection(total = state.filteredItems.sumOf { it.price * it.quantity })
@@ -144,7 +163,13 @@ fun HistoryDetailScreenPreview() {
     val navigator = Navigator()
 
     HistoryDetailScreen(
-        state = HistoryDetailState(filteredItems = listOf()),
-        onEvent = {}
+        state = HistoryDetailState(
+            checklistName = "Grocery List",
+            date = "2023-08-01",
+            selectedCategories = emptySet(),
+            filteredItems = emptyList()
+        ),
+        onNavigateBackClick = { navigator.navigate(Routes.DashboardMain) },
+        onSelectCategory = {}
     )
 }

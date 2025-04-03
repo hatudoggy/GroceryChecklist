@@ -63,7 +63,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
                 querySnapshot.documents.mapNotNull { doc ->
                     val history = fromFirestoreModel(doc, doc.id.toLong())
                     val totalPrice = fHistoryItemDAOImpl.aggregateTotalHistoryItemPrice(history.id)
-                    HistoryPriced(history, totalPrice)
+                    HistoryPriced(history, totalPrice.first())
                 }
             }
     }

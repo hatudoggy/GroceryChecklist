@@ -34,7 +34,7 @@ class HistoryDetailViewModel(
     private val navigator: Navigator,
     private val historyRepository: HistoryItemRepository,
 ) : ViewModel() {
-    private val _state: MutableStateFlow<HistoryDetailState> = MutableStateFlow(HistoryDetailState())
+    private val _state = MutableStateFlow(HistoryDetailState())
     val state: StateFlow<HistoryDetailState> = _state.asStateFlow()
 
     init {

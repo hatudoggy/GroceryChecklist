@@ -7,5 +7,5 @@ sealed interface ChecklistDetailState {
                 val checklistDetails: ChecklistDetails,
         ) : ChecklistDetailState
         object Loading : ChecklistDetailState
-        object Error : ChecklistDetailState
+        data class Error(val message: String? = null) : ChecklistDetailState
 }

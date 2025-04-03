@@ -15,6 +15,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.snapshots
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.time.Month
@@ -40,12 +41,14 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
         return generatedIds
     }
 
-    override suspend fun getHistoryItemById(historyItemId: Long): HistoryItem {
-        val documentReference = db.document("$historyItemId")
-        val snapshot = documentReference.get().await()
-        if (!snapshot.exists())
-            throw NoSuchElementException("History Item with id $historyItemId not found.")
-        return fromFirestoreModel(snapshot, snapshot.id.toLong())
+    override fun getHistoryItemById(historyItemId: Long): Flow<HistoryItem> {
+        return flow {
+            val documentReference = db.document("$historyItemId")
+            val snapshot = documentReference.get().await()
+            if (!snapshot.exists())
+                throw NoSuchElementException("History Item with id $historyItemId not found.")
+            emit(fromFirestoreModel(snapshot, historyItemId))
+        }
     }
 
     private fun getHistoryItemsFlow(
@@ -107,14 +110,14 @@ class FHistoryItemDAOImpl: FBaseDAOImpl<HistoryItem>(
         }
     }
 
-    override suspend fun aggregateTotalHistoryItems(historyId: Long): Int {
-        return getHistoryDocument(historyId).size()
+    override fun aggregateTotalHistoryItems(historyId: Long): Flow<Int> {
+        return flow { emit(getHistoryDocument(historyId).size()) }
     }
 
-    override suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double {
-        return getHistoryDocument(historyId).documents.sumOf { document ->
+    override fun aggregateTotalHistoryItemPrice(historyId: Long): Flow<Double> {
+        return flow { emit(getHistoryDocument(historyId).documents.sumOf { document ->
             document.getDouble("price") ?: 0.0
-        }
+        }) }
     }
 
     // Helper function to reduce code duplication

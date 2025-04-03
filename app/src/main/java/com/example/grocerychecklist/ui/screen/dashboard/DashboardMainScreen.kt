@@ -147,7 +147,7 @@ fun DashboardMainScreen(
                         iconBackgroundColor = item.history.iconColor.color,
                         variant = ButtonCardComponentVariant.History,
                         onClick = {
-                            onEvent(DashboardMainEvent.NavigateHistoryDetail(item.history.id))
+                            onEvent(DashboardMainEvent.NavigateHistoryDetail(item.history.id, item.history.name))
                         }
                     )
                 }

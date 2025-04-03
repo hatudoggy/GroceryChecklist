@@ -13,7 +13,7 @@ interface ChecklistItemDAOImpl: ChecklistItemDAO {
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE id = :checklistItemId LIMIT 1")
-    override suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull
+    override fun getChecklistItemById(checklistItemId: Long): Flow<ChecklistItemFull>
 
     @Transaction
     @Query("SELECT * FROM checklistitem WHERE checklistId = :checklistId")
@@ -58,7 +58,7 @@ interface ChecklistItemDAOImpl: ChecklistItemDAO {
     override fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>
 
     @Query("SELECT MAX(`order`) FROM checklistitem WHERE checklistId = :checklistId")
-    override suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
+    override fun getChecklistItemMaxOrder(checklistId: Long): Flow<Int>
 
     @Query("DELETE FROM checklistitem WHERE id = :checklistId")
     override suspend fun deleteChecklistById(checklistId: Long): Int
@@ -67,7 +67,7 @@ interface ChecklistItemDAOImpl: ChecklistItemDAO {
     override suspend fun deleteChecklistByItemId(itemId: Long): Int
 
     @Query("SELECT COUNT(*) FROM checklistitem WHERE checklistId = :checklistId")
-    override suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
+    override fun aggregateTotalChecklistItems(checklistId: Long): Flow<Int>
 
     @Query("""
         SELECT SUM(item.price * checklistitem.quantity)
@@ -75,5 +75,5 @@ interface ChecklistItemDAOImpl: ChecklistItemDAO {
         JOIN item on checklistitem.itemId = item.id
         WHERE checklistitem.checklistId = :checklistId
     """)
-    override suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double?
+    override fun aggregateTotalChecklistItemPrice(checklistId: Long): Flow<Double>
 }

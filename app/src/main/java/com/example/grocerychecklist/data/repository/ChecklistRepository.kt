@@ -15,69 +15,96 @@ import java.time.LocalDateTime
 class ChecklistRepository(
     private val checklistDAO: ChecklistDAO
 ) {
-    suspend fun addChecklist(checklistInput: ChecklistInput): Long {
-        val currentDateTime = DateUtility.getCurrentDateTime()
+    suspend fun addChecklist(checklistInput: ChecklistInput): Result<Long> {
+        return try {
+            val currentDateTime = DateUtility.getCurrentDateTime()
 
-        val checklist = Checklist(
-            name = checklistInput.name,
-            description = checklistInput.description,
-            icon = checklistInput.icon,
-            iconBackgroundColor = checklistInput.iconBackgroundColor,
-            createdAt = currentDateTime,
-            updatedAt = currentDateTime,
-            lastOpenedAt = currentDateTime,
-            lastShopAt = currentDateTime
-        )
-
-        return checklistDAO.insert(checklist)
-    }
-
-    suspend fun updateChecklist(id: Long, checklistInput: ChecklistInput) {
-        val checklist = checklistDAO.getChecklistById(id).first()
-        val currentDateTime = DateUtility.getCurrentDateTime()
-
-        val updatedChecklist = checklist.copy(
-            name = checklistInput.name,
-            description = checklistInput.description,
-            icon = checklistInput.icon,
-            iconBackgroundColor = checklistInput.iconBackgroundColor,
-            updatedAt = currentDateTime
-        )
-
-        checklistDAO.update(updatedChecklist)
-    }
-
-    suspend fun updateChecklistLastOpenedAt(checklistId: Long) {
-        val currentDateTime = DateUtility.getCurrentDateTime()
-        updateChecklistDate(checklistId, lastOpenedAt = currentDateTime)
-    }
-
-    suspend fun updateChecklistLastShoppedAt(checklistId: Long) {
-        val currentDateTime = DateUtility.getCurrentDateTime()
-        updateChecklistDate(checklistId, lastShopAt = currentDateTime)
-    }
-
-    private suspend fun updateChecklistDate(checklistId: Long, lastOpenedAt: LocalDateTime? = null, lastShopAt: LocalDateTime? = null) {
-        val checklist = checklistDAO.getChecklistById(checklistId)
-        checklist.let { it.map {
-            val newChecklist = it.copy(
-                lastOpenedAt = lastOpenedAt ?: it.lastOpenedAt,
-                lastShopAt = lastShopAt ?: it.lastShopAt
+            val checklist = Checklist(
+                name = checklistInput.name,
+                description = checklistInput.description,
+                icon = checklistInput.icon,
+                iconBackgroundColor = checklistInput.iconBackgroundColor,
+                createdAt = currentDateTime,
+                updatedAt = currentDateTime,
+                lastOpenedAt = currentDateTime,
+                lastShopAt = currentDateTime
             )
-            checklistDAO.update(newChecklist)
-         }
+
+            val id = checklistDAO.insert(checklist)
+            Result.Success(id)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
     }
 
-    suspend fun deleteChecklist(checklist: Checklist) {
-        checklistDAO.delete(checklist)
+    suspend fun updateChecklist(id: Long, checklistInput: ChecklistInput): Result<Unit> {
+        return try {
+            val checklist = checklistDAO.getChecklistById(id).first()
+
+            if (checklist != null) {
+                val currentDateTime = DateUtility.getCurrentDateTime()
+
+                val updatedChecklist = checklist.copy(
+                    name = checklistInput.name,
+                    description = checklistInput.description,
+                    icon = checklistInput.icon,
+                    iconBackgroundColor = checklistInput.iconBackgroundColor,
+                    updatedAt = currentDateTime
+                )
+
+                checklistDAO.update(updatedChecklist)
+                Result.Success(Unit)
+            } else {
+                Result.Error(Exception("Checklist not found"))
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
     }
 
-    fun getChecklist(id: Long): Flow<Checklist> {
+    suspend fun updateChecklistLastOpenedAt(checklistId: Long): Result<Unit> {
+        val currentDateTime = DateUtility.getCurrentDateTime()
+        return updateChecklistDate(checklistId, lastOpenedAt = currentDateTime)
+    }
+
+    suspend fun updateChecklistLastShoppedAt(checklistId: Long): Result<Unit> {
+        val currentDateTime = DateUtility.getCurrentDateTime()
+        return updateChecklistDate(checklistId, lastShopAt = currentDateTime)
+    }
+
+    private suspend fun updateChecklistDate(checklistId: Long, lastOpenedAt: LocalDateTime? = null, lastShopAt: LocalDateTime? = null): Result<Unit> {
+        return try {
+            val checklist = checklistDAO.getChecklistById(checklistId).first()
+
+            if (checklist != null) {
+                val newChecklist = checklist.copy(
+                    lastOpenedAt = lastOpenedAt ?: checklist.lastOpenedAt,
+                    lastShopAt = lastShopAt ?: checklist.lastShopAt
+                )
+                checklistDAO.update(newChecklist)
+                Result.Success(Unit)
+            } else {
+                Result.Error(Exception("Checklist not found"))
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    suspend fun deleteChecklist(checklist: Checklist): Result<Unit> {
+        return try {
+            checklistDAO.delete(checklist)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            return Result.Error(e)
+        }
+    }
+
+    fun getChecklist(id: Long): Flow<Checklist?> {
         return checklistDAO.getChecklistById(id)
     }
 
-    fun getChecklistWithDetails(id: Long): Flow<ChecklistDetails> {
+    fun getChecklistWithDetails(id: Long): Flow<ChecklistDetails?> {
         return checklistDAO.getChecklistWithDetails(id)
     }
 

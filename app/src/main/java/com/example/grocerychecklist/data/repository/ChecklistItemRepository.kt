@@ -24,107 +24,153 @@ class ChecklistItemRepository(
     private val itemDAO: ItemDAO
 ) {
 
-    suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput): Long {
-        val currentDateTime = DateUtility.getCurrentDateTime()
+    suspend fun addChecklistItem(checklistId: Long, checklistItemInput: ChecklistItemInput): Result<Long> {
+        return try {
+            val currentDateTime = DateUtility.getCurrentDateTime()
 
-        val item = Item(
-            name = checklistItemInput.name,
-            price = checklistItemInput.price,
-            category = checklistItemInput.category,
-            measureType = checklistItemInput.measureType,
-            measureValue = checklistItemInput.measureValue,
-            photoRef = checklistItemInput.photoRef,
-            createdAt = currentDateTime,
-            updatedAt = currentDateTime
-        )
-        val itemId = itemDAO.insert(item)
+            val item = Item(
+                name = checklistItemInput.name,
+                price = checklistItemInput.price,
+                category = checklistItemInput.category,
+                measureType = checklistItemInput.measureType,
+                measureValue = checklistItemInput.measureValue,
+                photoRef = checklistItemInput.photoRef,
+                createdAt = currentDateTime,
+                updatedAt = currentDateTime
+            )
+            val itemId = itemDAO.insert(item)
 
-        val order = checklistItemDAO.getChecklistItemMaxOrder(checklistId) + 1
-        val checklistItem = ChecklistItem(
-            checklistId = checklistId,
-            itemId = itemId,
-            order = order,
-            quantity = checklistItemInput.quantity,
-            createdAt = currentDateTime,
-            updatedAt = currentDateTime
-        )
+            val order = checklistItemDAO.getChecklistItemMaxOrder(checklistId).first()
 
-        return checklistItemDAO.insert(checklistItem)
-    }
+            if (order == null) {
+                Result.Error(Exception("Order not found"))
+                throw Exception("Order not found")
+            }
 
-    suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput) {
-        val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId)
-        val currentDateTime = DateUtility.getCurrentDateTime()
+            val checklistItem = ChecklistItem(
+                checklistId = checklistId,
+                itemId = itemId,
+                order = order + 1,
+                quantity = checklistItemInput.quantity,
+                createdAt = currentDateTime,
+                updatedAt = currentDateTime
+            )
 
-        val updatedItem = checklistItem.item.copy(
-            name = checklistItemInput.name,
-            price = checklistItemInput.price,
-            category = checklistItemInput.category,
-            measureType = checklistItemInput.measureType,
-            measureValue = checklistItemInput.measureValue,
-            photoRef = checklistItemInput.photoRef,
-            updatedAt = currentDateTime
-        )
-        val updatedChecklistItem = checklistItem.checklistItem.copy(
-            quantity = checklistItemInput.quantity,
-            updatedAt = currentDateTime
-        )
-
-        itemDAO.update(updatedItem)
-        checklistItemDAO.update(updatedChecklistItem)
-    }
-
-    suspend fun changeChecklistOrder(checklistId: Long, checklistItemId: Long, newOrder: Int) {
-        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId).take(1).first()
-
-        if (newOrder < 0 || newOrder >= checklistItems.size) {
-            throw IllegalArgumentException("New order is out of bounds")
-        }
-
-        val checklistItemOrder = checklistItems.find { it.id == checklistItemId } ?: return
-        val updatedList = checklistItems.toMutableList()
-        updatedList.remove(checklistItemOrder)
-        updatedList.add(newOrder - 1, checklistItemOrder)
-
-        val adjustedItems = updatedList.mapIndexed { index, checklistItem ->
-            checklistItem.copy(order = index + 1)
-        }.toMutableList()
-
-        adjustedItems.forEach { checklistItemDAO.update(it) }
-    }
-
-    suspend fun deleteChecklistItem(checklistItem: ChecklistItem) {
-        checklistItemDAO.delete(checklistItem)
-
-        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistItem.checklistId)
-        checklistItems.take(1).first().forEachIndexed { index, item ->
-            val updatedItem = item.copy(order = index + 1)
-            checklistItemDAO.update(updatedItem)
+            checklistItemDAO.insert(checklistItem)
+            Result.Success(checklistItem.id)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
     }
 
-    suspend fun deleteChecklistItem(checklistId: Long) {
-        checklistItemDAO.deleteChecklistById(checklistId)
+    suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput): Result<Unit> {
+        return try {
+            val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId).first()
 
-        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
-        checklistItems.take(1).first().forEachIndexed { index, item ->
-            val updatedItem = item.copy(order = index + 1)
-            checklistItemDAO.update(updatedItem)
+            if (checklistItem == null) {
+                return Result.Error(Exception("ChecklistItem not found"))
+            }
+
+            val currentDateTime = DateUtility.getCurrentDateTime()
+
+            val updatedItem = checklistItem.item.copy(
+                name = checklistItemInput.name,
+                price = checklistItemInput.price,
+                category = checklistItemInput.category,
+                measureType = checklistItemInput.measureType,
+                measureValue = checklistItemInput.measureValue,
+                photoRef = checklistItemInput.photoRef,
+                updatedAt = currentDateTime
+            )
+            val updatedChecklistItem = checklistItem.checklistItem.copy(
+                quantity = checklistItemInput.quantity,
+                updatedAt = currentDateTime
+            )
+
+            itemDAO.update(updatedItem)
+            checklistItemDAO.update(updatedChecklistItem)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
     }
 
-    suspend fun deleteChecklistItemAndItem(checklistId: Long, itemId: Long) {
-        checklistItemDAO.deleteChecklistById(checklistId)
-        itemDAO.deleteItemById(itemId)
+    suspend fun changeChecklistOrder(checklistId: Long, checklistItemId: Long, newOrder: Int): Result<Unit> {
+        return try {
+            val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId).take(1).first()
 
-        val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
-        checklistItems.take(1).first().forEachIndexed { index, item ->
-            val updatedItem = item.copy(order = index + 1)
-            checklistItemDAO.update(updatedItem)
+            if (newOrder < 0 || newOrder >= checklistItems.size) {
+                Result.Error(Exception("New order is out of bounds"))
+                throw IllegalArgumentException("New order is out of bounds")
+            }
+
+            val checklistItemOrder = checklistItems.find { it.id == checklistItemId } ?: return Result.Error(Exception("ChecklistItem not found"))
+            val updatedList = checklistItems.toMutableList()
+            updatedList.remove(checklistItemOrder)
+            updatedList.add(newOrder - 1, checklistItemOrder)
+
+            val adjustedItems = updatedList.mapIndexed { index, checklistItem ->
+                checklistItem.copy(order = index + 1)
+            }.toMutableList()
+
+            adjustedItems.forEach { checklistItemDAO.update(it) }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
     }
 
-    suspend fun getChecklistItem(id: Long): ChecklistItemFull {
+    suspend fun deleteChecklistItem(checklistItem: ChecklistItem): Result<Unit> {
+        return try {
+            checklistItemDAO.delete(checklistItem)
+
+            val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistItem.checklistId)
+            checklistItems.take(1).first().forEachIndexed { index, item ->
+                val updatedItem = item.copy(order = index + 1)
+                checklistItemDAO.update(updatedItem)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    suspend fun deleteChecklistItem(checklistId: Long): Result<Unit> {
+        return try {
+            checklistItemDAO.deleteChecklistById(checklistId)
+
+            val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
+            checklistItems.take(1).first().forEachIndexed { index, item ->
+                val updatedItem = item.copy(order = index + 1)
+                checklistItemDAO.update(updatedItem)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    suspend fun deleteChecklistItemAndItem(checklistId: Long, itemId: Long): Result<Unit> {
+        return try {
+            checklistItemDAO.deleteChecklistById(checklistId)
+
+            itemDAO.deleteItemById(itemId)
+
+            val checklistItems = checklistItemDAO.getAllChecklistItemsBaseOrderedByOrder(checklistId)
+            checklistItems.take(1).first().forEachIndexed { index, item ->
+                val updatedItem = item.copy(order = index + 1)
+                checklistItemDAO.update(updatedItem)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    suspend fun getChecklistItem(id: Long): Flow<ChecklistItemFull?> {
         return checklistItemDAO.getChecklistItemById(id)
     }
 
@@ -149,12 +195,12 @@ class ChecklistItemRepository(
         return checklistItemDAO.getAllChecklistItemsByName(checklistId,searchQuery)
     }
 
-    fun getTotalChecklistItems(checklistId: Long): Flow<Int> {
-        return flow { checklistItemDAO.aggregateTotalChecklistItems(checklistId) }
+    suspend fun getTotalChecklistItems(checklistId: Long): Flow<Int?> {
+        return checklistItemDAO.aggregateTotalChecklistItems(checklistId)
     }
 
-    fun getTotalChecklistItemPrice(checklistId: Long): Flow<Double> {
-        return flow{ checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId) ?: 0.00 }
+    suspend fun getTotalChecklistItemPrice(checklistId: Long): Flow<Double?> {
+        return checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId)
     }
 
 }

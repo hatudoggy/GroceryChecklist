@@ -19,7 +19,7 @@ interface HistoryItemDAOImpl : HistoryItemDAO {
     override suspend fun insertBatch(historyItems: List<HistoryItem>): List<Long>
 
     @Query("SELECT * FROM historyitem WHERE id = :historyItemId LIMIT 1")
-    override suspend fun getHistoryItemById(historyItemId: Long): HistoryItem
+    override fun getHistoryItemById(historyItemId: Long): Flow<HistoryItem>
 
     @Query("SELECT * FROM historyitem WHERE historyId = :historyId")
     override fun getAllHistoryItems(historyId: Long): Flow<List<HistoryItem>>
@@ -37,15 +37,14 @@ interface HistoryItemDAOImpl : HistoryItemDAO {
     override fun getAllHistoryItemsByCategory(historyId: Long, category: Category): Flow<List<HistoryItem>>
 
     @Query("SELECT COUNT(*) FROM historyitem WHERE historyId = :historyId")
-    override suspend fun aggregateTotalHistoryItems(historyId: Long): Int
+    override fun aggregateTotalHistoryItems(historyId: Long): Flow<Int>
 
     @Query("""
         SELECT SUM(price)
         FROM historyitem
         WHERE historyId = :historyId
     """)
-    override suspend fun aggregateTotalHistoryItemPrice(historyId: Long): Double?
-
+    override fun aggregateTotalHistoryItemPrice(historyId: Long): Flow<Double?>
 
     override fun aggregateTotalPriceMonth(month: Month): Flow<Double?>{
         return aggregateTotalPriceMonth(month.value)

@@ -6,6 +6,6 @@ import com.example.grocerychecklist.data.IconOption
 data class ChecklistInput(
     val name: String,
     val description: String,
-    val icon: IconOption,
-    val iconBackgroundColor: ColorOption,
+    val icon: IconOption = IconOption.MAIN_GROCERY,
+    val iconBackgroundColor: ColorOption = ColorOption.CopySkyGreen,
 )

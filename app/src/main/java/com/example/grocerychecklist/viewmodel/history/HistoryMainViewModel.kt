@@ -43,7 +43,7 @@ class HistoryMainViewModel(
             }
 
             is HistoryMainEvent.NavigateHistory -> {
-                navigator.navigate(Routes.HistoryDetail (event.historyId))
+                navigator.navigate(Routes.HistoryDetail (event.historyId, event.checklistName))
             }
         }
     }

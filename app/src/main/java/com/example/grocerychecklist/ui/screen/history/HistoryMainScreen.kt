@@ -244,7 +244,7 @@ fun HistoryCollapsedComponent(
 
         TextButton(onClick = {}) {
             Text("See More", modifier = Modifier.clickable(onClick = {
-                onEvent(HistoryMainEvent.NavigateHistory(data.history.id))
+                onEvent(HistoryMainEvent.NavigateHistory(data.history.id, data.history.name))
             }))
         }
     }
