@@ -46,8 +46,6 @@ import com.example.grocerychecklist.ui.theme.LightGray
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailState
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun ChecklistDetailScreen(
@@ -91,7 +89,7 @@ fun ChecklistDetailScreen(
                     CheckListStats(
                         quantity = itemCount.toString(),
                         totalPrice = totalPrice.toString(),
-                        lastShopAt = checklist.lastShopAt?.let { DateUtility.formatDateWithDay(it) } ?: "N/A"
+                        lastShopAt = checklist.lastShopAt?.let { DateUtility.formatDateToShort(it) } ?: "N/A"
                     )
 
                     CheckListButtons(onEvent = onEvent)
@@ -169,7 +167,7 @@ fun CheckListStatColumn(
             text = value,
             color = Color(0xFF6FA539),
             fontWeight = FontWeight.SemiBold,
-            fontSize = 22.sp,
+            fontSize = 18.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 0.dp)
         )
