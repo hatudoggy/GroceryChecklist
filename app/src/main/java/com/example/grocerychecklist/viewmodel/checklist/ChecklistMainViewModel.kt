@@ -22,12 +22,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.text.contains
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * ViewModel for the main checklist screen, managing UI state and interactions.
+ *
+ * This ViewModel is responsible for:
+ *  - Fetching and displaying a list of checklists.
+ *  - Handling user events like adding, updating, deleting checklists.
+ *  - Managing search functionality to filter checklists.
+ *  - Controlling the state of UI elements like drawers and dialogs.
+ *  - Navigating to the detail screen of a checklist.
+ *
+ *  @param navigator The navigator for handling screen transitions.
+ *  @param repository The repository for accessing and modifying checklist data.
+ */
 class ChecklistMainViewModel(
     private val navigator: Navigator,
     private val repository: ChecklistRepository

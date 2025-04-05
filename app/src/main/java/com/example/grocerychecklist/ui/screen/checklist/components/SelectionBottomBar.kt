@@ -28,6 +28,21 @@ import com.example.grocerychecklist.ui.theme.LightGray
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.ui.theme.SteelGray
 
+/**
+ * Composable function that displays a bottom bar with actions for selected items.
+ *
+ * This bottom bar provides actions such as delete, copy, edit, and more options,
+ * which are conditionally enabled based on the number of selected items.
+ *
+ * @param selectedCount The number of items currently selected.
+ * @param onDelete Callback function to be executed when the "Delete" action is triggered.
+ * @param onEditItem Callback function to be executed when the "Edit" action is triggered.
+ *   The "Edit" action is only enabled when a single item is selected.
+ * @param onMoreActions Callback function to be executed when the "More" action is triggered.
+ * @param onCopyToNewChecklist Callback function to be executed when the "Copy to New Checklist"
+ *   action is triggered.
+ * @param modifier Optional [Modifier] for styling and layout customization.
+ */
 @Composable
 fun SelectionBottomBar(
     selectedCount: Int,

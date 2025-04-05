@@ -42,6 +42,19 @@ import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent.Togg
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
 
 
+/**
+ * [FilterSortBottomSheet] Composable
+ *
+ * This composable displays a bottom sheet for filtering and sorting checklist items.
+ * It allows users to filter items by category and sort them based on various criteria
+ * (Name, Category, Price, Quantity, Date Added) in ascending or descending order.
+ *
+ * @param state The current state of the checklist, including selected categories,
+ *        sort option, and sort direction.  This is of type [ChecklistStartState].
+ * @param onEvent A callback function to handle user interactions, such as toggling
+ *        category selection, clearing filters, changing the sort option, and
+ *        toggling the sort direction. This is of type [(ChecklistStartEvent) -> Unit].
+ */
 @Composable
 fun FilterSortBottomSheet(
     state: ChecklistStartState,

@@ -47,6 +47,16 @@ import com.example.grocerychecklist.ui.theme.WheatBrown
 import kotlin.math.roundToInt
 
 
+/**
+ * A Floating Action Button (FAB) with extended actions for managing a checklist.
+ *
+ * It supports two modes: Shopping and Editing, and dynamically displays actions based on the current mode and checklist state.
+ * The FAB can be expanded to reveal additional actions, and supports drag-and-drop functionality for repositioning.
+ *
+ * @param currentMode The current mode of the checklist (Shopping or Editing).
+ * @param hasItems Indicates whether the checklist contains any items.
+ * @param hasSelectedItems Indicates whether any items in the checklist are currently selected.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChecklistFAB(

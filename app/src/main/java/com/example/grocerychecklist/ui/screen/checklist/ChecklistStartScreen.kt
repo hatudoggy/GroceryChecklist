@@ -117,6 +117,17 @@ internal fun ChecklistStartScreen(
     )
 }
 
+/**
+ * Composable function for the main screen of a checklist, handling user interactions and displaying checklist items.
+ *
+ * This screen manages different states of the checklist (loading, error, success, empty), user modes (shopping, editing),
+ * and various UI elements like dialogs, bottom sheets, and the main list of items.
+ *
+ * @param state The current state of the checklist, including items, selection, mode, and dialog/bottom sheet visibility.
+ * @param uiState The UI state of the checklist, representing loading, error, success, or empty states for item display.
+ * @param searchQuery The current search query entered by the user.
+ * @param onEvent A lambda function to handle user events, triggering state updates and actions.  See [ChecklistStartEvent] for possible events.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ChecklistStartScreen(
@@ -289,36 +300,6 @@ internal fun ChecklistStartScreen(
                 .padding(10.dp)
         ) {
 
-//            Row (
-//                Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Text(
-//                    state.checklistName,
-//                    fontSize = 18.sp,
-//                    fontWeight = FontWeight.Medium
-//                )
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Icon(
-//                        Icons.Filled.ShoppingCart,
-//                        modifier = Modifier
-//                            .size(18.dp),
-//                        tint = Color.LightGray,
-//                        contentDescription = "eye"
-//                    )
-//                    Spacer(Modifier.width(4.dp))
-//                    Text(
-//                        "Shopping Mode",
-//                        fontSize = 14.sp,
-//                        color = Color.LightGray
-//                    )
-//                }
-//            }
-//            Spacer(Modifier.height(16.dp))
-
             // Only show filter chips in shopping mode
             if (state.mode == ChecklistMode.SHOPPING) {
                 Row(
@@ -372,6 +353,12 @@ internal fun ChecklistStartScreen(
     }
 }
 
+/**
+ * Composable function that displays a checkout button with the total price of the selected items.
+ *
+ * @param checkedItems A list of [ChecklistItemData] representing the items selected for checkout.  Defaults to an empty list.  The total price is calculated based on the `price` and `quantity` of each item.
+ * @param toggleCheckout A lambda function that is executed when the checkout button is clicked.  It should handle the checkout process, such as navigating to a checkout screen or initiating a payment. Defaults to an empty lambda.
+ */
 @Composable
 private fun CheckoutButton(
     checkedItems: List<ChecklistItemData> = emptyList(),
@@ -415,6 +402,13 @@ private fun CheckoutButton(
     }
 }
 
+/**
+ * Composable function that displays a loading indicator for the checklist screen.
+ *
+ * It shows a full-screen loading component with a message indicating that the checklist is loading.
+ *
+ * @param modifier Modifier to be applied to the layout.  Defaults to an empty Modifier.
+ */
 @Composable
 private fun ChecklistLoadingUI(
     modifier: Modifier = Modifier
@@ -431,6 +425,18 @@ private fun ChecklistLoadingUI(
     }
 }
 
+/**
+ * Composable function that displays a UI indicating that the checklist is empty.
+ *
+ * This UI is shown when there are no checklist items to display.  It provides a visual cue
+ * to the user that the checklist is currently empty. If a search query is active, it will
+ * display a message indicating no items match the search and suggesting a different search term.
+ *
+ * @param modifier Modifier for customizing the layout and appearance of the empty checklist UI.
+ *                 Defaults to an empty modifier.
+ * @param searchQuery The current search query string. If not empty, the UI will display a
+ *                    message specific to search results. Defaults to an empty string.
+ */
 @Composable
 private fun ChecklistEmptyUI(
     modifier: Modifier = Modifier,
@@ -469,6 +475,14 @@ private fun ChecklistEmptyUI(
     }
 }
 
+/**
+ * Composable function to display a list of checklist items based on the current state and UI state.
+ *
+ * @param state The current state of the checklist, including selected chip, checked items, selected sort option, sort order, and mode.
+ * @param uiState The UI state representing a successful data retrieval, containing the list of checklists.
+ * @param onEvent A callback function to handle checklist events such as toggling item selection or check status.
+ * @param modifier Optional modifier for customizing the layout.
+ */
 @Composable
 private fun ChecklistSuccessUI(
     state: ChecklistStartState,
@@ -533,6 +547,13 @@ private fun ChecklistSuccessUI(
     }
 }
 
+/**
+ * Composable function to display an error message with a retry button for the checklist feature.
+ *
+ * @param errorMessage An optional error message to display. If null, a default error message from resources is used.
+ * @param loadItems A lambda function to be executed when the retry button is pressed. This should ideally re-attempt loading the checklist items.
+ * @param modifier Optional [Modifier] to apply to the layout.
+ */
 @Composable
 private fun ChecklistErrorUI(
     errorMessage: String?,

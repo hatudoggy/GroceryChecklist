@@ -39,6 +39,14 @@ import com.example.grocerychecklist.ui.theme.PrimaryDarkGreen
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
 
 
+/**
+ * A composable function that displays the toolbar for the checklist screen.
+ *
+ * The toolbar dynamically adapts its appearance based on whether the user is in selection mode or not.
+ *
+ * @param title The title to display in the toolbar when not in selection mode.
+ * @param searchQuery The current search query entered by the user.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChecklistToolbar(

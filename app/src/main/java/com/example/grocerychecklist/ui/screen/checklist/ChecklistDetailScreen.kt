@@ -65,12 +65,28 @@ import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailUIState
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistDetailViewModel
 import java.time.LocalDateTime
 
+/**
+ * Represents a summary of items belonging to a specific category.
+ *
+ * @property itemCategory The category of the items.
+ * @property itemCount The total number of items in the category.
+ * @property totalPrice The total price of all items in the category.
+ */
 data class CategorySummary(
     val itemCategory: ItemCategory,
     val itemCount: Int,
     val totalPrice: Double,
 )
 
+/**
+ * Composable function for displaying the details of a checklist.
+ *
+ * This screen retrieves the checklist details from the provided [ChecklistDetailViewModel]
+ * and renders the UI based on the current state. It handles navigation events and user
+ * interactions such as starting shopping, viewing categories, and clicking on a category.
+ *
+ * @param viewModel The [ChecklistDetailViewModel] responsible for managing the checklist details.
+ */
 @Composable
 internal fun ChecklistDetailScreen(
     viewModel: ChecklistDetailViewModel
@@ -89,6 +105,15 @@ internal fun ChecklistDetailScreen(
     )
 }
 
+/**
+ * Displays the details of a checklist, including its overview, statistics, categories, and a button to start shopping.
+ *
+ * @param state The current UI state of the checklist details screen.  It can be one of the following:
+ *  - `ChecklistDetailUIState.Loading`: Indicates that the checklist details are being loaded.
+ *  - `ChecklistDetailUIState.Success`: Indicates that the checklist details have been successfully loaded.  The details are accessible through `state.checklistDetails`.
+ *  - `ChecklistDetailUIState.Error`: Indicates that an error occurred while loading the checklist details.  An error message may be available in `state.message`.
+ * @param onNavigateBackClick Callback function to be executed when the user clicks the back navigation button.
+ */
 @Composable
 internal fun ChecklistDetailScreen(
     state: ChecklistDetailUIState,
@@ -179,6 +204,15 @@ internal fun ChecklistDetailScreen(
     }
 }
 
+/**
+ * Composable function to display an overview for a checklist, including an icon, title, and description.
+ *
+ * @param icon The icon to display.  Should be one of the values from `IconOption` enum.
+ * @param title The title text for the checklist overview.  Displayed in bold, larger text.
+ * @param description The description text for the checklist overview.  Displayed in justified gray text.
+ * @param iconColor The color option for the icon. Should be one of the values from `ColorOption` enum.
+ * @param modifier Optional modifier to apply to the layout. Defaults to an empty modifier.
+ */
 @Composable
 fun CheckListOverview(
     icon: IconOption,
@@ -209,6 +243,16 @@ fun CheckListOverview(
     }
 }
 
+/**
+ * Displays key statistics for a checklist, including quantity of items, total price, and last shop date.
+ *
+ * @param quantity The number of items in the checklist, represented as a String.
+ * @param totalPrice The total price of the items in the checklist, represented as a String.  Should include the currency symbol (e.g., "₱").
+ * @param lastShopAt The date the checklist was last shopped, represented as a String.
+ * @param modifier Optional [Modifier] to apply to the row containing the stats. Defaults to [Modifier.fillMaxWidth].
+ *
+ * This composable arranges three [CheckListStatColumn]s horizontally with equal weighting, providing a clear overview of the checklist's status.  It uses [Arrangement.SpaceEvenly] to distribute the columns evenly across the available width and [Alignment.CenterVertically] to ensure all columns are vertically centered.
+ */
 @Composable
 fun CheckListStats(
     quantity: String,
@@ -227,6 +271,17 @@ fun CheckListStats(
     }
 }
 
+/**
+ * Composable function to display a column representing a statistic in a checklist.
+ *
+ * This composable displays a value (typically a number or statistic) prominently at the top,
+ * followed by a label describing the attribute or statistic it represents.  The layout is a
+ * vertically centered column.
+ *
+ * @param value The string representation of the statistic's value to display (e.g., "5", "100%").
+ * @param attribute The string label describing the statistic (e.g., "Items Checked", "Completion Rate").
+ * @param modifier Optional [Modifier] for customizing the layout and styling of the column.  Defaults to an empty modifier.
+ */
 @Composable
 fun CheckListStatColumn(
     value: String,
@@ -257,6 +312,16 @@ fun CheckListStatColumn(
 }
 
 
+/**
+ * A composable function that creates a styled button for a checklist item.
+ *
+ * @param text The text to display on the button.
+ * @param icon The icon to display on the button.
+ * @param backgroundColor The background color of the button.
+ * @param textColor The text color of the button.
+ * @param modifier The modifier to be applied to the button.  This allows customization of layout, padding, etc.
+ * @param onClick The callback to be invoked when the button is clicked.  Defaults to an empty lambda if not provided.
+ */
 @Composable
 fun CheckListButton(
     text: String,
@@ -280,6 +345,14 @@ fun CheckListButton(
     }
 }
 
+/**
+ * A composable function that displays an icon within a colored box, typically used to represent a checklist item.
+ * The icon's color adapts to the background color for optimal visibility.
+ *
+ * @param icon The [IconOption] representing the icon to display (e.g., a check mark).
+ * @param colorOption The [ColorOption] defining the background color of the box.
+ * @param size The size (width and height) of the box and icon in [Dp].
+ */
 @Composable
 fun CheckListIcon(
     icon: IconOption,
@@ -302,6 +375,18 @@ fun CheckListIcon(
     }
 }
 
+/**
+ * Displays a section listing categories, typically on a home or overview screen.
+ *
+ * Shows a limited number of categories with an option to view more.  Handles the
+ * case where no categories are available.
+ *
+ * @param modifier Modifier for the layout.
+ * @param categories List of [CategorySummary] objects representing the categories to display.
+ * @param checklistIconOption  The [IconOption] to use for displaying checklist icons next to category names. Defaults to [IconOption.MAIN_GROCERY].
+ * @param onViewMoreClick Callback function invoked when the "View More" button is clicked.
+ * @param onCategoryClick Callback function invoked when a category card is clicked.  It receives the [ItemCategory] of the clicked category.
+ */
 @Composable
 fun CategoryListSection(
     modifier: Modifier = Modifier,
@@ -376,6 +461,16 @@ fun CategoryListSection(
 }
 
 
+/**
+ * A composable function that displays a card representing a category of items.
+ *
+ * @param modifier Modifier for styling and layout customization.
+ * @param itemCategory The category of items represented by the card.
+ * @param itemCount The number of items in the category.
+ * @param totalPrice The total price of all items in the category.
+ * @param checklistIconOption The icon to display for the category (defaults to MAIN_GROCERY).
+ * @param onClick Callback function to be executed when the card is clicked.
+ */
 @Composable
 fun CategoryCard(
     modifier: Modifier = Modifier,
@@ -435,6 +530,15 @@ fun CategoryCard(
     }
 }
 
+/**
+ * Preview for [ChecklistDetailScreen] when the checklist details are successfully loaded.
+ *
+ * This preview showcases the UI of the screen with sample data, including a grocery list
+ * with items categorized by fruit, cleaning supplies, and dairy products.  It demonstrates
+ * the display of checklist name, description, icon, last shopping date, item count,
+ * total price, and category summaries.  This is helpful for visualizing the screen's
+ * appearance without needing to run the full application.
+ */
 @Preview(showBackground = true)
 @Composable
 fun ChecklistDetailScreenLoadedPreview() {

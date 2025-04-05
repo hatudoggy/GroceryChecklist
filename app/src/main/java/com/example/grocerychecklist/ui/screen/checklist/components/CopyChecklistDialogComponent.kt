@@ -23,6 +23,16 @@ import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
 
+/**
+ * Composable function to display a dialog for copying checklist items to a new checklist.
+ *
+ * @param state The current state of the checklist creation process, containing information about selected items and the new checklist being created.
+ * @param onDismiss Callback function to be executed when the dialog is dismissed.
+ * @param onConfirm Callback function to be executed when the user confirms the copy operation.  It provides the [ChecklistInput] for the new checklist.
+ * @param onSetNewChecklist Callback function to update the state of the new checklist being created. It provides the updated [ChecklistInput].
+ * @param toggleIconPicker Callback function to open or close the icon picker dialog.
+ * @param modifier Optional [Modifier] for customizing the layout and appearance of the dialog.
+ */
 @Composable
 fun CopyChecklistDialogComponent(
     state: ChecklistStartState,
@@ -34,7 +44,7 @@ fun CopyChecklistDialogComponent(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
+        modifier = modifier
             .padding(
                 start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp,
             )

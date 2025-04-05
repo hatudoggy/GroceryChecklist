@@ -19,6 +19,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
+/**
+ * A custom icon button with support for short and long clicks.
+ *
+ * @param icon The icon to display.
+ * @param selectedColor The color of the icon when it's selected (after a short click). Defaults to Blue.
+ * @param unselectedColor The color of the icon when it's not selected.
+ * @param contentDescription A description of the icon for accessibility purposes.
+ * @param enabled Whether the button is enabled. Defaults to true.
+ * @param onClick The callback to be invoked when the button is clicked (short click).
+ * @param modifier Modifier to be applied to the icon.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CustomIconButton(

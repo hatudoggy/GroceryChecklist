@@ -37,7 +37,16 @@ import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
 
-// Bottom sheet modal drawer for editing Checklist
+/**
+ * Bottom sheet modal drawer for displaying a checkout summary of checked items in a checklist.
+ *
+ * @param checkedItems A list of [ChecklistItemData] representing the items that have been checked out.
+ * @param totalPrice The total price of the checked items.
+ * @param onCheckoutClick Callback function invoked when the "Checkout" button is clicked.
+ * @param isOpen Boolean flag indicating whether the bottom sheet is currently open.
+ * @param onClose Callback function invoked when the bottom sheet is dismissed.
+ * @param onVisible Callback function invoked when the visibility of the bottom sheet changes.  Provides a boolean parameter indicating if the sheet is visible.
+ */// Bottom sheet modal drawer for editing Checklist
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetCheckout(
