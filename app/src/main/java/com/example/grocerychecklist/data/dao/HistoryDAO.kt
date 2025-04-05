@@ -19,7 +19,7 @@ interface HistoryDAO {
 
     fun getHistoryItemAggregated(historyId: Long): Flow<List<HistoryItemAggregated>>
 
-    suspend fun getHistoryWithAggregatedItems(limit: Int? = null): Flow<List<HistoryMapped>>
+    fun getHistoryWithAggregatedItems(limit: Int? = null): Flow<List<HistoryMapped>>
 
     fun getHistoriesFromDateRange(startDate: LocalDateTime, endDate: LocalDateTime): Flow<List<History>>
 

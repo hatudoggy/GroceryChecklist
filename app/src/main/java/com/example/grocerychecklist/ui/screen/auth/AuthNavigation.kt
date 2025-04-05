@@ -20,8 +20,7 @@ fun NavGraphBuilder.authDestination() {
         val authMainViewModel = viewModel<AuthMainViewModel>(
             factory = viewModelFactory {
                 AuthMainViewModel(
-                    appModule.navigator,
-                    accountService = appModule.accountService
+                    appModule.navigator
                 )
             }
         )

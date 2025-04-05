@@ -1,7 +1,9 @@
 package com.example.grocerychecklist.data.repository
 
+import android.R.attr.order
 import com.example.grocerychecklist.data.dao.ChecklistItemDAO
 import com.example.grocerychecklist.data.dao.ItemDAO
+import com.example.grocerychecklist.data.mapper.ChecklistInput
 import com.example.grocerychecklist.data.mapper.ChecklistItemInput
 import com.example.grocerychecklist.data.model.ChecklistItem
 import com.example.grocerychecklist.data.model.ChecklistItemFull
@@ -10,6 +12,7 @@ import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 
 enum class ChecklistItemOrder(val order: String) {
@@ -17,6 +20,8 @@ enum class ChecklistItemOrder(val order: String) {
     Name("name"),
     Price("price"),
     Date("createdAt"),
+    Quantity("quantity"),
+    Category("category")
 }
 
 class ChecklistItemRepository(
@@ -63,6 +68,29 @@ class ChecklistItemRepository(
         }
     }
 
+    suspend fun copyChecklistItemsToChecklist(checklistId: Long, items: Map<Long, Int>): Result<Unit> {
+        return try {
+            val currentDateTime = DateUtility.getCurrentDateTime()
+
+            items.forEach { itemId ->
+                val checklistItem = ChecklistItem(
+                    checklistId = checklistId,
+                    itemId = itemId.component1(),
+                    order = 1,
+                    quantity = itemId.component2(),
+                    createdAt = currentDateTime,
+                    updatedAt = currentDateTime
+                )
+
+                checklistItemDAO.insert(checklistItem)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
     suspend fun updateChecklistItem(checklistItemId: Long, checklistItemInput: ChecklistItemInput): Result<Unit> {
         return try {
             val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId).first()
@@ -89,6 +117,20 @@ class ChecklistItemRepository(
 
             itemDAO.update(updatedItem)
             checklistItemDAO.update(updatedChecklistItem)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    suspend fun updateChecklistItemCategory(checklistItemId: Long, category: String): Result<Unit> {
+        return try {
+            val checklistItem = checklistItemDAO.getChecklistItemById(checklistItemId).first()
+            if (checklistItem == null) {
+                return Result.Error(Exception("ChecklistItem not found"))
+            }
+            val updatedItem = checklistItem.item.copy(category = category)
+            itemDAO.update(updatedItem)
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e)
@@ -170,7 +212,7 @@ class ChecklistItemRepository(
         }
     }
 
-    suspend fun getChecklistItem(id: Long): Flow<ChecklistItemFull?> {
+    fun getChecklistItem(id: Long): Flow<ChecklistItemFull?> {
         return checklistItemDAO.getChecklistItemById(id)
     }
 
@@ -188,6 +230,11 @@ class ChecklistItemRepository(
             ChecklistItemOrder.Date ->
                 checklistItemDAO.getAllChecklistItemsOrderedByPrice(checklistId)
 
+            ChecklistItemOrder.Quantity ->
+                checklistItemDAO.getAllChecklistItems(checklistId).map { it.sortedBy { it.checklistItem.quantity } }
+
+            ChecklistItemOrder.Category ->
+                checklistItemDAO.getAllChecklistItems(checklistId).map { it.sortedBy { it.item.category } }
         }
     }
 
@@ -195,11 +242,11 @@ class ChecklistItemRepository(
         return checklistItemDAO.getAllChecklistItemsByName(checklistId,searchQuery)
     }
 
-    suspend fun getTotalChecklistItems(checklistId: Long): Flow<Int?> {
+    fun getTotalChecklistItems(checklistId: Long): Flow<Int?> {
         return checklistItemDAO.aggregateTotalChecklistItems(checklistId)
     }
 
-    suspend fun getTotalChecklistItemPrice(checklistId: Long): Flow<Double?> {
+    fun getTotalChecklistItemPrice(checklistId: Long): Flow<Double?> {
         return checklistItemDAO.aggregateTotalChecklistItemPrice(checklistId)
     }
 

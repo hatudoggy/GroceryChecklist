@@ -9,6 +9,8 @@ import java.time.ZoneOffset
 import java.time.chrono.IsoChronology
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
+import java.time.format.TextStyle
+import java.util.Locale
 
 class DateUtility {
     companion object {
@@ -19,6 +21,10 @@ class DateUtility {
 
         fun getStartOfDay(startDate: LocalDateTime): LocalDateTime {
             return startDate.withHour(0).withMinute(0).withSecond(0).withNano(0)
+        }
+
+        fun getShortenedMonth(month: Month): String {
+            return month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
         }
 
         // Add this to DateUtility

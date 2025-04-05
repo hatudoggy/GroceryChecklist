@@ -2,9 +2,10 @@ package com.example.grocerychecklist.ui.component
 
 import ItemCategory
 import ItemTagComponent
+import android.R.attr.category
+import android.R.attr.name
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
+import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 
 enum class ChecklistItemComponentVariant {
     ChecklistRadioItem,
@@ -57,11 +59,11 @@ fun ChecklistItemComponent(
     picRef: String? = "",
     showPic: Boolean? = false,
     isChecked: Boolean? = false,
-    onCheckedChange: (Boolean) -> Unit? = {},
-    onClick: () -> Unit = {},
+    isSelected: Boolean? = false,
+    onCheckedChange: () -> Unit = {},
+    onSelectionChange: () -> Unit = {},
     onLongPress: () -> Unit = {}
 ) {
-    var checkedState by remember { mutableStateOf(isChecked) }
 
     Row(
         modifier = Modifier
@@ -70,11 +72,14 @@ fun ChecklistItemComponent(
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 onClick = {
-                    checkedState = !checkedState!!
-                    onCheckedChange(checkedState!!)
-                    onClick()
+                    onCheckedChange()
+                    onSelectionChange()
                 },
                 onLongClick = { onLongPress() }
+            )
+            .background(
+                if (isSelected == true) PrimaryGreenSurface.copy(alpha = 0.8f)
+                else MaterialTheme.colorScheme.surface
             )
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,

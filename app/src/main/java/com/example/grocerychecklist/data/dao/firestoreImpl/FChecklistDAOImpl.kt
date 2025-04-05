@@ -4,6 +4,7 @@ import com.example.grocerychecklist.data.dao.ChecklistDAO
 import com.example.grocerychecklist.data.dto.ChecklistFirestore
 import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.repository.ChecklistDetails
+import com.example.grocerychecklist.ui.screen.checklist.CategorySummary
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.snapshots
@@ -30,9 +31,18 @@ class FChecklistDAOImpl: FBaseIUDDAOImpl<Checklist>(
     override fun getChecklistWithDetails(checklistId: Long): Flow<ChecklistDetails> {
         return flow {
             val checklist = getChecklistById(checklistId).first()
-            val checklistItems = FChecklistItemDAOImpl().getAllChecklistItems(checklistId)
-            val itemCount = checklistItems.first().size
-            val totalPrice = checklistItems.first().sumOf { it.item.price * it.checklistItem.quantity }
+            val checklistItems = FChecklistItemDAOImpl().getAllChecklistItems(checklistId).first()
+            val itemCount = checklistItems.size
+            val totalPrice = checklistItems.sumOf { it.item.price * it.checklistItem.quantity }
+            val categoriesSummary = ItemCategory.entries.mapNotNull { category ->
+                var categoryItemCount = checklistItems.count { it.item.category == category.name }
+
+                CategorySummary(
+                    itemCategory = category,
+                    itemCount = categoryItemCount,
+                    totalPrice = checklistItems.sumOf { if (it.item.category == category.name) it.item.price * it.checklistItem.quantity else 0.0 }
+                ).takeIf { categoryItemCount > 0 }
+            }
 
             emit(ChecklistDetails(
                 checklist.id,
@@ -45,7 +55,8 @@ class FChecklistDAOImpl: FBaseIUDDAOImpl<Checklist>(
                 checklist.lastOpenedAt,
                 checklist.lastShopAt,
                 itemCount = itemCount,
-                totalPrice = totalPrice
+                totalPrice = totalPrice,
+                categoriesSummary = categoriesSummary,
             ))
         }
     }

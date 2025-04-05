@@ -141,7 +141,7 @@ fun ItemMainScreen(
                                 ?: ItemCategory.OTHER,
                             price = item.price,
                             quantity = item.measureValue,
-                            onClick = { onEvent(ItemMainEvent.SelectItem(item)) } // Click to edit
+                            onSelectionChange = { onEvent(ItemMainEvent.SelectItem(item)) } // Click to edit
                         )
                     }
                 }

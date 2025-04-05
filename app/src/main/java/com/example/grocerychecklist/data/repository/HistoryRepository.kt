@@ -1,5 +1,6 @@
 package com.example.grocerychecklist.data.repository
 
+import android.util.Log
 import com.example.grocerychecklist.data.dao.HistoryDAO
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.mapper.HistoryPriced
@@ -7,6 +8,9 @@ import com.example.grocerychecklist.data.model.Checklist
 import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.domain.utility.DateUtility
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
@@ -46,8 +50,15 @@ class HistoryRepository(
         return historyDAO.getHistoriesFromDateRange(startDate, endDate)
     }
 
-    suspend fun getAggregatedHistory(limit: Int? = null): Flow<List<HistoryMapped>> {
+    fun getAggregatedHistory(limit: Int? = null): Flow<List<HistoryMapped>> {
         return historyDAO.getHistoryWithAggregatedItems(limit)
+            .onEach { list ->
+                Log.d("HistoryRepo", "Got ${list.size} history items")
+            }
+            .catch { e ->
+                Log.e("HistoryRepo", "Error getting history items", e)
+                emit(emptyList())
+            }
     }
 
     fun getHistoriesFromMonth(month: Month): Flow<List<History>> {

@@ -56,8 +56,8 @@ class HistoryItemRepository(
                     photoRef = item.photoRef,
                     order = item.order,
                     quantity = item.quantity,
-                    isChecked = item.isChecked,
-                    createdAt = currentDateTime
+                    createdAt = currentDateTime,
+                    isChecked = true
                 )
             }
 

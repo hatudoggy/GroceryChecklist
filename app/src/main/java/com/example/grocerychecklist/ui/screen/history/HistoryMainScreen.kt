@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.grocerychecklist.R
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
@@ -49,6 +50,8 @@ import com.example.grocerychecklist.domain.utility.ItemCategoryUtility
 import com.example.grocerychecklist.ui.component.ButtonCardComponent
 import com.example.grocerychecklist.ui.component.ButtonCardComponentVariant
 import com.example.grocerychecklist.ui.component.CollapsibleComponent
+import com.example.grocerychecklist.ui.component.ErrorComponent
+import com.example.grocerychecklist.ui.component.LoadingComponent
 import com.example.grocerychecklist.ui.component.Measurement
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
@@ -85,25 +88,54 @@ fun HistoryMainScreen(
         ) {
             when {
                 state.isLoading -> {
-                    // Loading indicator
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        LoadingComponent(
+                            loadingMessage = R.string.history_loading
+                        )
+                    }
+                }
+                state.error != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        ErrorComponent(
+                            errorMessage = state.error,
+                            onRetry = { onEvent(HistoryMainEvent.LoadHistory) }
+                        )
+                    }
+                }
+
+                state.cards.isEmpty() -> {
+                    // Empty state
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = PrimaryGreen
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Loading history...",
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Empty Checklist",
+                                modifier = Modifier.size(32.dp),
+                            )
+                            Text(
+                                text = "No History Items",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.DarkGray
+                            )
+                        }
                     }
                 }
-                state.cards.isNotEmpty() -> {
+
+                else -> {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -160,42 +192,6 @@ fun HistoryMainScreen(
                         }
                     }
                 }
-                else -> {
-                    // Empty state
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.History,
-                                contentDescription = "Empty Checklist",
-                                modifier = Modifier.size(32.dp),
-                            )
-                            Text(
-                                text = "No History Items",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.DarkGray
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Show error message if there is one
-            state.error?.let { errorMessage ->
-                Text(
-                    text = errorMessage,
-                    color = Color.Red,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                )
             }
         }
     }

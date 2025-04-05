@@ -82,7 +82,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
         }
     }
 
-    override suspend fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
+    override fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
         val histories = getAllHistoriesOrderedLimitWithSum(limit ?: Int.MAX_VALUE)
 
         return histories.map { historiesPriced ->

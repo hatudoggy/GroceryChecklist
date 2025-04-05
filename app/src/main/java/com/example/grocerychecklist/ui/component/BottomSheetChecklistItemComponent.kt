@@ -29,6 +29,19 @@ import androidx.core.text.isDigitsOnly
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
 
 
+/**
+ * A composable function that displays a bottom sheet for adding or editing a checklist item.
+ *
+ * @param selectedItem The currently selected checklist item.  If null, the bottom sheet is in "add" mode.
+ *                     If not null, the bottom sheet is in "edit" mode, pre-populated with the item's data.
+ * @param isOpen A boolean indicating whether the bottom sheet is open.
+ * @param onClose A lambda function to be called when the bottom sheet is closed (canceled).
+ * @param onAdd A lambda function to be called when the "Add" or "Edit" button is clicked.  It takes the
+ *              item's name, category, price, and quantity as arguments. Note that price and quantity
+ *              are converted to Double and Int respectively within the composable.
+ * @param onVisible A lambda function that is called when the visibility of the bottom sheet changes. It
+ *                  receives a boolean argument indicating whether the bottom sheet is currently visible.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetChecklistItem(
@@ -117,7 +130,7 @@ fun BottomSheetChecklistItem(
                 Spacer(Modifier.width(10.dp))
                 Button(
                     onClick = { onAdd(name, category, price.toDouble(), quantity.toInt()) },
-                ) { Text( if(selectedItem == null) "Add" else "Edit" ) }
+                ) { Text( if(selectedItem == null) "Add" else "Save" ) }
             }
         }
     }

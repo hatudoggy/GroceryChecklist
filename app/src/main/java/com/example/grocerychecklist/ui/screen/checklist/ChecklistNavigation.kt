@@ -42,6 +42,8 @@ fun NavGraphBuilder.checklistDestination() {
                 ChecklistStartViewModel(
                     route.checklistId,
                     route.checklistName,
+                    route.filterByCategory ?: ItemCategory.ALL,
+                    route.mode,
                     appModule.navigator,
                     appModule.checklistItemRepository,
                     appModule.checklistRepository,

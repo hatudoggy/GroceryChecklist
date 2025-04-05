@@ -62,8 +62,6 @@ fun DashboardMainScreen(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val category = ItemCategory.entries
-
 
             Box(
                 modifier = Modifier

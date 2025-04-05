@@ -35,7 +35,6 @@ data class ChecklistItemData(
     val order: Int,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    var isChecked: Boolean = false
 )
 
 fun checklistDataMapper(items: Flow<List<ChecklistItemFull>>): Flow<List<ChecklistItemData>> {

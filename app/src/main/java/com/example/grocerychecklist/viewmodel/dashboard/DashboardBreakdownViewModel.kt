@@ -41,7 +41,7 @@ data class DashboardCategoryData(
 )
 
 data class DashboardGraphData(
-    val date: String,
+    val month: Month,
     val expenses: Double = 0.0
 )
 
@@ -95,13 +95,13 @@ class DashboardBreakdownViewModel(
                 }
 
                 val dashboardGraphDataList = monthlyExpenses.map { (month, expense) ->
-                    DashboardGraphData(month.name, expense)
+                    DashboardGraphData(month, expense)
                 }
 
                 // Sort by month (most recent first) and take 3
-                val sortedData = dashboardGraphDataList.sortedBy {
-                    Month.valueOf(it.date.uppercase())
-                }.take(3)
+                val sortedData = dashboardGraphDataList
+                    .sortedBy { it.month.value }
+                    .take(3)
 
                 Log.d("DashboardBreakdownVM", "Graph data: $sortedData")
                 val maxValue = calculateDashboardGraphMaxValue(sortedData)

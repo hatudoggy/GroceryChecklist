@@ -9,7 +9,6 @@ sealed interface ChecklistMainEvent {
     data object ToggleDrawer : ChecklistMainEvent
     data object ToggleIconPicker : ChecklistMainEvent
     data object ToggleDeleteDialog : ChecklistMainEvent
-    data class ToggleActionMenu(val checklist: Checklist) : ChecklistMainEvent
 
     // State Changes
     data class SearchQueryEvent(val query: String) : ChecklistMainEvent

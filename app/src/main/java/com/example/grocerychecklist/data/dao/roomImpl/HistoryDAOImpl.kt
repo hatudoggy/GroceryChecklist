@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 
@@ -28,7 +29,7 @@ interface HistoryDAOImpl : HistoryDAO {
     override fun getAllHistoriesOrderedByCreatedAt(): Flow<List<History>>
 
     @Query("""
-        SELECT history.*, SUM(historyItem.price * historyItem.quantity) AS totalPrice
+        SELECT history.*, COALESCE(SUM(historyItem.price * historyItem.quantity), 0) AS totalPrice
         FROM history
         LEFT JOIN historyItem ON history.id = historyItem.historyId
         WHERE historyItem.isChecked = 1
@@ -38,24 +39,37 @@ interface HistoryDAOImpl : HistoryDAO {
     """)
     override fun getAllHistoriesOrderedLimitWithSum(limit: Int): Flow<List<HistoryPriced>>
 
-    @Query("""SELECT SUM(price * quantity) AS sumOfPrice, COUNT(*) AS totalItems, category FROM HistoryItem WHERE historyId = :historyId GROUP BY category ORDER BY category""")
+    @Query("""
+        SELECT 
+        COALESCE(SUM(price * quantity), 0) AS sumOfPrice, 
+        COUNT(*) AS totalItems, 
+        category  
+        FROM HistoryItem 
+        WHERE historyId = :historyId 
+        GROUP BY category 
+        ORDER BY sumOfPrice DESC""")
     override fun getHistoryItemAggregated(historyId: Long): Flow<List<HistoryItemAggregated>>
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
+    override fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
         return getAllHistoriesOrderedByCreatedAt().flatMapLatest { historyList ->
+            if (historyList.isEmpty()) {
+                return@flatMapLatest flowOf(emptyList())
+            }
+
             combine(historyList.map { history ->
                 getHistoryItemAggregated(history.id).map { aggregatedItems ->
-                    val totalPrice = aggregatedItems.sumOf { it.sumOfPrice }
-                    val limitedAggregatedItems = aggregatedItems.take(3)
-
                     HistoryMapped(
                         history = history,
-                        totalPrice = totalPrice,
-                        aggregatedItems = limitedAggregatedItems
+                        totalPrice = aggregatedItems.sumOf { it.sumOfPrice },
+                        aggregatedItems = aggregatedItems.take(3) // Limit to 3 categories
                     )
                 }
-            }) { results: Array<HistoryMapped> -> if (limit != null) results.toList().take(limit) else results.toList() }
+            }) { results: Array<HistoryMapped> ->
+                results.toList().let { list ->
+                    if (limit != null) list.take(limit) else list
+                }.sortedByDescending { it.history.createdAt } // Ensure proper sorting
+            }
         }
     }
 

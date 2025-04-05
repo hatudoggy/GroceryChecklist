@@ -1,5 +1,7 @@
 package com.example.grocerychecklist.ui.screen
 
+import ItemCategory
+import com.example.grocerychecklist.ui.screen.checklist.ChecklistMode
 import kotlinx.serialization.Serializable
 
 sealed interface Routes {
@@ -20,7 +22,7 @@ sealed interface Routes {
     @Serializable
     data class ChecklistDetail(val checklistId: Long, val checklistName: String): Routes
     @Serializable
-    data class ChecklistStart(val checklistId: Long, val checklistName: String): Routes
+    data class ChecklistStart(val checklistId: Long, val checklistName: String, val mode: ChecklistMode, val filterByCategory: ItemCategory?): Routes
 
     @Serializable
     data object ItemMain: Routes

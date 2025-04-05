@@ -13,6 +13,7 @@ import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes.*
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent.*
 import com.example.grocerychecklist.viewmodel.util.SubmissionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,22 +22,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.text.contains
+import kotlin.time.Duration.Companion.milliseconds
 
 class ChecklistMainViewModel(
     private val navigator: Navigator,
     private val repository: ChecklistRepository
 ) : ViewModel() {
 
-    val _state = MutableStateFlow(ChecklistMainState())
+    private val _state = MutableStateFlow(ChecklistMainState())
     val state: StateFlow<ChecklistMainState> = _state.asStateFlow()
 
-    val _searchQuery = MutableStateFlow("")
+    private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    var _data = repository.getChecklists()
+
+    private var _data: Flow<List<Checklist>> = repository.getChecklists()
     val uiState: StateFlow<ChecklistMainUIState> = createUIState(
         _data,
         _searchQuery
@@ -64,7 +68,10 @@ class ChecklistMainViewModel(
                             else -> ChecklistMainUIState.Success(checklists.filter { it.name.contains(searchQuery.value, ignoreCase = true) })
                         }
                     }
-                    is Result.Error -> ChecklistMainUIState.Error("Failed to load checklists")
+                    is Result.Error -> {
+                        Log.e(TAG, "Failed to load checklists: ${result.exception}")
+                        ChecklistMainUIState.Error("Failed to load checklists")
+                    }
                     is Result.Loading -> ChecklistMainUIState.Loading
                 }
             }
@@ -91,7 +98,6 @@ class ChecklistMainViewModel(
             is UpdateChecklist -> updateData(event.checklist)
             is LoadChecklists -> loadData()
             is SearchQueryEvent -> updateSearch(event.query)
-            is ToggleActionMenu -> toggleActionMenu(event.checklist)
             is ToggleDeleteDialog -> toggleDeleteDialog()
             is ToggleDrawer -> toggleDrawer()
 
@@ -101,38 +107,33 @@ class ChecklistMainViewModel(
         _state.update {
             it.copy(
                 isDeleteDialogOpen = !it.isDeleteDialogOpen,
-                isActionMenuOpen = false,
-                selectedItem = null
             )
         }
     }
 
     fun toggleDrawer() {
-        _state.update {
-            it.copy(
-                isDrawerOpen = !it.isDrawerOpen,
-                isActionMenuOpen = false,
-                selectedItem = null
-            )
-        }
-    }
+        viewModelScope.launch {
+            var wasOpen = false
+            _state.update {
+                wasOpen = it.isDrawerOpen
+                it.copy(
+                    isDrawerOpen = !wasOpen,
+                )
+            }
 
-    fun toggleActionMenu(item: Checklist) {
-        _state.update {
-            it.copy(
-                isActionMenuOpen = !it.isActionMenuOpen,
-                selectedItem = item
-            )
-        }
-    }
+            delay(500.milliseconds)
 
-    fun toggleCheckout(){
-        _state.update { it.copy(
-            isActionMenuOpen = false,
-            isDeleteDialogOpen = false,
-            isDrawerOpen = false,
-            selectedItem = null
-        ) }
+            _state.update {
+                it.copy(
+                    // Only reset state when closing the drawer (wasOpen was true)
+                    editingChecklist = if (wasOpen) null else it.editingChecklist,
+                    newChecklist = if (wasOpen) ChecklistInput(
+                        name = "",
+                        description = ""
+                    ) else it.newChecklist
+                )
+            }
+        }
     }
 
     fun updateSearch(query: String) {
@@ -163,6 +164,8 @@ class ChecklistMainViewModel(
                                 description = ""
                             )
                         )
+
+                        toggleDrawer()
                     }
                 )
             }
@@ -183,6 +186,7 @@ class ChecklistMainViewModel(
                     errorMessage = "Failed to update checklist",
                     onSuccess = {
                         setEditingChecklist(null)
+                        toggleDrawer()
                     }
                 )
             }
@@ -194,16 +198,12 @@ class ChecklistMainViewModel(
                     result = repository.deleteChecklist(toDelete),
                     errorMessage = "Failed to delete checklist",
                     onSuccess = {
-                        setSelectedItem(null)
+                        setEditingChecklist(null)
+                        toggleDeleteDialog()
+                        toggleDrawer()
                     }
                 )
             }
-    }
-
-    private fun setSelectedItem(checklist: Checklist?) {
-        _state.update {
-            it.copy(selectedItem = checklist)
-        }
     }
 
     private fun setNewChecklist(checklist: ChecklistInput?) {

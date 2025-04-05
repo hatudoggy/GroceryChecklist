@@ -1,6 +1,5 @@
 package com.example.grocerychecklist.ui.screen.dashboard
 
-import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.border
@@ -45,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
@@ -55,8 +55,8 @@ import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
 import ir.ehsannarmani.compose_charts.models.GridProperties
-import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
+import java.time.Month
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +68,7 @@ fun DashboardBreakdownScreen(
     val barsData = if (state.dashboardGraphData.isNotEmpty()) {
         state.dashboardGraphData.map {
             Bars(
-                label = it.date,
+                label = DateUtility.getShortenedMonth(it.month),
                 values = listOf(
                     Bars.Data(
                         value = it.expenses,
@@ -134,8 +134,8 @@ fun DashboardBreakdownScreen(
 
                             barProperties = BarProperties(
                                 cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
-                                spacing = 1.dp,
-                                thickness = 36.dp
+                                spacing = 8.dp,
+                                thickness = 48.dp
                             ),
 
                             labelHelperProperties = LabelHelperProperties(enabled = false),
@@ -350,9 +350,9 @@ fun DashboardBreakdownPreview() {
                 )
             ),
             dashboardGraphData = listOf(
-                DashboardGraphData(date="JANUARY", expenses=0.0),
-                DashboardGraphData(date="FEBRUARY", expenses=0.0),
-                DashboardGraphData(date="MARCH", expenses=250.0)),
+                DashboardGraphData(month= Month.JANUARY, expenses=0.0),
+                DashboardGraphData(month= Month.FEBRUARY, expenses=0.0),
+                DashboardGraphData(month= Month.MARCH, expenses=250.0)),
             dashboardGraphMaxValue = 1000.0,
             ),
         onEvent = {}

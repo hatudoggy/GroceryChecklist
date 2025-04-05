@@ -1,31 +1,39 @@
 package com.example.grocerychecklist.viewmodel.history
 
-import ItemCategory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.grocerychecklist.data.ColorOption
+import com.example.grocerychecklist.data.IconOption
+import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.mapper.HistoryMapped
+import com.example.grocerychecklist.data.model.History
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.screen.Navigator
-import com.example.grocerychecklist.ui.screen.Routes
+import com.example.grocerychecklist.ui.screen.Routes.*
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
 
 class HistoryMainViewModel(
     private val navigator: Navigator,
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(HistoryMainState(isLoading = true))
+    private val _state = MutableStateFlow(HistoryMainState())
     val state: StateFlow<HistoryMainState> = _state.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        HistoryMainState(isLoading = true)
+        HistoryMainState()
     )
 
     init {
@@ -43,8 +51,10 @@ class HistoryMainViewModel(
             }
 
             is HistoryMainEvent.NavigateHistory -> {
-                navigator.navigate(Routes.HistoryDetail (event.historyId, event.checklistName))
+                navigator.navigate(HistoryDetail (event.historyId, event.checklistName))
             }
+
+            is HistoryMainEvent.LoadHistory -> loadHistoryData()
         }
     }
 
@@ -59,13 +69,18 @@ class HistoryMainViewModel(
             val month = DateUtility.formatDate(data.history.createdAt)
 
             if (!_state.value.monthsList.contains(month)) {
-                _state.value.monthsList.add(month)
+                _state.update {
+                    it.copy(
+                        monthsList = it.monthsList + month
+                    )
+                }
             }
         }
 
         return sortedHistoryData
     }
 
+    @OptIn(FlowPreview::class)
     private fun loadHistoryData() {
         viewModelScope.launch {
             _state.update {
@@ -76,22 +91,42 @@ class HistoryMainViewModel(
                 // Added a small delay to ensure loading indicator is visible
                 delay(300)
 
-                historyRepository.getAggregatedHistory()
-                    .collect { unsortedCards ->
-                        val sortedCards = sortHistoryData(unsortedCards)
-                        _state.update {
-                            it.copy(
-                                cards = sortedCards,
-                                isLoading = false,
-                                error = null
-                            )
-                        }
+                val aggregatedHistory = historyRepository.getAggregatedHistory().timeout(10_000.milliseconds).firstOrNull()
+
+                if (aggregatedHistory == null || aggregatedHistory.isEmpty()) {
+                    _state.update {
+                        it.copy(
+                            cards = emptyList(),
+                            monthsList = emptyList(),
+                            isLoading = false,
+                            error = null
+                        )
                     }
+
+                    return@launch
+                }
+
+                aggregatedHistory.let { unsortedCards ->
+                    val months = unsortedCards
+                        .map { DateUtility.formatDate(it.history.createdAt) }
+                        .distinct()
+                        .sortedDescending()
+
+                    val sortedCards = sortHistoryData(unsortedCards)
+                    _state.update {
+                        it.copy(
+                            cards = sortedCards,
+                            monthsList = months,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = e.message ?: "Unknown error loading history"
+                        error = e.message ?: "Failed to load history"
                     )
                 }
             }
