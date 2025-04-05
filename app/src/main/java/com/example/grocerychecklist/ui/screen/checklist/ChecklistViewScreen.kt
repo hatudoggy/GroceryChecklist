@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.util.EmptyStatePlaceholder
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistViewState
 
@@ -54,13 +56,13 @@ fun ChecklistViewScreen(
             )
         },
 
-    ) { innerPadding ->
-        Column (
+        ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(10.dp)
         ) {
-            Row (
+            Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -110,18 +112,25 @@ fun ChecklistViewScreen(
                 onValueChange = { onEvent(ChecklistViewEvent.UpdateSearchQuery(it)) }
             )
 
-            Spacer(Modifier.height(8.dp))
-            LazyColumn {
-                items(state.checklistItems) { item ->
-                    ChecklistItemComponent(
-                        name = item.name,
-                        variant = ChecklistItemComponentVariant.ChecklistItem,
-                        category = item.category,
-                        price = item.price,
-                        quantity = item.quantity.toDouble(),
-                        measurement = item.measurement,
-                    )
+            if (state.checklistItems.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                LazyColumn {
+                    items(state.checklistItems) { item ->
+                        ChecklistItemComponent(
+                            name = item.name,
+                            variant = ChecklistItemComponentVariant.ChecklistItem,
+                            category = item.category,
+                            price = item.price,
+                            quantity = item.quantity.toDouble(),
+                            measurement = item.measurement,
+                        )
+                    }
                 }
+            } else {
+                EmptyStatePlaceholder(
+                    icon = Icons.Filled.Checklist,
+                    message = "No Checklist Items"
+                )
             }
         }
     }
