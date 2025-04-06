@@ -4,6 +4,7 @@ import ItemCategory
 import ItemTagComponent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.domain.utility.NumberUtility
 
 enum class ChecklistItemComponentVariant {
     ChecklistRadioItem,
@@ -137,7 +137,7 @@ fun ChecklistItemComponent(
                     variant == ChecklistItemComponentVariant.ChecklistRadioItem
                 ) {
                     Text(
-                        NumberUtility.formatQuantity(quantity, measurement!!.getText(quantity)),
+                        "x $quantity ${measurement!!.getText(quantity)}",
                         color = Color.Gray,
                         fontSize = 15.sp
                     )
