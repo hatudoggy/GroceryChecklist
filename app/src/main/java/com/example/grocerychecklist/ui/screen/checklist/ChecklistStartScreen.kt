@@ -18,13 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.ShoppingCartCheckout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -53,9 +49,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.grocerychecklist.R
 import com.example.grocerychecklist.data.repository.ChecklistItemOrder
-import androidx.compose.ui.window.Dialog
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
 import com.example.grocerychecklist.ui.component.AlertDialogExtend
@@ -76,9 +72,6 @@ import com.example.grocerychecklist.ui.theme.ErrorTonal
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemFormInputs
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
-import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent.*
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
@@ -207,49 +200,14 @@ internal fun ChecklistStartScreen(
         },
     )
 
-    if (state.mode == ChecklistMode.SHOPPING){
-        BottomSheetCheckout(
-            checkedItems = state.checkedItems,
-            totalPrice =  state.checkedItems.sumOf { it.price * it.quantity },
-            onCheckoutClick = { onEvent(ChecklistStartEvent.OpenCheckoutDialog) },
-            isOpen = state.isCheckoutOpen,
-            onClose = {  onEvent(ToggleCheckout) },
-        )
-    }
-
-    BottomSheetChecklistItem(
-        selectedItem = state.editingItem,
-        isOpen = state.isDrawerOpen,
-        onClose = { onEvent(ToggleDrawer) },
-        onAdd = { name, category, price, quantity ->
-            if (state.editingItem == null)
-                onEvent(ItemAddition(ChecklistItemFormInputs(name, category.name, price, quantity)))
-            else {
-                onEvent(ItemModification(state.editingItem.id, ChecklistItemFormInputs(name, category.name, price, quantity)))
-            }
-        },
-        onVisible = { visible -> if (!visible) onEvent(ClearSelection) }
-    )
-
-    if (state.isFilterBottomSheetOpen) {
-        ModalBottomSheet(
-            onDismissRequest = { onEvent(ToggleFilterBottomSheet) }
-        ) {
-            FilterSortBottomSheet(
-                state = state,
-                onEvent = onEvent
-            )
-        }
-    }
-
     // Checkout Confirmation Dialog
-    if (state.isCheckoutConfirmOpen) {
+    if (state.isCheckoutConfirmDialogOpen) {
         AlertDialog(
-            onDismissRequest = { onEvent(ChecklistStartEvent.CloseCheckoutDialog) },
+            onDismissRequest = { onEvent(ToggleCheckoutDialog) },
             title = { Text("Proceed to Checkout?") },
             text = { Text(
                 "Are you sure you want to proceed to checkout? ${ 
-                    if (state.items.none { item -> state.checkedItems.any { it.id == item.id } }) 
+                    if (state.checkedItems.isEmpty()) 
                         "You have no checked items in your cart." 
                     else "" 
                 }"
@@ -257,14 +215,14 @@ internal fun ChecklistStartScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onEvent(ChecklistStartEvent.ProceedCheckout(state.items))
+                        onEvent(ProceedCheckout)
                     }
                 ) {
                     Text("Confirm", color = PrimaryGreen)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onEvent(ChecklistStartEvent.CloseCheckoutDialog) }) {
+                TextButton(onClick = { onEvent(ToggleCheckoutDialog) }) {
                     Text("Cancel", color = Color.Black)
                 }
             },
@@ -273,64 +231,10 @@ internal fun ChecklistStartScreen(
     }
 
     if (state.isCheckoutCompleted) {
-        Dialog(
-            onDismissRequest = {}
-        ) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardColors(
-                    containerColor = Color.White,
-                    contentColor = CardDefaults.cardColors().contentColor,
-                    disabledContainerColor = CardDefaults.cardColors().disabledContainerColor,
-                    disabledContentColor = CardDefaults.cardColors().disabledContentColor,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ){
-                    Text("Checkout Completed", fontSize = 24.sp, fontWeight = FontWeight.Medium)
-                    Icon(
-                        Icons.Filled.CheckCircle,
-                        contentDescription = "Check Symbol",
-                        tint = PrimaryGreen,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Total Items", fontSize = 14.sp, color = Color.Gray)
-                        Text(
-                            "${
-                            state.items.filter { item -> state.checkedItems.any { it.id == item.id } }.size
-                            }",
-                            fontSize = 20.sp
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Total Price", fontSize = 14.sp, color = Color.Gray)
-                        val converter = ConvertNumToCurrency()
-                        Text(
-                            converter(Currency.PHP, state.totalPrice),
-                            fontSize = 20.sp,
-
-                        )
-                    }
-                    Button(
-                        onClick = {
-                            onEvent(ChecklistStartEvent.NavigateChecklistScreen)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Go Back To Checklists")
-                    }
-                }
-            }
-        }
+        CheckoutCompleteDialog(
+            state = state,
+            onEvent = onEvent
+        )
     }
 
     if (state.isCopyDialogOpen) {
@@ -452,7 +356,7 @@ internal fun ChecklistStartScreen(
             if (state.mode == ChecklistMode.SHOPPING) {
                 CheckoutButton(
                     checkedItems = state.checkedItems,
-                    toggleCheckout = { onEvent(ToggleCheckout) }
+                    toggleCheckout = { onEvent(ToggleCheckoutSummary) }
                 )
             }
         }
@@ -589,6 +493,7 @@ private fun ChecklistEmptyUI(
  * @param onEvent A callback function to handle checklist events such as toggling item selection or check status.
  * @param modifier Optional modifier for customizing the layout.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChecklistSuccessUI(
     state: ChecklistStartState,
@@ -649,59 +554,41 @@ private fun ChecklistSuccessUI(
                     isSelected = state.selectedItems.contains(item.id)
                 )
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .offset {
-                        val offsetY = sheetState.requireOffset()
-                        IntOffset(
-                            x = 0,
-                            y = -offsetY.toInt() + 100
-                        )
-                    }
-                    .background(Color.White)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                ) {
-                    val converter = ConvertNumToCurrency()
-                    Text(
-                        "Total",
-                        fontSize = 16.sp,
-                    )
-                    Text(
-                        converter(Currency.PHP, totalPrice),
-                        fontSize = 18.sp,
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = { onCheckoutClick() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(5.dp),
-                    ) {
-                        Text(
-                            "Checkout",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Icon(
-                            Icons.Default.ShoppingCartCheckout,
-                            contentDescription = "Checkout",
-                            tint = Color.White
-                        )
-                    }
+        }
+    }
+
+    if (state.mode == ChecklistMode.SHOPPING){
+        BottomSheetCheckout(
+            checkedItems = state.checkedItems,
+            totalPrice =  state.checkedItems.sumOf { it.price * it.quantity },
+            onCheckoutClick = { onEvent(ToggleCheckoutDialog) },
+            isOpen = state.isCheckoutSummaryOpen,
+            onClose = {  onEvent(ToggleCheckoutSummary) },
+        )
+    }
+
+    BottomSheetChecklistItem(
+        selectedItem = state.editingItem,
+        isOpen = state.isDrawerOpen,
+        onClose = { onEvent(ToggleDrawer) },
+        onAdd = { name, category, price, quantity ->
+            if (state.editingItem == null)
+                onEvent(ItemAddition(ChecklistItemFormInputs(name, category.name, price, quantity)))
+            else {
+                onEvent(ItemModification(state.editingItem.id, ChecklistItemFormInputs(name, category.name, price, quantity)))
+            }
+        },
+        onVisible = { visible -> if (!visible) onEvent(ClearSelection) }
+    )
+
+    if (state.isFilterBottomSheetOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(ToggleFilterBottomSheet) }
+        ) {
+            FilterSortBottomSheet(
+                state = state,
+                onEvent = onEvent
+            )
         }
     }
 }
@@ -730,5 +617,69 @@ private fun ChecklistErrorUI(
 }
 
 
+@Composable
+private fun CheckoutCompleteDialog(
+    state: ChecklistStartState,
+    onEvent: (ChecklistStartEvent) -> Unit
+){
+    Dialog(
+        onDismissRequest = {}
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardColors(
+                containerColor = Color.White,
+                contentColor = CardDefaults.cardColors().contentColor,
+                disabledContainerColor = CardDefaults.cardColors().disabledContainerColor,
+                disabledContentColor = CardDefaults.cardColors().disabledContentColor,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ){
+                Text("Checkout Completed", fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                Icon(
+                    Icons.Filled.CheckCircle,
+                    contentDescription = "Check Symbol",
+                    tint = PrimaryGreen,
+                    modifier = Modifier.size(64.dp)
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Items", fontSize = 14.sp, color = Color.Gray)
+                    Text(
+                        "${
+                            state.checkedItems.size
+                        }",
+                        fontSize = 20.sp
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Price", fontSize = 14.sp, color = Color.Gray)
+                    val converter = ConvertNumToCurrency()
+                    Text(
+                        converter(Currency.PHP, state.checkedItems.sumOf { it.price * it.quantity }),
+                        fontSize = 20.sp,
+
+                        )
+                }
+                Button(
+                    onClick = {
+                        onEvent(NavigateChecklistScreen)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Go Back To Checklists")
+                }
+            }
+        }
+    }
+}
 
 

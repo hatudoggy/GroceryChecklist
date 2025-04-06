@@ -35,13 +35,13 @@ data class ChecklistStartState(
     val isDrawerOpen: Boolean = false,
     val isActionMenuOpen: Boolean = false,
     val isDeleteDialogOpen: Boolean = false,
-    val isCheckoutOpen: Boolean = false,
+    val isCheckoutSummaryOpen: Boolean = false,
     val isChangeCategoryDialogOpen: Boolean = false,
     val isMoreActionsMenuOpen: Boolean = false,
     val isCopyDialogOpen: Boolean = false,
 
     val submissionState: SubmissionState = SubmissionState.Idle,
-    val isCheckoutConfirmOpen: Boolean = false,
+    val isCheckoutConfirmDialogOpen: Boolean = false,
     val isCheckoutCompleted: Boolean = false,
 )
 

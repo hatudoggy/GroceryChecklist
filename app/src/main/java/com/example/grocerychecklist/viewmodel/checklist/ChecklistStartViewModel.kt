@@ -14,9 +14,11 @@ import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.Result
 import com.example.grocerychecklist.data.repository.asResult
 import com.example.grocerychecklist.ui.screen.Navigator
+import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.ui.screen.checklist.ChecklistMode
 import com.example.grocerychecklist.ui.screen.checklist.FilterType
 import com.example.grocerychecklist.viewmodel.util.SubmissionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -229,13 +231,11 @@ class ChecklistStartViewModel(
             is ChecklistStartEvent.ToggleDrawer -> toggleDrawer()
             is ChecklistStartEvent.ToggleDeleteDialog -> toggleDeleteDialog()
             is ChecklistStartEvent.ToggleActionMenu-> toggleActionMenu(event.checklist)
-            is ChecklistStartEvent.ToggleCheckout -> toggleCheckout()
+            is ChecklistStartEvent.ToggleCheckoutSummary -> toggleCheckoutSummary()
             is ChecklistStartEvent.ToggleItemCheck -> toggleItemCheck(event.checklistItem)
             is ChecklistStartEvent.ProceedCheckout -> proceedCheckout()
-
             is ChecklistStartEvent.SearchQueryEvent -> updateSearch(event.query)
             is ChecklistStartEvent.FilterSelection -> updateSelectedChip(event.type)
-
             is ChecklistStartEvent.ItemAddition -> addData(event.input)
             is ChecklistStartEvent.ItemModification -> editData(event.checklistItemId, event.input)
             is ChecklistStartEvent.ItemDeletion -> deleteData(event.checklistItemId, event.groceryItemId)
@@ -251,7 +251,6 @@ class ChecklistStartViewModel(
 
                 loadData()
             }
-
             is ChecklistStartEvent.ToggleItemSelection -> {
                 viewModelScope.launch {
                     _state.update { state ->
@@ -280,7 +279,6 @@ class ChecklistStartViewModel(
                     }
                 }
             }
-
             is ChecklistStartEvent.MoveSelectedItems -> {
                 viewModelScope.launch {
                     state.value.selectedItems.forEach { itemId ->
@@ -296,7 +294,6 @@ class ChecklistStartViewModel(
                     ) }
                 }
             }
-
             is ChecklistStartEvent.DeleteSelectedItems -> {
                 viewModelScope.launch {
                     state.value.selectedItems.forEach { itemId ->
@@ -320,7 +317,6 @@ class ChecklistStartViewModel(
                     ) }
                 }
             }
-
             is ChecklistStartEvent.ChangeSortOption -> {
                 _state.update { it.copy(selectedSortOption = event.option) }
                 loadData() // Reload with new sort
@@ -353,7 +349,10 @@ class ChecklistStartViewModel(
             is ChecklistStartEvent.ToggleCategorySelection -> toggleCategorySelection(event.category)
             is ChecklistStartEvent.ToggleFilterBottomSheet -> toggleFilterBottomSheet()
             is ChecklistStartEvent.SetNewChecklist -> { _state.update { it.copy(newChecklist = event.checklist) }}
-            ChecklistStartEvent.ToggleIconPicker -> toggleIconPicker()
+            is ChecklistStartEvent.ToggleIconPicker -> toggleIconPicker()
+            is ChecklistStartEvent.NavigateChecklistScreen -> navigator.navigateWithClearBackStack(Routes.ChecklistMain)
+            is ChecklistStartEvent.NavigateHistoryScreen -> navigator.navigateWithClearBackStack(Routes.HistoryMain)
+            is ChecklistStartEvent.ToggleCheckoutDialog -> { _state.update { it.copy(isCheckoutConfirmDialogOpen = !it.isCheckoutConfirmDialogOpen) } }
         }
     }
 
@@ -556,9 +555,9 @@ class ChecklistStartViewModel(
      * it also ensures that other UI elements, such as the action menu, delete dialog, and drawer, are closed,
      * and any ongoing item editing is cancelled.
      */
-    fun toggleCheckout(){
+    fun toggleCheckoutSummary(){
         _state.update { it.copy(
-            isCheckoutOpen = !it.isCheckoutOpen,
+            isCheckoutSummaryOpen = !it.isCheckoutSummaryOpen,
             isActionMenuOpen = false,
             isDeleteDialogOpen = false,
             isDrawerOpen = false,
@@ -659,8 +658,13 @@ class ChecklistStartViewModel(
                     ),
                     "Failed to add history items",
                     onSuccess = {
-                        _state.update { it.copy(checkedItems = emptyList()) }
-                        toggleCheckout()
+                        _state.update {
+                            it.copy(
+                                isCheckoutCompleted = true,
+                                isCheckoutConfirmDialogOpen = false,
+                                isCheckoutSummaryOpen = false,
+                            )
+                        }
                     }
                 )
 
@@ -905,100 +909,6 @@ class ChecklistStartViewModel(
                 onSuccess?.invoke()
                 loadData()
                 updateSubmissionState(SubmissionState.Success)
-            ChecklistStartEvent.OpenCheckoutCompleteDialog -> {
-                _state.update { it.copy(isCheckoutCompleted = true) }
-            }
-            ChecklistStartEvent.CloseCheckoutCompleteDialog -> {
-                _state.update { it.copy(isCheckoutCompleted = false) }
-            }
-
-            ChecklistStartEvent.NavigateChecklistScreen -> {
-                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
-                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
-            }
-            ChecklistStartEvent.NavigateHistoryScreen -> {
-                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
-                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
-            }
-
-            ChecklistStartEvent.ClearSelectedItem -> { _state.update { it.copy(selectedItem = null) } }
-
-
-            is ChecklistStartEvent.AddChecklistItem -> {
-                onEvent(ChecklistStartEvent.CloseCheckoutDialog)
-                viewModelScope.launch {
-                    try {
-                        val id = repo.addChecklistItem(
-                            checklistId,
-                            checklistItemInput = ChecklistItemInput(
-                                name = event.formInputs.name,
-                                price = event.formInputs.price,
-                                quantity = event.formInputs.quantity,
-                                category = event.formInputs.category.name,
-                                measureType = "",
-                                measureValue = 0.00,
-                                photoRef = ""
-                            )
-                        )
-                        println("Created Checklist Id: $id")
-                        onEvent(ChecklistStartEvent.CloseDrawer)
-                    } catch (err: Error) {
-                        Log.e("ChecklistMainViewModel", "Error adding item: ${err.message}")
-                    }
-                }
-            }
-            is ChecklistStartEvent.EditChecklistItem -> {
-                viewModelScope.launch {
-                    try {
-                        val id = repo.updateChecklistItem(
-                            event.checklistId,
-                            checklistItemInput = ChecklistItemInput(
-                                name = event.formInputs.name,
-                                price = event.formInputs.price,
-                                quantity = event.formInputs.quantity,
-                                category = event.formInputs.category.name,
-                                measureType = "",
-                                measureValue = 0.00,
-                                photoRef = ""
-                            )
-                        )
-                        println("Edited Checklist Id: $id")
-                        onEvent(ChecklistStartEvent.CloseDrawer)
-                    } catch (err: Error) {
-                        Log.e("ChecklistMainViewModel", "Error updating item: ${err.message}")
-                    }
-                }
-            }
-            is ChecklistStartEvent.DeleteChecklistItem -> {
-                val item = _state.value.filteredItems.find { it.id == event.checklistId }
-                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
-                viewModelScope.launch {
-                    try {
-                        val id = repo.deleteChecklistItem(
-                            event.checklistId,
-                        )
-                        println("Deleted Checklist Id: $id")
-                        onEvent(ChecklistStartEvent.CloseDeleteDialog)
-                    } catch (err: Error) {
-                        Log.e("ChecklistMainViewModel", "Error deleting item: ${err.message}")
-                    }
-                }
-            }
-            is ChecklistStartEvent.DeleteChecklistItemAndItem -> {
-                val item = _state.value.filteredItems.find { it.id == event.itemId }
-                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
-                viewModelScope.launch {
-                    try {
-                        val id = repo.deleteChecklistItemAndItem(
-                            event.checklistId,
-                            event.itemId
-                        )
-                        println("Deleted Checklist Id: $id")
-                        onEvent(ChecklistStartEvent.CloseDeleteDialog)
-                    } catch (err: Error) {
-                        Log.e("ChecklistMainViewModel", "Error deleting item: ${err.message}")
-                    }
-                }
             }
             is Result.Loading -> updateSubmissionState(SubmissionState.Loading)
         }

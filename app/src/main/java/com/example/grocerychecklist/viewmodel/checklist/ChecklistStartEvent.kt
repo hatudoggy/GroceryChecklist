@@ -63,7 +63,7 @@ sealed interface ChecklistStartEvent {
     /**
      * Event triggered to toggle the visibility of the checkout dialog/UI.
      */
-    data object ToggleCheckout : ChecklistStartEvent
+    data object ToggleCheckoutSummary : ChecklistStartEvent
     /**
      * Event triggered when an item's check state (completed/not completed) is toggled.
      * @property checklistItem The data of the checklist item whose check state is toggled.
@@ -82,14 +82,9 @@ sealed interface ChecklistStartEvent {
      * Event triggered to toggle the visibility of the copy sheet.
      */
     data object ToggleCopyDialog : ChecklistStartEvent
-    // Checkout
-    data object OpenCheckout: ChecklistStartEvent
-    data object CloseCheckout: ChecklistStartEvent
-    data object OpenCheckoutDialog: ChecklistStartEvent
-    data object CloseCheckoutDialog: ChecklistStartEvent
-    data object OpenCheckoutCompleteDialog: ChecklistStartEvent
-    data object CloseCheckoutCompleteDialog: ChecklistStartEvent
 
+    // Checkout
+    data object ToggleCheckoutDialog: ChecklistStartEvent
     data object ToggleIconPicker : ChecklistStartEvent
 
     /**
