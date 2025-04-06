@@ -172,7 +172,8 @@ fun ChecklistMainScreen(
                 TextButton(onClick = { onEvent(ChecklistMainEvent.ToggleDeleteDialog) }) {
                     Text("Cancel", color = Color.Black)
                 }
-            }
+            },
+            containerColor = Color.White
         )
     }
 

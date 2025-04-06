@@ -22,4 +22,6 @@ data class ChecklistStartState (
     val isDeleteDialogOpen: Boolean = false,
     val isEditingItem: Boolean = false,
     val isCheckoutOpen: Boolean = false,
+    val isCheckoutConfirmOpen: Boolean = false,
+    val isCheckoutCompleted: Boolean = false,
 )

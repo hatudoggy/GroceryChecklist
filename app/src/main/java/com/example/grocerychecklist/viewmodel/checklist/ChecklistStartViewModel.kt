@@ -108,11 +108,12 @@ class ChecklistStartViewModel(
             }
 
             ChecklistStartEvent.OpenDeleteDialog -> {
+                _state.update { it.copy(isActionMenuOpen = false) }
                 _state.update { it.copy(isDeleteDialogOpen = true) }
             }
 
             ChecklistStartEvent.CloseDeleteDialog -> {
-                _state.update { it.copy(isActionMenuOpen = false) }
+
                 _state.update { it.copy(isDeleteDialogOpen = false) }
                 onEvent(ChecklistStartEvent.ClearSelectedItem)
             }
@@ -120,6 +121,13 @@ class ChecklistStartViewModel(
             ChecklistStartEvent.OpenCheckout -> { _state.update { it.copy(isCheckoutOpen = true) } }
 
             ChecklistStartEvent.CloseCheckout -> { _state.update { it.copy(isCheckoutOpen = false) } }
+
+            ChecklistStartEvent.OpenCheckoutDialog -> {
+                _state.update { it.copy(isCheckoutConfirmOpen = true) }
+            }
+            ChecklistStartEvent.CloseCheckoutDialog -> {
+                _state.update { it.copy(isCheckoutConfirmOpen = false) }
+            }
 
             is ChecklistStartEvent.ProceedCheckout -> {
                 viewModelScope.launch {
@@ -133,17 +141,36 @@ class ChecklistStartViewModel(
                             historyId, filterItemsChecked(FilterType.CHECKED, mapChecked)
                         )
 
+                        onEvent(ChecklistStartEvent.CloseCheckoutDialog)
                         onEvent(ChecklistStartEvent.CloseCheckout)
+                        onEvent(ChecklistStartEvent.OpenCheckoutCompleteDialog)
                     } catch (err: Error) {
                         Log.e("ChecklistMainViewModel", "Error checking out: ${err.message}")
                     }
                 }
             }
 
+            ChecklistStartEvent.OpenCheckoutCompleteDialog -> {
+                _state.update { it.copy(isCheckoutCompleted = true) }
+            }
+            ChecklistStartEvent.CloseCheckoutCompleteDialog -> {
+                _state.update { it.copy(isCheckoutCompleted = false) }
+            }
+
+            ChecklistStartEvent.NavigateChecklistScreen -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
+                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
+            }
+            ChecklistStartEvent.NavigateHistoryScreen -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
+                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
+            }
+
             ChecklistStartEvent.ClearSelectedItem -> { _state.update { it.copy(selectedItem = null) } }
 
 
             is ChecklistStartEvent.AddChecklistItem -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutDialog)
                 viewModelScope.launch {
                     try {
                         val id = repo.addChecklistItem(

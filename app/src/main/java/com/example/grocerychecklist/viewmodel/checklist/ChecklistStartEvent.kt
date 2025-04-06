@@ -5,6 +5,8 @@ import com.example.grocerychecklist.ui.screen.checklist.ChecklistStartFormInputs
 sealed interface ChecklistStartEvent {
     // Navigation Events
     data object NavigateBack: ChecklistStartEvent
+    data object NavigateChecklistScreen: ChecklistStartEvent
+    data object NavigateHistoryScreen: ChecklistStartEvent
 
     // UI Toggles
     data object OpenDrawer: ChecklistStartEvent
@@ -18,6 +20,10 @@ sealed interface ChecklistStartEvent {
     data object OpenCheckout: ChecklistStartEvent
     data object CloseCheckout: ChecklistStartEvent
     data class ProceedCheckout(val items: List<ChecklistData>): ChecklistStartEvent
+    data object OpenCheckoutDialog: ChecklistStartEvent
+    data object CloseCheckoutDialog: ChecklistStartEvent
+    data object OpenCheckoutCompleteDialog: ChecklistStartEvent
+    data object CloseCheckoutCompleteDialog: ChecklistStartEvent
 
     // Input Event
     data object ClearSelectedItem: ChecklistStartEvent
