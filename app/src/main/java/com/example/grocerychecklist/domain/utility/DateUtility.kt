@@ -5,9 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.ZoneOffset
-import java.time.chrono.IsoChronology
 import java.time.format.DateTimeFormatter
-import java.time.format.ResolverStyle
 
 class DateUtility {
     companion object {
@@ -39,6 +37,11 @@ class DateUtility {
 
         fun formatDate(createdAt: LocalDateTime): String {
             val formatter = DateTimeFormatter.ofPattern("MMM yyyy")
+            return createdAt.toLocalDate().format(formatter)
+        }
+
+        fun formatDateToShort(createdAt: LocalDateTime): String {
+            val formatter = DateTimeFormatter.ofPattern("MM/dd/yy")
             return createdAt.toLocalDate().format(formatter)
         }
 

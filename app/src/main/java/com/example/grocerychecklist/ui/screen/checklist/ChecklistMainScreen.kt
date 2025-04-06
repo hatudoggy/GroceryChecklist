@@ -60,6 +60,7 @@ import com.example.grocerychecklist.ui.component.ButtonCardIconComponent
 import com.example.grocerychecklist.ui.component.ChecklistCategory
 import com.example.grocerychecklist.ui.component.RoundedTextField
 import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.screen.util.EmptyStatePlaceholder
 import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainEvent
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistMainState
@@ -236,29 +237,10 @@ fun ChecklistMainScreen(
                     }
                 }
             } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Checklist,
-                            contentDescription = "Empty Checklist",
-                            modifier = Modifier.size(32.dp),
-                        )
-                        Text(
-                            text = "No Checklist Items",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
-                        )
-                    }
-
-                }
+                EmptyStatePlaceholder(
+                    icon = Icons.Filled.Checklist,
+                    message = "No Checklist Items"
+                )
             }
         }
     }
