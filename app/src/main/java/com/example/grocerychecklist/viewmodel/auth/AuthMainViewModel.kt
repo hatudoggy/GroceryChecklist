@@ -8,23 +8,10 @@ import com.example.grocerychecklist.ui.screen.Routes
 import kotlinx.coroutines.launch
 
 class AuthMainViewModel(
-    private val navigator: Navigator,
-    private val authRepository: AuthRepository
+    private val navigator: Navigator
 ): ViewModel() {
-//    init {
-//        viewModelScope.launch {
-//            accountService.currentUser.collect { user ->
-//                if (user != null) {
-//                    // User is signed in
-//                    navigator.navigate(Routes.DashboardMain)
-//                }
-//            }
-//        }
-//    }
-
     private fun onCreateGuest(){
         viewModelScope.launch {
-            authRepository.createAnonymousAccount()
             navigator.navigate(Routes.DashboardMain)
         }
     }
