@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,7 +65,6 @@ import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.ChipComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
-import com.example.grocerychecklist.ui.screen.util.EmptyStatePlaceholder
 import com.example.grocerychecklist.ui.theme.ErrorText
 import com.example.grocerychecklist.ui.theme.ErrorTonal
 import com.example.grocerychecklist.ui.theme.PrimaryGreen
@@ -76,7 +76,7 @@ import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
 import com.example.grocerychecklist.viewmodel.checklist.FilterType
 
 
-data class ChecklistStartFormInputs(
+data class ChecklistStartFormInputs (
     val name: String,
     val category: ItemCategory,
     val price: Double,
@@ -96,18 +96,16 @@ fun ChecklistStartScreen(
             if (state.selectedItem == null)
                 onEvent(
                     ChecklistStartEvent.AddChecklistItem(
-                        ChecklistStartFormInputs(name, category, price, quantity)
-                    )
-                )
+                    ChecklistStartFormInputs(name, category, price, quantity)
+                ))
             else
                 onEvent(
                     ChecklistStartEvent.EditChecklistItem(
                         state.selectedItem.id,
                         ChecklistStartFormInputs(name, category, price, quantity)
-                    )
-                )
+                ))
         },
-        onVisible = { visible -> if (!visible) onEvent(ChecklistStartEvent.ClearSelectedItem) }
+        onVisible = { visible -> if(!visible) onEvent(ChecklistStartEvent.ClearSelectedItem)}
     )
 
     // Edit, Delete Action Menu
@@ -154,12 +152,7 @@ fun ChecklistStartScreen(
                     onClick = {
                         state.selectedItem.let {
                             if (it != null) {
-                                onEvent(
-                                    ChecklistStartEvent.DeleteChecklistItemAndItem(
-                                        it.id,
-                                        it.itemId
-                                    )
-                                )
+                                onEvent(ChecklistStartEvent.DeleteChecklistItemAndItem(it.id, it.itemId))
                             }
                         }
                     },
@@ -184,7 +177,7 @@ fun ChecklistStartScreen(
     )
 
     BottomSheetCheckout(
-        checkedItems = state.items.filter { item -> state.checkedItems.any { it.id == item.id } },
+        checkedItems = state.items.filter { item -> state.checkedItems.any { it.id == item.id} },
         totalPrice = state.totalPrice,
         onCheckoutClick = { onEvent(ChecklistStartEvent.OpenCheckoutDialog) },
         isOpen = state.isCheckoutOpen,
@@ -299,16 +292,16 @@ fun ChecklistStartScreen(
                 title = "Checklist",
                 onNavigateBackClick = { onEvent(ChecklistStartEvent.NavigateBack) }
             )
-        },
+         },
 
         ) { innerPadding ->
-        Column(
+        Column (
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(innerPadding)
                 .padding(10.dp)
         ) {
-            Row(
+            Row (
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -341,7 +334,7 @@ fun ChecklistStartScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Iterates through each FilterType to create a ChipComponent.
+              // Iterates through each FilterType to create a ChipComponent.
                 FilterType.entries.forEach { filterType ->
                     ChipComponent(
                         label = filterType.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -353,35 +346,27 @@ fun ChecklistStartScreen(
                 }
             }
 
-            if (state.items.isNotEmpty()) {
-                Spacer(Modifier.height(16.dp))
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(state.filteredItems) { item ->
-                        // Create and display a ChecklistItemComponent for each item in the filtered list.
-                        ChecklistItemComponent(
-                            name = item.name,
-                            variant = ChecklistItemComponentVariant.ChecklistRadioItem,
-                            category = item.category,
-                            price = item.price,
-                            quantity = item.quantity.toDouble(),
-                            measurement = item.measurement,
-                            isChecked = state.checkedItems.any { it.id == item.id },
-                            // When the checked state changes, update the ViewModel accordingly.
-                            // Use onCheckedChange instead of onClick for handling the checkbox state.
-                            onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
-                            onLongPress = { onEvent(ChecklistStartEvent.OpenActionMenu(item)) }
-                        )
-                    }
+            Spacer(Modifier.height(16.dp))
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(state.filteredItems) { item ->
+                    // Create and display a ChecklistItemComponent for each item in the filtered list.
+                    ChecklistItemComponent(
+                        name = item.name,
+                        variant = ChecklistItemComponentVariant.ChecklistRadioItem,
+                        category = item.category,
+                        price = item.price,
+                        quantity = item.quantity.toDouble(),
+                        measurement = item.measurement,
+                        isChecked = state.checkedItems.any { it.id == item.id },
+                        // When the checked state changes, update the ViewModel accordingly.
+                        // Use onCheckedChange instead of onClick for handling the checkbox state.
+                        onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
+                        onLongPress = { onEvent(ChecklistStartEvent.OpenActionMenu(item)) }
+                    )
                 }
-            } else {
-                EmptyStatePlaceholder(
-                    icon = Icons.Filled.Checklist,
-                    message = "No Checklist Items"
-                )
             }
-
             Spacer(Modifier.height(16.dp))
 
             Row(
@@ -424,6 +409,7 @@ fun ChecklistStartScreen(
 }
 
 
+
 // Bottom sheet modal drawer for editing Checklist
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -449,7 +435,7 @@ fun BottomSheetCheckout(
         Box(
             modifier = Modifier.fillMaxHeight(),
             contentAlignment = Alignment.BottomStart
-        ) {
+        ){
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier

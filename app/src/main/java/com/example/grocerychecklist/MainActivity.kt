@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 var startDestination by remember { mutableStateOf<Routes>(Routes.AuthMain) }
 
                 LaunchedEffect(key1 = Unit) {
-                    val hasUser = GroceryChecklistApp.appModule.accountService.hasUser()
+                    val hasUser = GroceryChecklistApp.appModule.authRepository.hasUser()
                     startDestination = if (!hasUser) {
                         Routes.AuthMain
                     } else {
