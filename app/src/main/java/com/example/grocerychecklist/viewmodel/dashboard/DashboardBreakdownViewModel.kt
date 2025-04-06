@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.Month
+import kotlin.math.ceil
 
 /**
  * Data class representing a category's data for a dashboard.
@@ -56,6 +57,9 @@ class DashboardBreakdownViewModel(
         SharingStarted.WhileSubscribed(5000),
         DashboardBreakdownState()
     )
+
+    private val _graphState = MutableStateFlow(DashboardGraphState())
+    val graphState: StateFlow<DashboardGraphState> = _graphState
 
     init {
         viewModelScope.launch {
@@ -106,8 +110,8 @@ class DashboardBreakdownViewModel(
                 Log.d("DashboardBreakdownVM", "Graph data: $sortedData")
                 val maxValue = calculateDashboardGraphMaxValue(sortedData)
                 Log.d("DashboardBreakdownVM", "Setting maxValue to: $maxValue")
-                _state.update {
-                    it.copy(dashboardGraphData = sortedData, dashboardGraphMaxValue = maxValue)
+                _graphState.update {
+                    it.copy(data = sortedData, maxValue = maxValue)
                 }
             } catch (e: Exception) {
                 Log.e("DashboardBreakdownVM", "Error processing graph data", e)
@@ -118,7 +122,7 @@ class DashboardBreakdownViewModel(
 
     private fun calculateDashboardGraphMaxValue(data: List<DashboardGraphData>): Double {
         val maxValue = data.maxOf { it.expenses }
-        return maxValue + (maxValue * 0.25)
+        return ceil(maxValue + (maxValue * 0.10))
     }
 
     private fun getTodayData() {

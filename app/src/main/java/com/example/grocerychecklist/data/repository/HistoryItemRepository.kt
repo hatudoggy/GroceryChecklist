@@ -12,34 +12,6 @@ import java.time.format.DateTimeFormatter
 class HistoryItemRepository(
     private val historyItemDAO: HistoryItemDAO
 ) {
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM")
-
-//    suspend fun addHistoryItems(
-//        historyId: Long, checklistItems: List<ChecklistItemFull>, checkedItems: Set<Long>): List<Long> {
-//
-//        val currentDateTime = DateUtility.getCurrentDateTime()
-//
-//        val historyItems = checklistItems.map { item ->
-//            val isChecked = checkedItems.contains(item.checklistItem.id)
-//            HistoryItem(
-//                historyId = historyId,
-//                checklistItemId = item.checklistItem.checklistId,
-//                name = item.item.name,
-//                price = item.item.price,
-//                category = item.item.category,
-//                measureType = item.item.measureType,
-//                measureValue = item.item.measureValue,
-//                photoRef = item.item.photoRef,
-//                order = item.checklistItem.order,
-//                quantity = item.checklistItem.quantity,
-//                isChecked = isChecked,
-//                createdAt = currentDateTime
-//            )
-//        }
-//
-//        return historyItemDAO.insertBatch(historyItems)
-//    }
-
     suspend fun addHistoryItems(historyId: Long, items: List<ChecklistItemData>): Result<List<Long>> {
         return try {
             val currentDateTime = DateUtility.getCurrentDateTime()
@@ -68,7 +40,7 @@ class HistoryItemRepository(
         }
     }
 
-    suspend fun getHistoryItem(id: Long): Flow<HistoryItem?> {
+    fun getHistoryItem(id: Long): Flow<HistoryItem?> {
         return historyItemDAO.getHistoryItemById(id)
     }
 
@@ -80,11 +52,11 @@ class HistoryItemRepository(
         return historyItemDAO.getAllHistoryItemsOrderAndCheckedFilter(historyId, groupBy, isChecked)
     }
 
-    suspend fun getTotalHistoryItems(historyId: Long): Flow<Int?> {
+    fun getTotalHistoryItems(historyId: Long): Flow<Int?> {
         return historyItemDAO.aggregateTotalHistoryItems(historyId)
     }
 
-    suspend fun getTotalHistoryItemPrice(historyId: Long): Flow<Double?> {
+    fun getTotalHistoryItemPrice(historyId: Long): Flow<Double?> {
         return (historyItemDAO.aggregateTotalHistoryItemPrice(historyId))
     }
 

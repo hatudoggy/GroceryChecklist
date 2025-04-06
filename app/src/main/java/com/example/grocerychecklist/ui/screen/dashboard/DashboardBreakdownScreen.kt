@@ -26,6 +26,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,13 +46,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.grocerychecklist.domain.utility.DateUtility
 import com.example.grocerychecklist.ui.component.ToastComponent
 import com.example.grocerychecklist.ui.component.TopBarComponent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownEvent
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownState
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardBreakdownViewModel
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardCategoryData
 import com.example.grocerychecklist.viewmodel.dashboard.DashboardGraphData
+import com.example.grocerychecklist.viewmodel.dashboard.DashboardGraphState
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
@@ -58,37 +63,59 @@ import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 import java.time.Month
 
+@Composable
+fun DashboardBreakdownScreen(
+    viewModel: DashboardBreakdownViewModel,
+) {
+    val state by viewModel.state.collectAsState()
+    val graphState by viewModel.graphState.collectAsState()
+    val onEvent = viewModel::onEvent
+
+
+    DashboardBreakdownScreen(
+        state = state,
+        graphState = graphState,
+        onEvent = onEvent
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardBreakdownScreen(
     state: DashboardBreakdownState,
-    onEvent: (DashboardBreakdownEvent) -> Unit,
+    graphState: DashboardGraphState,
+    onEvent: (DashboardBreakdownEvent) -> Unit
 ) {
-    val barsData = if (state.dashboardGraphData.isNotEmpty()) {
-        state.dashboardGraphData.map {
-            Bars(
-                label = DateUtility.getShortenedMonth(it.month),
-                values = listOf(
-                    Bars.Data(
-                        value = it.expenses,
-                        color = SolidColor(Color.Green)
+
+
+    val barsData by remember(graphState.data) {
+        derivedStateOf {
+            if (graphState.data.isNotEmpty()) {
+                graphState.data.map {
+                    Bars(
+                        label = DateUtility.getShortenedMonth(it.month),
+                        values = listOf(
+                            Bars.Data(
+                                value = it.expenses,
+                                color = SolidColor(Color.Green)
+                            )
+                        )
+                    )
+                }
+            } else {
+                listOf(
+                    Bars(
+                        label = "No Data",
+                        values = listOf(
+                            Bars.Data(
+                                value = 0f.toDouble(),
+                                color = SolidColor(Color.Green)
+                            )
+                        )
                     )
                 )
-            )
+            }
         }
-    } else {
-        listOf(
-            Bars(
-                label = "No Data",
-                values = listOf(
-                    Bars.Data(
-                        value = 0f.toDouble(),
-                        color = SolidColor(Color.Green)
-                    )
-                )
-            )
-        )
     }
 
     Scaffold(
@@ -106,10 +133,7 @@ fun DashboardBreakdownScreen(
 
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Overview",
-                style = MaterialTheme.typography.titleLarge,
-            )
+            Text(text = "Overview", style = MaterialTheme.typography.titleLarge,)
 
             Column(
                 modifier = Modifier
@@ -121,39 +145,41 @@ fun DashboardBreakdownScreen(
                         color = Color(0xFFECECEC),
                         shape = RoundedCornerShape(size = 11.dp)
                     ),
-
                 horizontalAlignment = Alignment.CenterHorizontally
-
                 ) {
-                    key(state.dashboardGraphMaxValue) {
-                        ColumnChart(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 22.dp, vertical = 8.dp),
-                            data = barsData,
 
-                            barProperties = BarProperties(
-                                cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
-                                spacing = 1.dp,
-                                thickness = 48.dp
+                key(graphState.maxValue) {
+                    ColumnChart(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 22.dp, vertical = 8.dp),
+                        data = barsData,
+
+                        barProperties = BarProperties(
+                            cornerRadius = Bars.Data.Radius.Rectangle(
+                                topRight = 6.dp,
+                                topLeft = 6.dp
                             ),
+                            spacing = 1.dp,
+                            thickness = 48.dp
+                        ),
 
-                            labelHelperProperties = LabelHelperProperties(enabled = false),
-                            gridProperties = GridProperties(
-                                yAxisProperties = GridProperties.AxisProperties(
-                                    enabled = false
-                                )
-                            ),
+                        labelHelperProperties = LabelHelperProperties(enabled = false),
+                        gridProperties = GridProperties(
+                            yAxisProperties = GridProperties.AxisProperties(
+                                enabled = false
+                            )
+                        ),
 
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            ),
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
 
-                            maxValue = state.dashboardGraphMaxValue
-                        )
-                    }
+                        maxValue = graphState.maxValue
+                    )
                 }
+            }
 
                 Column {
                     // State variables to manage the dropdown's expanded state and the selected option text.
@@ -349,12 +375,24 @@ fun DashboardBreakdownPreview() {
                     expenses = 1200.0
                 )
             ),
-            dashboardGraphData = listOf(
-                DashboardGraphData(month= Month.JANUARY, expenses=0.0),
-                DashboardGraphData(month= Month.FEBRUARY, expenses=0.0),
-                DashboardGraphData(month= Month.MARCH, expenses=250.0)),
-            dashboardGraphMaxValue = 1000.0,
-            ),
+            days = listOf("Today", "Yesterday", "This Week", "This Month"),
+        ),
+        graphState = DashboardGraphState(
+            data = listOf(
+                DashboardGraphData(
+                    month = Month.JANUARY,
+                    expenses = 1200.0,
+                ),
+                DashboardGraphData(
+                    month = Month.FEBRUARY,
+                    expenses = 364.0,
+                ),
+                DashboardGraphData(
+                    month = Month.MARCH,
+                    expenses = 845.0,
+                ),
+            )
+        ),
         onEvent = {}
     )
 }
