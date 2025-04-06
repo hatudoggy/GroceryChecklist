@@ -3,7 +3,7 @@ package com.example.grocerychecklist.viewmodel.settings
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.grocerychecklist.data.model.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.NetworkUtils
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 class SettingsMainViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService,
+    private val authRepository: AuthRepository,
     private val application: Application
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsMainState())
@@ -31,8 +31,8 @@ class SettingsMainViewModel(
     }
 
     private fun updateUser(){
-        if (accountService.hasUser()){
-            val user = accountService.getUserProfile()
+        if (authRepository.hasUser()){
+            val user = authRepository.getUserProfile()
             _state.update {
                 it.copy(
                     userName = user.displayName.ifBlank { "Guest" },
@@ -66,7 +66,7 @@ class SettingsMainViewModel(
                 delay(100)
 
                 // Perform the sign-out operation
-                accountService.signOut()
+                authRepository.signOut()
 
                 // Keep the indicator visible for a moment to ensure user sees feedback
                 delay(800)
@@ -90,7 +90,7 @@ class SettingsMainViewModel(
             _state.update {it.copy(isPasswordReset = false, error = null)}
 
             try {
-                accountService.resetPassword()
+                authRepository.resetPassword()
                 _state.update { it.copy(isPasswordReset = true) }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
@@ -108,7 +108,7 @@ class SettingsMainViewModel(
 
         viewModelScope.launch {
             try {
-                accountService.updateEmail(newEmail)
+                authRepository.updateEmail(newEmail)
                 _state.update {
                     it.copy(
                         isEmailUpdateSent = true,
@@ -130,10 +130,10 @@ class SettingsMainViewModel(
     private fun reauthenticate(password: String) {
         viewModelScope.launch {
             try {
-                accountService.reauthenticate(password)
+                authRepository.reauthenticate(password)
 
                 pendingEmail?.let { email ->
-                    accountService.updateEmail(email)
+                    authRepository.updateEmail(email)
                     _state.update {
                         it.copy(
                             isEmailUpdateSent = true,

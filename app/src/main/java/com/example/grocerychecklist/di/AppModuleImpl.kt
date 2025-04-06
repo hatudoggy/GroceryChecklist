@@ -18,7 +18,7 @@ import com.example.grocerychecklist.data.dao.manager.ChecklistItemDAOManager
 import com.example.grocerychecklist.data.dao.manager.HistoryDAOManager
 import com.example.grocerychecklist.data.dao.manager.HistoryItemDAOManager
 import com.example.grocerychecklist.data.dao.manager.ItemDAOManager
-import com.example.grocerychecklist.data.model.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.DatabaseRepository
@@ -39,8 +39,8 @@ class AppModuleImpl(
         Navigator()
     }
 
-    override val accountService: AccountService by lazy {
-        AccountService()
+    override val authRepository: AuthRepository by lazy {
+        AuthRepository()
     }
 
     override val application: Application by lazy {
