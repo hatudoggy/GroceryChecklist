@@ -134,7 +134,7 @@ fun DashboardBreakdownScreen(
 
                             barProperties = BarProperties(
                                 cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
-                                spacing = 8.dp,
+                                spacing = 1.dp,
                                 thickness = 48.dp
                             ),
 

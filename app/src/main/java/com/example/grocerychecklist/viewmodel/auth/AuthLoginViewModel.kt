@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.util.ERROR_TAG
 import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
-import com.example.grocerychecklist.data.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
@@ -28,7 +28,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 
 class AuthLoginViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService,
+    private val authRepository: AuthRepository,
     private val application: Application
 ): ViewModel() {
     // Add a state flow to manage the UI state of the registration process
@@ -67,7 +67,7 @@ class AuthLoginViewModel(
 
             try{
                 withTimeout(5000){
-                    accountService.signInWithEmail(_uiState.value.email, _uiState.value.password)
+                    authRepository.signInWithEmail(_uiState.value.email, _uiState.value.password)
                     _uiState.update { it.copy(submissionState = SubmissionState.Success) }
                 }
             }
@@ -93,7 +93,7 @@ class AuthLoginViewModel(
                 withTimeout(5000) {
                     if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        accountService.signInWithGoogle(googleIdTokenCredential.idToken)
+                        authRepository.signInWithGoogle(googleIdTokenCredential.idToken)
                         _uiState.update { it.copy(submissionState = SubmissionState.Success) }
                     } else {
                         Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)

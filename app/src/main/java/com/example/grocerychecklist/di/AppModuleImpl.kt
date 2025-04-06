@@ -4,7 +4,17 @@ import android.app.Application
 import android.content.Context
 import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.data.dao.DAOProvider
-import com.example.grocerychecklist.data.service.AccountService
+import com.example.grocerychecklist.data.dao.ChecklistDAO
+import com.example.grocerychecklist.data.dao.ChecklistItemDAO
+import com.example.grocerychecklist.data.dao.HistoryDAO
+import com.example.grocerychecklist.data.dao.HistoryItemDAO
+import com.example.grocerychecklist.data.dao.ItemDAO
+import com.example.grocerychecklist.data.dao.firestoreImpl.FChecklistDAOImpl
+import com.example.grocerychecklist.data.dao.firestoreImpl.FChecklistItemDAOImpl
+import com.example.grocerychecklist.data.dao.firestoreImpl.FHistoryDAOImpl
+import com.example.grocerychecklist.data.dao.firestoreImpl.FHistoryItemDAOImpl
+import com.example.grocerychecklist.data.dao.firestoreImpl.FItemDAOImpl
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
@@ -24,8 +34,8 @@ class AppModuleImpl(
         Navigator()
     }
 
-    override val accountService: AccountService by lazy {
-        AccountService()
+    override val authRepository: AuthRepository by lazy {
+        AuthRepository()
     }
 
     override val application: Application by lazy {
@@ -33,7 +43,7 @@ class AppModuleImpl(
     }
 
     private val repositoryManager by lazy {
-        RepositoryManager(appContext, accountService)
+        RepositoryManager(appContext, authRepository)
     }
 
     override val checklistRepository: ChecklistRepository

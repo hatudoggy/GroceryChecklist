@@ -34,7 +34,7 @@ fun NavGraphBuilder.authDestination() {
             factory = viewModelFactory {
                 AuthLoginViewModel(
                     appModule.navigator,
-                    appModule.accountService,
+                    appModule.authRepository,
                     appModule.application)
             }
         )
@@ -50,7 +50,7 @@ fun NavGraphBuilder.authDestination() {
             factory = viewModelFactory {
                 AuthRegisterViewModel(
                     appModule.navigator,
-                    appModule.accountService,
+                    appModule.authRepository,
                     appModule.application)
             }
         )

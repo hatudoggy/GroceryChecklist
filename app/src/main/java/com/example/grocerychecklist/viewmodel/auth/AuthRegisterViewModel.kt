@@ -5,7 +5,7 @@ import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
-import com.example.grocerychecklist.data.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
@@ -31,7 +31,7 @@ private const val ERROR_TAG = "AuthRegisterViewModel"
 // Data class to hold the form state
 class AuthRegisterViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService,
+    private val authRepository: AuthRepository,
     private val application: Application
 ) : ViewModel() {
 
@@ -92,7 +92,7 @@ class AuthRegisterViewModel(
             if (fullName.isNotBlank()) {
                 try {
                     withTimeout(5000) {
-                        accountService.updateDisplayName(fullName)
+                        authRepository.updateDisplayName(fullName)
                     }
                 } catch (_: SocketTimeoutException) {
                     _state.update { it.copy(submissionState = SubmissionState.Error(TIMEOUT_ERROR)) }
@@ -117,7 +117,7 @@ class AuthRegisterViewModel(
                     if (!currentState.isFormValid) {
                         throw IllegalArgumentException("Invalid form data")
                     }
-                    accountService.linkAccountWithEmail(currentState.email, currentState.password)
+                    authRepository.linkAccountWithEmail(currentState.email, currentState.password)
                     updateDisplayNameOnSignUp()
                     _state.update { it.copy(submissionState = SubmissionState.Success) }
                 }
@@ -141,7 +141,7 @@ class AuthRegisterViewModel(
                 withTimeout(5000) {
                     if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        accountService.linkAccountWithGoogle(googleIdTokenCredential.idToken)
+                        authRepository.linkAccountWithGoogle(googleIdTokenCredential.idToken)
                         _state.update { it.copy(submissionState = SubmissionState.Success) }
                     } else {
                         Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)

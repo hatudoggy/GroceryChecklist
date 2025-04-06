@@ -2,7 +2,7 @@ package com.example.grocerychecklist.di
 
 import android.app.Application
 import com.example.grocerychecklist.data.AppDatabase
-import com.example.grocerychecklist.data.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
@@ -13,7 +13,7 @@ import com.example.grocerychecklist.ui.screen.Navigator
 interface AppModule {
     val db: AppDatabase
     val navigator: Navigator
-    val accountService: AccountService
+    val authRepository: AuthRepository
     val application: Application
     val checklistRepository: ChecklistRepository
     val checklistItemRepository: ChecklistItemRepository

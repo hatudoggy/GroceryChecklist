@@ -1,14 +1,15 @@
-package com.example.grocerychecklist.data.service
+package com.example.grocerychecklist.data.repository
 
 import com.example.grocerychecklist.data.dao.firestoreImpl.FirestoreCollections
 import com.example.grocerychecklist.data.model.AuthUser
 import com.example.grocerychecklist.data.model.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class AccountService{
+class AuthRepository{
     val currentAuthUser: Flow<AuthUser?>
         get() = callbackFlow {
             val listener =
@@ -34,24 +35,13 @@ class AccountService{
         return Firebase.auth.currentUser != null
     }
 
-    fun isAnonymous(): Boolean {
-        return Firebase.auth.currentUser?.isAnonymous ?: false
-    }
-
     fun getUserProfile(): AuthUser {
         return Firebase.auth.currentUser.toAppUser()
     }
 
-    suspend fun createAnonymousAccount() {
-        val currentUser = Firebase.auth.currentUser
-        if (currentUser == null || !currentUser.isAnonymous) {
-            if (currentUser != null) Firebase.auth.signOut() // Sign out if a non-anonymous user is signed in
-            Firebase.auth.signInAnonymously().await()        }
-    }
-
     suspend fun updateDisplayName(newDisplayName: String) {
         val profileUpdates = userProfileChangeRequest {
-            displayName = newDisplayName
+            UserProfileChangeRequest.Builder().setDisplayName(newDisplayName).build()
         }
 
         Firebase.auth.currentUser!!.updateProfile(profileUpdates).await()
