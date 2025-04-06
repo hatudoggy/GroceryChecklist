@@ -1,17 +1,15 @@
 package com.example.grocerychecklist.viewmodel.auth
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import android.util.Patterns
-import androidx.compose.animation.core.copy
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grocerychecklist.util.ERROR_TAG
 import com.example.grocerychecklist.util.UNEXPECTED_CREDENTIAL
-import com.example.grocerychecklist.data.model.service.AccountService
+import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.ui.screen.Navigator
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.util.DEFAULT_ERROR
@@ -30,7 +28,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 
 class AuthLoginViewModel(
     private val navigator: Navigator,
-    private val accountService: AccountService,
+    private val authRepository: AuthRepository,
     private val application: Application
 ): ViewModel() {
     // Add a state flow to manage the UI state of the registration process
@@ -83,7 +81,7 @@ class AuthLoginViewModel(
             _uiState.update { it.copy(isLoading = true) }
             try{
                 withTimeout(5000){
-                    accountService.signInWithEmail(_uiState.value.email, _uiState.value.password)
+                    authRepository.signInWithEmail(_uiState.value.email, _uiState.value.password)
                     navigator.navigate(Routes.DashboardMain)
                 }
             }
@@ -110,7 +108,7 @@ class AuthLoginViewModel(
                 withTimeout(5000) {
                     if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        accountService.signInWithGoogle(googleIdTokenCredential.idToken)
+                        authRepository.signInWithGoogle(googleIdTokenCredential.idToken)
                         navigator.navigate(Routes.DashboardMain)
                     } else {
                         Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)

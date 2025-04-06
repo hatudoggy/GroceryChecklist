@@ -16,7 +16,7 @@ fun NavGraphBuilder.settingsDestination() {
             factory = viewModelFactory {
                 SettingsMainViewModel(
                     appModule.navigator,
-                    appModule.accountService,
+                    appModule.authRepository,
                     appModule.application
                 )
             }
