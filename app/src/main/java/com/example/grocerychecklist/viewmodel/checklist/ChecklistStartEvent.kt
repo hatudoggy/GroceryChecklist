@@ -11,7 +11,10 @@ import com.example.grocerychecklist.ui.screen.checklist.FilterType
  * Each event represents a user interaction or a state change within the Checklist.
  */
 sealed interface ChecklistStartEvent {
-    data object NavigateBack : ChecklistStartEvent
+    // Navigation Events
+    data object NavigateBack: ChecklistStartEvent
+    data object NavigateChecklistScreen: ChecklistStartEvent
+    data object NavigateHistoryScreen: ChecklistStartEvent
 
     /**
      * Event triggered when the Checklist mode changes.
@@ -79,6 +82,13 @@ sealed interface ChecklistStartEvent {
      * Event triggered to toggle the visibility of the copy sheet.
      */
     data object ToggleCopyDialog : ChecklistStartEvent
+    // Checkout
+    data object OpenCheckout: ChecklistStartEvent
+    data object CloseCheckout: ChecklistStartEvent
+    data object OpenCheckoutDialog: ChecklistStartEvent
+    data object CloseCheckoutDialog: ChecklistStartEvent
+    data object OpenCheckoutCompleteDialog: ChecklistStartEvent
+    data object CloseCheckoutCompleteDialog: ChecklistStartEvent
 
     data object ToggleIconPicker : ChecklistStartEvent
 

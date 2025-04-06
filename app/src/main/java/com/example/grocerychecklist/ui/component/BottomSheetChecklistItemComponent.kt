@@ -106,7 +106,12 @@ fun BottomSheetChecklistItem(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = price,
-                onValueChange = { if (it.isDigitsOnly()) price = it },
+                onValueChange = { newValue ->
+                    val regex = Regex("^\\d*(\\.\\d{0,2})?$")
+                    if (newValue.isEmpty() || regex.matches(newValue)) {
+                        price = newValue
+                    }
+                },
                 label = { Text("Price") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
@@ -129,6 +134,10 @@ fun BottomSheetChecklistItem(
                 ) { Text("Cancel") }
                 Spacer(Modifier.width(10.dp))
                 Button(
+                    enabled =
+                        name.trim().isNotEmpty() &&
+                        price.isNotEmpty() &&
+                        quantity.isNotEmpty(),
                     onClick = { onAdd(name, category, price.toDouble(), quantity.toInt()) },
                 ) { Text( if(selectedItem == null) "Add" else "Save" ) }
             }

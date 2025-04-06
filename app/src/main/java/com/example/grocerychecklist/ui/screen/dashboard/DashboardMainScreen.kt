@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -72,15 +74,24 @@ fun DashboardMainScreen(
             ) {
                 PieChart(
                     pieChartData = PieChartData(
-                        state.categoryBreakdown.map {
-                            PieChartData.Slice(
-                                it.sumOfPrice.toFloat(),
-                                ItemCategory.valueOf(it.category).color,
+                        if (state.categoryBreakdown.isEmpty()) {
+                            listOf(
+                                PieChartData.Slice(
+                                    1F,
+                                    Color.LightGray,
+                                )
                             )
+                        } else {
+                            state.categoryBreakdown.map {
+                                PieChartData.Slice(
+                                    it.sumOfPrice.toFloat(),
+                                    ItemCategory.valueOf(it.category).color,
+                                )
+                            }
                         }
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    sliceDrawer = SimpleSliceDrawer(14F)
+                    sliceDrawer = SimpleSliceDrawer(12F)
                 )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -136,18 +147,43 @@ fun DashboardMainScreen(
                         })
                     )
                 }
-                state.histories.forEach { item ->
-                    ButtonCardComponent(
-                        name = item.history.name,
-                        expense = item.totalPrice,
-                        date = DateUtility.formatDateWithDay(item.history.createdAt),
-                        icon = item.history.icon.imageVector,
-                        iconBackgroundColor = item.history.iconColor.color,
-                        variant = ButtonCardComponentVariant.History,
-                        onClick = {
-                            onEvent(DashboardMainEvent.NavigateHistoryDetail(item.history.id, item.history.name))
+                if (state.histories.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.History,
+                            contentDescription = "Empty Checklist",
+                            modifier = Modifier.size(32.dp),
+                        )
+                        Text(
+                            text = "No History Items",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray
+                        )
+                    }
                         }
-                    )
+                } else {
+                    state.histories.forEach { item ->
+                        ButtonCardComponent(
+                            name = item.history.name,
+                            expense = item.totalPrice,
+                            date = DateUtility.formatDateWithDay(item.history.createdAt),
+                            icon = item.history.icon.imageVector,
+                            iconBackgroundColor = item.history.iconColor.color,
+                            variant = ButtonCardComponentVariant.History,
+                            onClick = {
+                                onEvent(DashboardMainEvent.NavigateHistoryDetail(item.history.id, item.history.name))
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -905,6 +905,100 @@ class ChecklistStartViewModel(
                 onSuccess?.invoke()
                 loadData()
                 updateSubmissionState(SubmissionState.Success)
+            ChecklistStartEvent.OpenCheckoutCompleteDialog -> {
+                _state.update { it.copy(isCheckoutCompleted = true) }
+            }
+            ChecklistStartEvent.CloseCheckoutCompleteDialog -> {
+                _state.update { it.copy(isCheckoutCompleted = false) }
+            }
+
+            ChecklistStartEvent.NavigateChecklistScreen -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
+                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
+            }
+            ChecklistStartEvent.NavigateHistoryScreen -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutCompleteDialog)
+                navigator.navigateWithClearBackStack(Routes.ChecklistMain)
+            }
+
+            ChecklistStartEvent.ClearSelectedItem -> { _state.update { it.copy(selectedItem = null) } }
+
+
+            is ChecklistStartEvent.AddChecklistItem -> {
+                onEvent(ChecklistStartEvent.CloseCheckoutDialog)
+                viewModelScope.launch {
+                    try {
+                        val id = repo.addChecklistItem(
+                            checklistId,
+                            checklistItemInput = ChecklistItemInput(
+                                name = event.formInputs.name,
+                                price = event.formInputs.price,
+                                quantity = event.formInputs.quantity,
+                                category = event.formInputs.category.name,
+                                measureType = "",
+                                measureValue = 0.00,
+                                photoRef = ""
+                            )
+                        )
+                        println("Created Checklist Id: $id")
+                        onEvent(ChecklistStartEvent.CloseDrawer)
+                    } catch (err: Error) {
+                        Log.e("ChecklistMainViewModel", "Error adding item: ${err.message}")
+                    }
+                }
+            }
+            is ChecklistStartEvent.EditChecklistItem -> {
+                viewModelScope.launch {
+                    try {
+                        val id = repo.updateChecklistItem(
+                            event.checklistId,
+                            checklistItemInput = ChecklistItemInput(
+                                name = event.formInputs.name,
+                                price = event.formInputs.price,
+                                quantity = event.formInputs.quantity,
+                                category = event.formInputs.category.name,
+                                measureType = "",
+                                measureValue = 0.00,
+                                photoRef = ""
+                            )
+                        )
+                        println("Edited Checklist Id: $id")
+                        onEvent(ChecklistStartEvent.CloseDrawer)
+                    } catch (err: Error) {
+                        Log.e("ChecklistMainViewModel", "Error updating item: ${err.message}")
+                    }
+                }
+            }
+            is ChecklistStartEvent.DeleteChecklistItem -> {
+                val item = _state.value.filteredItems.find { it.id == event.checklistId }
+                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
+                viewModelScope.launch {
+                    try {
+                        val id = repo.deleteChecklistItem(
+                            event.checklistId,
+                        )
+                        println("Deleted Checklist Id: $id")
+                        onEvent(ChecklistStartEvent.CloseDeleteDialog)
+                    } catch (err: Error) {
+                        Log.e("ChecklistMainViewModel", "Error deleting item: ${err.message}")
+                    }
+                }
+            }
+            is ChecklistStartEvent.DeleteChecklistItemAndItem -> {
+                val item = _state.value.filteredItems.find { it.id == event.itemId }
+                if (item != null) onEvent(ChecklistStartEvent.ToggleItemCheck(item))
+                viewModelScope.launch {
+                    try {
+                        val id = repo.deleteChecklistItemAndItem(
+                            event.checklistId,
+                            event.itemId
+                        )
+                        println("Deleted Checklist Id: $id")
+                        onEvent(ChecklistStartEvent.CloseDeleteDialog)
+                    } catch (err: Error) {
+                        Log.e("ChecklistMainViewModel", "Error deleting item: ${err.message}")
+                    }
+                }
             }
             is Result.Loading -> updateSubmissionState(SubmissionState.Loading)
         }

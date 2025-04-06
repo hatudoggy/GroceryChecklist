@@ -223,7 +223,8 @@ internal fun ChecklistMainScreen(
                 TextButton(onClick = { toggleDeleteDialog() }) {
                     Text("Cancel", color = Color.Black)
                 }
-            }
+            },
+            containerColor = Color.White
         )
     }
 

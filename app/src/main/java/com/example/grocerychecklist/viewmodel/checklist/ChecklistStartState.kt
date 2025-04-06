@@ -41,6 +41,8 @@ data class ChecklistStartState(
     val isCopyDialogOpen: Boolean = false,
 
     val submissionState: SubmissionState = SubmissionState.Idle,
+    val isCheckoutConfirmOpen: Boolean = false,
+    val isCheckoutCompleted: Boolean = false,
 )
 
 sealed interface ChecklistStartUIState{

@@ -134,7 +134,7 @@ fun ChecklistItemComponent(
             ) {
                 val converter = ConvertNumToCurrency()
                 Text(
-                    converter(Currency.PHP, price, false),
+                    converter(Currency.PHP, price, true),
                     fontSize = 16.sp
                 )
                 if (
