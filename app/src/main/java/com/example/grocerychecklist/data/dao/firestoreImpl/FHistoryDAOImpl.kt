@@ -9,12 +9,16 @@ import com.example.grocerychecklist.data.mapper.HistoryItemAggregated
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 import com.example.grocerychecklist.data.mapper.HistoryPriced
 import com.example.grocerychecklist.data.model.History
+import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.example.grocerychecklist.util.IdGenerator
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.snapshots
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
@@ -24,8 +28,13 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
     FirestoreCollections.HISTORIES
 ), HistoryDAO {
 
+    private val fHistoryItemDAOImpl: FHistoryItemDAOImpl by lazy {
+        FHistoryItemDAOImpl()
+    }
+
     override suspend fun insert(history: History): Long {
         val newId = IdGenerator.nextID()
+        Log.d("FHistoryDAOImpl", "Inserting history with newId: $newId")
         val firestoreModel = toFirestoreModel(history)
         db.document(newId.toString()).set(firestoreModel).await()
         return newId
@@ -33,6 +42,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
 
     override suspend fun getHistoryById(historyId: Long): History {
         val snapshot = db.document(historyId.toString()).get().await()
+        Log.d("FHistoryDAOImpl", "Fetching history by id: $historyId")
         if (!snapshot.exists())
             throw NoSuchElementException("History with id $historyId not found.")
         return fromFirestoreModel(snapshot, snapshot.id.toLong())
@@ -40,6 +50,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
 
     override fun getAllHistoriesOrderedByCreatedAt(): Flow<List<History>> {
         return db
+            .also { Log.d("FHistoryDAOImpl", "Fetching all histories ordered by createdAt") }
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .snapshots()
             .map { querySnapshot ->
@@ -48,6 +59,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
     }
 
     override fun getAllHistoriesOrderedLimitWithSum(limit: Int): Flow<List<HistoryPriced>> {
+        Log.d("FHistoryDAOImpl", "Fetching all histories with sum limited by: $limit")
         return db
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(limit.toLong())
@@ -55,67 +67,46 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
             .map { querySnapshot ->
                 querySnapshot.documents.mapNotNull { doc ->
                     val history = fromFirestoreModel(doc, doc.id.toLong())
-                    val totalPrice = doc.getDouble("totalPrice") ?: 0.0
-                    HistoryPriced(history, totalPrice)
+                    Log.d("FHistoryDAOImpl", "Processing history: ${history.id}")
+                    val totalPrice = fHistoryItemDAOImpl.aggregateTotalHistoryItemPrice(history.id)
+                    HistoryPriced(history, totalPrice.first())
                 }
             }
     }
 
     override fun getHistoryItemAggregated(historyId: Long): Flow<List<HistoryItemAggregated>> {
-        return db
-            .document(historyId.toString())
-            .snapshots()
-            .map { documentSnapshot ->
-                val aggregatedItemsList = documentSnapshot.get("aggregatedItems")
-                        as? List<*> ?: emptyList<HistoryItemAggregatedFirestore>()
-
-                aggregatedItemsList.mapNotNull { item ->
-                    try {
-                        val firestoreItem = Gson().fromJson(Gson().toJson(item),
-                            HistoryItemAggregatedFirestore::class.java)
-                        firestoreItem.toDomainModel()
-                    } catch (e: Exception) {
-                        null
-                    }
+        Log.d("FHistoryDAOImpl", "Fetching aggregated items for history ID: $historyId")
+        val historyItems = fHistoryItemDAOImpl.getAllHistoryItems(historyId)
+        return historyItems.map { items ->
+            Log.d("FHistoryDAOImpl", "Processing ${items.size} history items")
+            items.groupBy { item -> item.category }
+                .map { (category, groupedItems) ->
+                    val totalPrice = groupedItems.sumOf { it.price }
+                    val totalQuantity = groupedItems.sumOf { it.quantity }
+                    Log.d("FHistoryDAOImpl", "Aggregated category: $category, totalPrice: $totalPrice, totalQuantity: $totalQuantity")
+                    HistoryItemAggregated(
+                        totalPrice,
+                        totalQuantity,
+                        category
+                    )
                 }
-            }
+        }
     }
 
-    override suspend fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
-        return db
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .snapshots()
-            .map { querySnapshot ->
-                querySnapshot.documents.mapNotNull { document ->
-                    try {
-                        val historyFirestore = document.toObject(HistoryFirestore::class.java)
-                            ?.apply { id = document.id.toLong() }
+    override fun getHistoryWithAggregatedItems(limit: Int?): Flow<List<HistoryMapped>> {
+        val histories = getAllHistoriesOrderedLimitWithSum(limit ?: Int.MAX_VALUE)
 
-                        val totalPrice = historyFirestore?.totalPrice ?: 0.0
-                        val aggregatedItemsList = historyFirestore?.aggregatedItems ?: emptyList()
+        return histories.map { pricedHistories ->
+            Log.d("FHistoryDAOImpl", "Mapping ${pricedHistories.size} histories with aggregated items")
+            pricedHistories.map { historyPriced ->
+                val history = historyPriced.history
+                Log.d("FHistoryDAOImpl", "Getting aggregated items for history ID: ${history.id}")
+                val aggregatedItems = getHistoryItemAggregated(history.id).firstOrNull() ?: emptyList()
+                Log.d("FHistoryDAOImpl", "Aggregated items result: $aggregatedItems")
 
-                        val aggregatedItems = aggregatedItemsList.mapNotNull { item ->
-                            try {
-                                val firestoreItem = Gson().fromJson(Gson().toJson(item),
-                                    HistoryItemAggregatedFirestore::class.java)
-                                firestoreItem.toDomainModel()
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }.take(3)
-
-                        historyFirestore?.let {
-                            HistoryMapped(
-                                history = it.toHistory(historyFirestore.id),
-                                totalPrice = totalPrice,
-                                aggregatedItems = aggregatedItems
-                            )
-                        }
-                    } catch (e: Exception) {
-                        null
-                    }
-                }.let { if (limit != null) it.take(limit) else it }
+                HistoryMapped(history, historyPriced.totalPrice, aggregatedItems)
             }
+        }
     }
 
     override fun getHistoriesFromDateRange(
@@ -125,6 +116,7 @@ class FHistoryDAOImpl: FBaseDAOImpl<History>(
         val startTimestamp = startDate.toTimestamp()
         val endTimestamp = endDate.toTimestamp()
 
+        Log.d("FHistoryDAOImpl", "Fetching histories from date range: $startDate to $endDate")
         return db
             .whereGreaterThanOrEqualTo("createdAt", startTimestamp)
             .whereLessThan("createdAt", endTimestamp)

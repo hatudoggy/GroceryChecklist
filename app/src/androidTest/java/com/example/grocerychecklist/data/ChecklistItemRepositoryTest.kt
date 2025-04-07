@@ -43,7 +43,7 @@ class ChecklistItemRepositoryTest {
         checklistDAO = db.checklistDAO()
         checklistRepository = ChecklistRepository(checklistDAO)
         itemDAO = db.itemDAO()
-        itemRepository = ItemRepository(itemDAO)
+        itemRepository = ItemRepository(checklistItemDAO, itemDAO)
         checklistItemDAO = db.checklistItemDAO()
         checklistItemRepository = ChecklistItemRepository(checklistItemDAO, itemDAO)
     }

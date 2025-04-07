@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
 
-    suspend fun getChecklistItemById(checklistItemId: Long): ChecklistItemFull
+    fun getChecklistItemById(checklistItemId: Long): Flow<ChecklistItemFull?>
 
     fun getAllChecklistItems(checklistId: Long): Flow<List<ChecklistItemFull>>
 
@@ -23,14 +23,14 @@ interface ChecklistItemDAO: BaseDAO<ChecklistItem> {
 
     fun getAllChecklistItemsByCategory(checklistId: Long, category: String): Flow<List<ChecklistItemFull>>
 
-    suspend fun getChecklistItemMaxOrder(checklistId: Long): Int
+    fun getChecklistItemMaxOrder(checklistId: Long): Flow<Int?>
 
     suspend fun deleteChecklistById(checklistId: Long): Int
 
     suspend fun deleteChecklistByItemId(itemId: Long): Int
 
-    suspend fun aggregateTotalChecklistItems(checklistId: Long): Int
+    fun aggregateTotalChecklistItems(checklistId: Long): Flow<Int?>
 
-    suspend fun aggregateTotalChecklistItemPrice(checklistId: Long): Double?
+    fun aggregateTotalChecklistItemPrice(checklistId: Long): Flow<Double?>
 
 }

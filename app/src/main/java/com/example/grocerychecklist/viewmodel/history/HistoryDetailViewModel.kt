@@ -1,6 +1,7 @@
 package com.example.grocerychecklist.viewmodel.history
 
 import ItemCategory
+import android.R.attr.name
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
@@ -16,29 +17,28 @@ import com.example.grocerychecklist.ui.screen.history.HistoryDataDetails
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Map.entry
 
 /**
  * ViewModel for the History Detail screen, responsible for managing and providing data
  * related to historical grocery items.
  */
 class HistoryDetailViewModel(
+    private val historyId: Long,
+    private val checklistName: String,
     private val navigator: Navigator,
-    entry: NavBackStackEntry,
     private val historyRepository: HistoryItemRepository,
-    private val checklistRepository: ChecklistRepository
 ) : ViewModel() {
-    private val historyId = entry.toRoute<Routes.HistoryDetail>().historyId
-    
-    private val _state = MutableStateFlow(HistoryDetailState())
-    val state: StateFlow<HistoryDetailState> = _state.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(500), HistoryDetailState()
-    )
+    private val _state: MutableStateFlow<HistoryDetailState> = MutableStateFlow(HistoryDetailState())
+    val state: StateFlow<HistoryDetailState> = _state.asStateFlow()
 
     init {
+        _state.update { it.copy(checklistName = checklistName) }
         loadHistoryItems()
         loadHistoryDetails()
     }
@@ -66,7 +66,6 @@ class HistoryDetailViewModel(
             val history = historyRepository.getHistoryItems(historyId, ChecklistItemOrder.Name).first().first()
             _state.update { currentState ->
                 currentState.copy(
-                    checklistName = checklistRepository.getChecklist(history.checklistItemId).name,
                     date = DateUtility.formatDateWithDay(history.createdAt)
                 )
             }

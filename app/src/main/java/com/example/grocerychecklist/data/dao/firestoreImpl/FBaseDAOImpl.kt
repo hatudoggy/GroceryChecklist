@@ -20,6 +20,7 @@ abstract class FBaseDAOImpl<T : Any>(
             .document(currentUser.uid)
             .collection(collectionPath)
 
+
     protected abstract fun toFirestoreModel(obj: T): Map<String, Any?>
     protected abstract fun fromFirestoreModel(snapshot: DocumentSnapshot, id: Long): T
     protected abstract fun getId(obj: T): Long

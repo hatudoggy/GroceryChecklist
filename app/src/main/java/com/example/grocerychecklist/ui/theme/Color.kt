@@ -18,6 +18,11 @@ val PrimaryDarkGreen = Color(0xFF6FA539)
 val PrimaryLightGreen = Color(0xFF8AE260)
 val PrimaryGreenSurface = Color(0xFFE2FFD5)
 
+val SecondaryColor = Color(0xFF03A9F4)
+val SecondaryColorSurface = Color(0xFFD5E8FF)
+
+
+
 val ErrorText = Color(0xFF871c1c)
 val ErrorFilled = Color(0xFFCC3148)
 val ErrorTonal = Color(0xFFf0c7c7)

@@ -95,7 +95,7 @@ fun SettingsMainScreen(
     }
     // Sign Out Indicator overlay - will appear on top of the entire screen
     SignOutIndicator(isVisible = state.isSigningOut)
-    ToastComponent(message = state.error)
+    ToastComponent(message = state.error, onDismiss = { onEvent(SettingsMainEvent.ClearErrorState) })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

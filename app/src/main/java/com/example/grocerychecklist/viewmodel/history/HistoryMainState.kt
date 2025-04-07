@@ -4,9 +4,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import com.example.grocerychecklist.data.mapper.HistoryMapped
 
-data class HistoryMainState (
-    // Main Data
+data class HistoryMainState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
     val cards: List<HistoryMapped> = emptyList(),
-    val cardStates: MutableMap<Long, Boolean> = mutableStateMapOf(),
-    val monthsList: MutableList<String> = mutableStateListOf(),
+    val monthsList: List<String> = emptyList(),
+    val cardStates: Map<Long, Boolean> = emptyMap()
 )

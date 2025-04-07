@@ -1,7 +1,10 @@
 package com.example.grocerychecklist.ui.component
 
+import android.R.attr.text
 import android.content.Context
 import android.util.Log
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -19,11 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
@@ -47,9 +47,9 @@ import kotlinx.coroutines.launch
 fun GoogleButton(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    text: String = "Sign Up with Google",
-    loadingText: String = "Creating Account...",
-    icon: Int = R.drawable.ic_google_logo,
+    @StringRes text: Int = R.string.sign_up_with_google,
+    @StringRes loadingText: Int = R.string.sign_up_loading,
+    @DrawableRes icon: Int = R.drawable.ic_google_logo,
     shape: Shape = MaterialTheme.shapes.medium,
     borderColor: Color = Color.LightGray,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
@@ -87,12 +87,12 @@ fun GoogleButton(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                painter = painterResource(id = icon),
+                painter = painterResource(icon),
                 contentDescription = "Google Button",
                 tint = Color.Unspecified
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = if (isLoading) loadingText else text)
+            Text(text = stringResource(if (isLoading) loadingText else text))
             if (isLoading) {
                 Spacer(modifier = Modifier.width(16.dp))
                 CircularProgressIndicator(

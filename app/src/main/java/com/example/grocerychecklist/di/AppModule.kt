@@ -5,7 +5,6 @@ import com.example.grocerychecklist.data.AppDatabase
 import com.example.grocerychecklist.data.repository.AuthRepository
 import com.example.grocerychecklist.data.repository.ChecklistItemRepository
 import com.example.grocerychecklist.data.repository.ChecklistRepository
-import com.example.grocerychecklist.data.repository.DatabaseRepository
 import com.example.grocerychecklist.data.repository.HistoryItemRepository
 import com.example.grocerychecklist.data.repository.HistoryRepository
 import com.example.grocerychecklist.data.repository.ItemRepository
@@ -16,7 +15,6 @@ interface AppModule {
     val navigator: Navigator
     val authRepository: AuthRepository
     val application: Application
-    val databaseRepository: DatabaseRepository
     val checklistRepository: ChecklistRepository
     val checklistItemRepository: ChecklistItemRepository
     val itemRepository: ItemRepository

@@ -1,29 +1,74 @@
 <resources>
     <string name="app_name">GroceryChecklist</string>
+
+    <!-- Main -->
     <string name="checklist_title">Main Grocery</string>
     <string name="checklist_description">A checklist of the main groceries for the month. Essentials like food, medicine, and toiletries.</string>
+    <string name="history_title">History</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Authentication -->
     <string name="authenticate">Authenticate</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="confirm_password">Confirm password</string>
-    <string name="sign_in">Sign in</string>
-    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="login">Log in</string>
+    <string name="login_error">Failed to log in</string>
+    <string name="login_loading">Logging in…</string>
     <string name="no_accounts_error">No Google accounts found on this device</string>
-    <string name="sign_up">Sign up</string>
+    <string name="login_with_google">Login with Google</string>
+    <string name="sign_up">Register</string>
+    <string name="sign_up_error">Failed to sign up</string>
+    <string name="sign_up_loading">Signing up…</string>`
     <string name="sign_up_with_google">Sign up with Google</string>
-    <string name="sign_up_description">Don\'t have an account? Click here to Sign Up!</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="sign_up_now">Sign up now</string>
     <string name="sign_out">Sign out</string>
     <string name="sign_out_title">Sign out?</string>
-    <string name="sign_out_description">You will have to sign in again to see your notes.</string>
+    <string name="sign_out_description">You will have to sign in again to see your data.</string>
     <string name="delete_account">Delete account</string>
     <string name="delete_account_title">Delete account?</string>
-    <string name="delete_account_description">You will lose all your notes and your account will be deleted. This action is irreversible.</string>
+    <string name="delete_account_description">You will lose all your data and your account will be deleted. This action is irreversible.</string>
     <string name="cancel">Cancel</string>
     <string name="account_center">Account center</string>
+    <string name="update">Update</string>
     <string name="profile_name">Display name</string>
     <string name="profile_email">Email: %1$s</string>
     <string name="profile_uid">UID: %1$s</string>
     <string name="profile_provider">Account provider: %1$s</string>
-    <string name="update">Update</string>
+
+    <!-- General -->
     <string name="or">or</string>
+    <string name="delete">Delete</string>
+    <string name="delete_account_confirmation">Are you sure you want to delete your account?</string>
+    <string name="error">Error</string>
+    <string name="oops">Oops!</string>
+    <string name="success">Success</string>
+    <string name="default_error">Something went wrong</string>
+    <string name="close">Close</string>
+
+    <!-- Loading -->
+    <string name="checklist_loading">Loading checklist…</string>
+    <string name="history_loading">Loading history…</string>
+    <string name="checklist_item_loading">Loading checklist item…</string>
+    <string name="history_item_loading">Loading history item…</string>
+
+    <!-- Errors -->
+    <string name="checklist_error">Failed to load checklist</string>
+    <string name="history_error">Failed to load history</string>
+    <string name="invalid_email">Invalid email address</string>
+    <string name="invalid_password">Invalid password</string>
+    <string name="invalid_email_or_password">Invalid email or password</string>"
+    <string name="invalid_confirm_password">Passwords do not match</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="timeout_error">Request timed out</string>
+    <string name="unexpected_credential">Unexpected credential</string>
+    <string name="checklist_item_error">Failed to load checklist item</string>
+    <string name="history_item_error">Failed to load history item</string>
+
+    <!-- UI -->
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
 </resources>

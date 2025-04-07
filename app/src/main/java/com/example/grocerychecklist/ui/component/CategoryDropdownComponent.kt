@@ -57,6 +57,7 @@ fun CategoryDropdown(
             onDismissRequest = { expanded = false }
         ) {
             ItemCategory.entries.forEach { category ->
+                if (category == ItemCategory.ALL) return@forEach
                 DropdownMenuItem(
                     leadingIcon = {
                         Icon(

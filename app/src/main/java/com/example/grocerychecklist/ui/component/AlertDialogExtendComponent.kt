@@ -33,9 +33,17 @@ import com.example.grocerychecklist.ui.screen.checklist.ChecklistStartScreen
 import com.example.grocerychecklist.ui.theme.ErrorFilled
 import com.example.grocerychecklist.ui.theme.ErrorText
 import com.example.grocerychecklist.ui.theme.ErrorTonal
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
 
 
+/**
+ * A customizable AlertDialog with a title, body, and action buttons.
+ *
+ * @param isOpen Boolean flag to control the visibility of the dialog. When true, the dialog is shown.
+ * @param onClose Callback function invoked when the user attempts to dismiss the dialog, typically by clicking outside or pressing the back button.
+ * @param title The title text displayed at the top of the dialog.
+ * @param body The main content text displayed in the body of the dialog.
+ * @param actionButtons A composable lambda that defines the action buttons to be displayed at the bottom of the dialog. This allows for flexible button configurations (e.g., positive and negative buttons).
+ */
 @Composable
 fun AlertDialogExtend(
     isOpen: Boolean,

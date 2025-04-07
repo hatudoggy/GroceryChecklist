@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.example.grocerychecklist.GroceryChecklistApp.Companion.appModule
 import com.example.grocerychecklist.ui.screen.Routes
 import com.example.grocerychecklist.viewmodel.history.HistoryDetailViewModel
@@ -30,20 +31,19 @@ fun NavGraphBuilder.historyDestination() {
     }
 
     composable<Routes.HistoryDetail> { entry ->
+        val route = entry.toRoute<Routes.HistoryDetail>()
         val historyDetailViewModel = viewModel<HistoryDetailViewModel>(
             factory = viewModelFactory {
                 HistoryDetailViewModel(
-                    appModule.navigator,
-                    entry,
-                    appModule.historyItemRepository,
-                    appModule.checklistRepository
+                    checklistName = route.checklistName,
+                    historyId = route.historyId,
+                    navigator = appModule.navigator,
+                    historyRepository = appModule.historyItemRepository,
                 )
             }
         )
-        val state by historyDetailViewModel.state.collectAsState()
         HistoryDetailScreen(
-            state = state,
-            onEvent = historyDetailViewModel::onEvent
+            viewModel = historyDetailViewModel
         )
     }
 }

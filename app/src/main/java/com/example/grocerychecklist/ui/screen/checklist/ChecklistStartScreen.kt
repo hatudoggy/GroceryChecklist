@@ -1,7 +1,5 @@
 package com.example.grocerychecklist.ui.screen.checklist
 
-import ItemCategory
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,112 +7,147 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.ShoppingCartCheckout
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.DarkGray
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.example.grocerychecklist.R
+import com.example.grocerychecklist.data.repository.ChecklistItemOrder
 import com.example.grocerychecklist.domain.usecase.ConvertNumToCurrency
 import com.example.grocerychecklist.domain.usecase.Currency
-import com.example.grocerychecklist.ui.component.ActionMenu
 import com.example.grocerychecklist.ui.component.AlertDialogExtend
-import com.example.grocerychecklist.ui.component.BottomSheet
 import com.example.grocerychecklist.ui.component.BottomSheetChecklistItem
 import com.example.grocerychecklist.ui.component.ChecklistItemComponent
 import com.example.grocerychecklist.ui.component.ChecklistItemComponentVariant
 import com.example.grocerychecklist.ui.component.ChipComponent
-import com.example.grocerychecklist.ui.component.TopBarComponent
+import com.example.grocerychecklist.ui.component.ErrorComponent
+import com.example.grocerychecklist.ui.component.LoadingComponent
+import com.example.grocerychecklist.ui.screen.checklist.components.BottomSheetCheckout
+import com.example.grocerychecklist.ui.screen.checklist.components.ChecklistFAB
+import com.example.grocerychecklist.ui.screen.checklist.components.ChecklistToolbar
+import com.example.grocerychecklist.ui.screen.checklist.components.CopyChecklistDialogComponent
+import com.example.grocerychecklist.ui.screen.checklist.components.FilterSortBottomSheet
+import com.example.grocerychecklist.ui.screen.checklist.components.SelectionBottomBar
 import com.example.grocerychecklist.ui.theme.ErrorText
 import com.example.grocerychecklist.ui.theme.ErrorTonal
-import com.example.grocerychecklist.ui.theme.PrimaryGreenSurface
-import com.example.grocerychecklist.viewmodel.checklist.ChecklistData
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemData
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistItemFormInputs
+import com.example.grocerychecklist.ui.theme.PrimaryGreen
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartEvent.*
 import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartState
-import com.example.grocerychecklist.viewmodel.checklist.FilterType
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartUIState
+import com.example.grocerychecklist.viewmodel.checklist.ChecklistStartViewModel
+
+/**
+ * Enum class representing different filter types for a list of items.
+ *
+ * The filter types allow users to view:
+ *  - ALL: All items in the list, regardless of their checked state.
+ *  - CHECKED: Only items that are currently checked.
+ *  - UNCHECKED: Only items that are currently unchecked.
+ */
+enum class FilterType{
+    ALL, CHECKED, UNCHECKED
+}
+
+/**
+ * Enum class representing the different modes for a checklist.
+ *
+ *  - EDIT:  Indicates the checklist is in edit mode, allowing users to modify the items.
+ *  - SHOPPING: Indicates the checklist is in shopping mode, allowing users to check off items as they acquire them.
+ */
+enum class ChecklistMode{
+    EDIT, SHOPPING
+}
 
 
-data class ChecklistStartFormInputs (
-    val name: String,
-    val category: ItemCategory,
-    val price: Double,
-    val quantity: Int,
-)
-
+/**
+ * Composable function for displaying the checklist start screen.  This screen acts as a
+ * coordinator, collecting state from the [ChecklistStartViewModel] and passing it down
+ * to the actual UI composable, also named `ChecklistStartScreen`, along with event
+ * handlers to be triggered by user interactions within the UI.
+ *
+ * @param viewModel The [ChecklistStartViewModel] providing the data and logic for the screen.
+ */
 @Composable
-fun ChecklistStartScreen(
-    state: ChecklistStartState,
-    onEvent: (ChecklistStartEvent) -> Unit,
+internal fun ChecklistStartScreen(
+    viewModel: ChecklistStartViewModel,
 ) {
-    BottomSheetChecklistItem(
-        selectedItem = state.selectedItem,
-        isOpen = state.isDrawerOpen,
-        onClose = { onEvent(ChecklistStartEvent.CloseDrawer) },
-        onAdd = { name, category, price, quantity ->
-            if (state.selectedItem == null)
-                onEvent(
-                    ChecklistStartEvent.AddChecklistItem(
-                    ChecklistStartFormInputs(name, category, price, quantity)
-                ))
-            else
-                onEvent(
-                    ChecklistStartEvent.EditChecklistItem(
-                        state.selectedItem.id,
-                        ChecklistStartFormInputs(name, category, price, quantity)
-                ))
-        },
-        onVisible = { visible -> if(!visible) onEvent(ChecklistStartEvent.ClearSelectedItem)}
-    )
+    val state by viewModel.state.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
-    // Edit, Delete Action Menu
-    ActionMenu(
-        isOpen = state.isActionMenuOpen,
-        onClose = { onEvent(ChecklistStartEvent.CloseActionMenu) },
-        onEditMenu = {
-            onEvent(ChecklistStartEvent.OpenDrawer)
-        },
-        onDeleteDialog = {
-            onEvent(ChecklistStartEvent.OpenDeleteDialog)
-        }
+    ChecklistStartScreen(
+        state = state,
+        uiState = uiState,
+        searchQuery = searchQuery,
+        onEvent = viewModel::onEvent
     )
+}
 
+/**
+ * Composable function for the main screen of a checklist, handling user interactions and displaying checklist items.
+ *
+ * This screen manages different states of the checklist (loading, error, success, empty), user modes (shopping, editing),
+ * and various UI elements like dialogs, bottom sheets, and the main list of items.
+ *
+ * @param state The current state of the checklist, including items, selection, mode, and dialog/bottom sheet visibility.
+ * @param uiState The UI state of the checklist, representing loading, error, success, or empty states for item display.
+ * @param searchQuery The current search query entered by the user.
+ * @param onEvent A lambda function to handle user events, triggering state updates and actions.  See [ChecklistStartEvent] for possible events.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ChecklistStartScreen(
+    state: ChecklistStartState,
+    uiState: ChecklistStartUIState,
+    searchQuery: String,
+    onEvent: (ChecklistStartEvent) -> Unit
+) {
     // Delete Dialog
     AlertDialogExtend(
         isOpen = state.isDeleteDialogOpen,
-        onClose = { onEvent(ChecklistStartEvent.CloseDeleteDialog) },
+        onClose = { onEvent(ToggleDeleteDialog) },
         title = "Delete Item?",
         body = "Are you sure you want to delete this item?",
         actionButtons = {
@@ -123,9 +156,9 @@ fun ChecklistStartScreen(
             ) {
                 FilledTonalButton(
                     onClick = {
-                        state.selectedItem.let {
+                        state.editingItem.let {
                             if (it != null) {
-                                onEvent(ChecklistStartEvent.DeleteChecklistItem(it.id))
+                                onEvent(ItemDeletion(it.id, null))
                             }
                         }
                     },
@@ -141,9 +174,9 @@ fun ChecklistStartScreen(
                 }
                 FilledTonalButton(
                     onClick = {
-                        state.selectedItem.let {
+                        state.editingItem.let {
                             if (it != null) {
-                                onEvent(ChecklistStartEvent.DeleteChecklistItemAndItem(it.id, it.itemId))
+                                onEvent(ItemDeletion(it.id, it.itemId))
                             }
                         }
                     },
@@ -155,290 +188,498 @@ fun ChecklistStartScreen(
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Delete Checklist Item & Item")
+                    Text("Delete Checklist Item & Grocery Item")
                 }
                 TextButton(
-                    onClick = { onEvent(ChecklistStartEvent.CloseDeleteDialog) },
+                    onClick = { onEvent(ToggleDeleteDialog) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Cancel", color = Color.DarkGray)
+                    Text("Cancel", color = DarkGray)
                 }
             }
         },
     )
 
-    BottomSheetCheckout(
-        checkedItems = state.items.filter { item -> state.checkedItems.any { it.id == item.id} },
-        totalPrice = state.totalPrice,
-        onCheckoutClick = { onEvent(ChecklistStartEvent.ProceedCheckout(state.items)) },
-        isOpen = state.isCheckoutOpen,
-        onClose = { onEvent(ChecklistStartEvent.CloseCheckout) },
-    )
+    // Checkout Confirmation Dialog
+    if (state.isCheckoutConfirmDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { onEvent(ToggleCheckoutDialog) },
+            title = { Text("Proceed to Checkout?") },
+            text = { Text(
+                "Are you sure you want to proceed to checkout? ${ 
+                    if (state.checkedItems.isEmpty()) 
+                        "You have no checked items in your cart." 
+                    else "" 
+                }"
+            ) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(ProceedCheckout)
+                    }
+                ) {
+                    Text("Confirm", color = PrimaryGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(ToggleCheckoutDialog) }) {
+                    Text("Cancel", color = Color.Black)
+                }
+            },
+            containerColor = Color.White
+        )
+    }
+
+    if (state.isCheckoutCompleted) {
+        CheckoutCompleteDialog(
+            state = state,
+            onEvent = onEvent
+        )
+    }
+
+    if (state.isCopyDialogOpen) {
+        CopyChecklistDialogComponent(
+            state = state,
+            onDismiss = { onEvent(ToggleCopyDialog) },
+            onConfirm = { onEvent(CopyToNewChecklist(it)) },
+            onSetNewChecklist = { onEvent(SetNewChecklist(it)) },
+            toggleIconPicker = { onEvent(ToggleIconPicker) },
+            modifier = Modifier
+        )
+    }
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                shape = CircleShape,
-                containerColor = PrimaryGreenSurface,
-                onClick = { onEvent(ChecklistStartEvent.OpenDrawer) },
-                modifier = Modifier
-                    .offset(y = (-78).dp),
-            ) {
-                Icon(Icons.Filled.Add, "Add FAB")
+        topBar = {
+            ChecklistToolbar(
+                title = state.checklistName,
+                searchQuery = searchQuery,
+                onSearchChange = { onEvent(SearchQueryEvent(it)) },
+                onToggleDrawer = { onEvent(ToggleDrawer) },
+                onNavigateBack = { onEvent(NavigateBack) },
+                selectedCount = state.selectedItems.size,
+                onSelectAll = {
+                    if (state.selectedItems.isEmpty()) {
+                        onEvent(SelectAllItems)
+                    } else {
+                        onEvent(ClearSelection)
+                    } },
+                onCancelSelection = {
+                    onEvent(ClearSelection)
+                    onEvent(ChangeItemSelectMode(mode = false))
+                },
+                hasSelectedAll = uiState is ChecklistStartUIState.Success && uiState.checklists.size == state.selectedItems.size,
+                isSelectionModeActive = state.isSelectionModeActive,
+                onToggleFilterBottomSheet = { onEvent(ToggleFilterBottomSheet) }
+            )
+        },
+        bottomBar = {
+            if (state.isSelectionModeActive) {
+                SelectionBottomBar(
+                    selectedCount = state.selectedItems.size,
+                    onDelete = { onEvent(ToggleDeleteDialog) },
+                    onEditItem = { onEvent(ToggleDrawer) },
+                    onMoreActions = { onEvent(ToggleMoreActionsMenu) },
+                    onCopyToNewChecklist = { onEvent(ToggleCopyDialog) },
+                )
             }
         },
-        topBar = {
-            TopBarComponent(
-                title = "Checklist",
-                onNavigateBackClick = { onEvent(ChecklistStartEvent.NavigateBack) }
+        floatingActionButton = {
+            ChecklistFAB(
+                currentMode = state.mode,
+                hasItems = uiState is ChecklistStartUIState.Success && uiState.checklists.isNotEmpty(),
+                hasSelectedItems = state.selectedItems.isNotEmpty(),
+                onAddItem = { onEvent(ToggleDrawer) },
+                onToggleMode = {
+                    onEvent(
+                        ChangeMode(
+                            if (state.mode == ChecklistMode.SHOPPING) ChecklistMode.EDIT
+                            else ChecklistMode.SHOPPING
+                        )
+                    )
+                },
+                onDeleteSelected = { onEvent(ToggleDeleteDialog) },
+                paddingBottom = 80.dp
             )
-         },
-
-        ) { innerPadding ->
+        },
+        floatingActionButtonPosition = FabPosition.EndOverlay
+    ) { innerPadding ->
         Column (
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(innerPadding)
                 .padding(10.dp)
         ) {
-            Row (
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    state.checklistName,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.ShoppingCart,
-                        modifier = Modifier
-                            .size(18.dp),
-                        tint = Color.LightGray,
-                        contentDescription = "eye"
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        "Shopping Mode",
-                        fontSize = 14.sp,
-                        color = Color.LightGray
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-              // Iterates through each FilterType to create a ChipComponent.
-                FilterType.entries.forEach { filterType ->
-                    ChipComponent(
-                        label = filterType.name.lowercase().replaceFirstChar { it.uppercase() },
-                        isActive = state.selectedChip == filterType,
-                        onClick = {
-                            onEvent(ChecklistStartEvent.SelectChip(filterType))
-                        }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-            LazyColumn(
-                modifier = Modifier.weight(1f)
-            ) {
-                items(state.filteredItems) { item ->
-                    // Create and display a ChecklistItemComponent for each item in the filtered list.
-                    ChecklistItemComponent(
-                        name = item.name,
-                        variant = ChecklistItemComponentVariant.ChecklistRadioItem,
-                        category = item.category,
-                        price = item.price,
-                        quantity = item.quantity.toDouble(),
-                        measurement = item.measurement,
-                        isChecked = state.checkedItems.any { it.id == item.id },
-                        // When the checked state changes, update the ViewModel accordingly.
-                        // Use onCheckedChange instead of onClick for handling the checkbox state.
-                        onCheckedChange = { onEvent(ChecklistStartEvent.ToggleItemCheck(item)) },
-                        onLongPress = { onEvent(ChecklistStartEvent.OpenActionMenu(item)) }
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                Modifier
-                    .shadow(12.dp, RoundedCornerShape(15.dp))
-                    .clickable { onEvent(ChecklistStartEvent.OpenCheckout) }
-            ) {
+            // Only show filter chips in shopping mode
+            if (state.mode == ChecklistMode.SHOPPING) {
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(15.dp))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(top = 20.dp, bottom = 20.dp, start = 20.dp, end = 16.dp)
-                        .weight(1f, fill = true),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val converter = ConvertNumToCurrency()
-                    Text(
-                        "Total",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                    Row {
-                        Text(
-                            converter(Currency.PHP, state.totalPrice, false),
-                            fontSize = 18.sp,
-                            color = Color.White
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            contentDescription = "Checkout",
-                            tint = Color.White,
+                    // Iterates through each FilterType to create a ChipComponent.
+                    FilterType.entries.forEach { filterType ->
+                        ChipComponent(
+                            label = filterType.name.lowercase().replaceFirstChar { it.uppercase() },
+                            isActive = state.selectedChip == filterType,
+                            onClick = { onEvent(FilterSelection(filterType))}
                         )
                     }
                 }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            when(uiState) {
+                ChecklistStartUIState.Loading -> {
+                    ChecklistLoadingUI(modifier = Modifier.weight(1f))
+                }
+                is ChecklistStartUIState.Error -> {
+                    ChecklistErrorUI(
+                        modifier = Modifier.weight(1f),
+                        errorMessage = uiState.message,
+                        loadItems = { onEvent(LoadData) }
+                    )
+                }
+                is ChecklistStartUIState.Success -> {
+                    ChecklistSuccessUI(state = state, uiState = uiState, onEvent = onEvent, modifier = Modifier.weight(1f))
+                }
+
+                is ChecklistStartUIState.Empty -> {
+                    ChecklistEmptyUI()
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (state.mode == ChecklistMode.SHOPPING) {
+                CheckoutButton(
+                    checkedItems = state.checkedItems,
+                    toggleCheckout = { onEvent(ToggleCheckoutSummary) }
+                )
             }
         }
     }
 }
 
-
-
-// Bottom sheet modal drawer for editing Checklist
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+/**
+ * Composable function that displays a checkout button with the total price of the selected items.
+ *
+ * @param checkedItems A list of [ChecklistItemData] representing the items selected for checkout.  Defaults to an empty list.  The total price is calculated based on the `price` and `quantity` of each item.
+ * @param toggleCheckout A lambda function that is executed when the checkout button is clicked.  It should handle the checkout process, such as navigating to a checkout screen or initiating a payment. Defaults to an empty lambda.
+ */
 @Composable
-fun BottomSheetCheckout(
-    checkedItems: List<ChecklistData>,
-    totalPrice: Double,
-    onCheckoutClick: () -> Unit,
-    isOpen: Boolean,
-    onClose: () -> Unit,
-    onVisible: (Boolean) -> Unit = {}
+private fun CheckoutButton(
+    checkedItems: List<ChecklistItemData> = emptyList(),
+    toggleCheckout: () -> Unit = {},
 ) {
+    val converter = ConvertNumToCurrency()
 
-    val sheetState = rememberModalBottomSheetState()
-
-
-    BottomSheet(
-        isOpen = isOpen,
-        onClose = onClose,
-        skipExpand = false,
-        onVisibilityChanged = { visible -> onVisible(visible) },
-        sheetState = sheetState,
+    Row(
+        modifier = Modifier
+            .shadow(12.dp, RoundedCornerShape(15.dp))
+            .clickable { toggleCheckout() }
     ) {
-        Box(
-            modifier = Modifier.fillMaxHeight(),
-            contentAlignment = Alignment.BottomStart
-        ){
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .padding(
-                        start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp,
-                    )
-            ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(15.dp))
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(top = 24.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
+                .weight(1f, fill = true),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Total",
+                fontSize = 16.sp,
+                color = Color.White
+            )
+            Row {
                 Text(
-                    "Checkout",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp
+                    converter(Currency.PHP, checkedItems.sumOf { it.price * it.quantity }, false),
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    items(checkedItems) { item ->
-                        ChecklistItemComponent(
-                            name = item.name,
-                            variant = ChecklistItemComponentVariant.ChecklistItem,
-                            category = item.category,
-                            price = item.price,
-                            quantity = item.quantity.toDouble(),
-                            measurement = item.measurement,
-                            isChecked = item.isChecked,
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(100.dp))
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Checkout",
+                    tint = Color.White,
+                )
             }
+        }
+    }
+}
+
+/**
+ * Composable function that displays a loading indicator for the checklist screen.
+ *
+ * It shows a full-screen loading component with a message indicating that the checklist is loading.
+ *
+ * @param modifier Modifier to be applied to the layout.  Defaults to an empty Modifier.
+ */
+@Composable
+private fun ChecklistLoadingUI(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+    ) {
+        LoadingComponent(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 150.dp),
+            loadingMessage = R.string.checklist_loading
+        )
+    }
+}
+
+/**
+ * Composable function that displays a UI indicating that the checklist is empty.
+ *
+ * This UI is shown when there are no checklist items to display.  It provides a visual cue
+ * to the user that the checklist is currently empty. If a search query is active, it will
+ * display a message indicating no items match the search and suggesting a different search term.
+ *
+ * @param modifier Modifier for customizing the layout and appearance of the empty checklist UI.
+ *                 Defaults to an empty modifier.
+ * @param searchQuery The current search query string. If not empty, the UI will display a
+ *                    message specific to search results. Defaults to an empty string.
+ */
+@Composable
+private fun ChecklistEmptyUI(
+    modifier: Modifier = Modifier,
+    searchQuery: String = ""
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Checklist,
+                contentDescription = "Empty Checklist",
+                modifier = Modifier.size(48.dp),
+                tint = DarkGray.copy(alpha = 0.6f)
+            )
+            Text(
+                text = if (searchQuery.isNotEmpty()) {
+                    "No items match your search"
+                } else {
+                    "No Checklist Items"
+                },
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = DarkGray.copy(alpha = 0.6f)
+            )
+            if (searchQuery.isNotEmpty()) {
+                Text(
+                    text = "Try a different search term",
+                    fontSize = 14.sp,
+                    color = DarkGray.copy(alpha = 0.6f)
+                )
+            }
+    }
+}
+
+/**
+ * Composable function to display a list of checklist items based on the current state and UI state.
+ *
+ * @param state The current state of the checklist, including selected chip, checked items, selected sort option, sort order, and mode.
+ * @param uiState The UI state representing a successful data retrieval, containing the list of checklists.
+ * @param onEvent A callback function to handle checklist events such as toggling item selection or check status.
+ * @param modifier Optional modifier for customizing the layout.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChecklistSuccessUI(
+    state: ChecklistStartState,
+    uiState: ChecklistStartUIState.Success,
+    onEvent: (ChecklistStartEvent) -> Unit,
+    modifier: Modifier = Modifier
+){
+    val filteredItems = when (state.selectedChip) {
+        FilterType.ALL -> uiState.checklists
+        FilterType.CHECKED -> state.checkedItems
+        FilterType.UNCHECKED -> uiState.checklists.minus(state.checkedItems)
+    }
+
+    val sortedItems = when (state.selectedSortOption) {
+        ChecklistItemOrder.Name -> filteredItems.sortedBy { it.name }
+        ChecklistItemOrder.Category -> filteredItems.sortedBy { it.category }
+        ChecklistItemOrder.Price -> filteredItems.sortedBy { it.price }
+        ChecklistItemOrder.Quantity -> filteredItems.sortedBy { it.quantity }
+        ChecklistItemOrder.Order -> filteredItems
+        ChecklistItemOrder.Date -> filteredItems.sortedBy { it.createdAt }
+    }.let { if (!state.isSortAscending) it.reversed() else it }
+
+    LazyColumn(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 24.dp),
+    ) {
+
+        sortedItems.groupBy { it.category }.forEach { (_, items) ->
+            items(items) { item ->
+                ChecklistItemComponent(
+                    name = item.name,
+                    onSelectionChange = {
+                        if (state.mode == ChecklistMode.EDIT) {
+                            onEvent(ToggleItemSelection(item.id))
+                        }
+                    },
+                    onLongPress = {
+                        if (state.mode == ChecklistMode.EDIT) {
+                            onEvent(ToggleItemSelection(item.id))
+                        }
+                    },
+                    onCheckedChange = {
+                        if (state.mode == ChecklistMode.SHOPPING) {
+                            onEvent(ToggleItemCheck(item))
+                        }
+                    },
+                    variant = if ( state.mode == ChecklistMode.SHOPPING) {
+                        ChecklistItemComponentVariant.ChecklistRadioItem
+                    }   else {
+                        ChecklistItemComponentVariant.ChecklistItem
+                    },
+                    category = item.category,
+                    price = item.price,
+                    quantity = item.quantity.toDouble(),
+                    measurement = item.measurement,
+                    isChecked = state.checkedItems.any { it.id == item.id },
+                    isSelected = state.selectedItems.contains(item.id)
+                )
+            }
+        }
+    }
+
+    if (state.mode == ChecklistMode.SHOPPING){
+        BottomSheetCheckout(
+            checkedItems = state.checkedItems,
+            totalPrice =  state.checkedItems.sumOf { it.price * it.quantity },
+            onCheckoutClick = { onEvent(ToggleCheckoutDialog) },
+            isOpen = state.isCheckoutSummaryOpen,
+            onClose = {  onEvent(ToggleCheckoutSummary) },
+        )
+    }
+
+    BottomSheetChecklistItem(
+        selectedItem = state.editingItem,
+        isOpen = state.isDrawerOpen,
+        onClose = { onEvent(ToggleDrawer) },
+        onAdd = { name, category, price, quantity ->
+            if (state.editingItem == null)
+                onEvent(ItemAddition(ChecklistItemFormInputs(name, category.name, price, quantity)))
+            else {
+                onEvent(ItemModification(state.editingItem.id, ChecklistItemFormInputs(name, category.name, price, quantity)))
+            }
+        },
+        onVisible = { visible -> if (!visible) onEvent(ClearSelection) }
+    )
+
+    if (state.isFilterBottomSheetOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(ToggleFilterBottomSheet) }
+        ) {
+            FilterSortBottomSheet(
+                state = state,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+/**
+ * Composable function to display an error message with a retry button for the checklist feature.
+ *
+ * @param errorMessage An optional error message to display. If null, a default error message from resources is used.
+ * @param loadItems A lambda function to be executed when the retry button is pressed. This should ideally re-attempt loading the checklist items.
+ * @param modifier Optional [Modifier] to apply to the layout.
+ */
+@Composable
+private fun ChecklistErrorUI(
+    errorMessage: String?,
+    loadItems: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val defaultErrorMessage = stringResource(id = R.string.checklist_error)
+    Box(modifier = modifier
+        .fillMaxSize()
+        .padding(bottom = 150.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        ErrorComponent(errorMessage = errorMessage?: defaultErrorMessage, onRetry = loadItems)
+    }
+}
+
+
+@Composable
+private fun CheckoutCompleteDialog(
+    state: ChecklistStartState,
+    onEvent: (ChecklistStartEvent) -> Unit
+){
+    Dialog(
+        onDismissRequest = {}
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardColors(
+                containerColor = Color.White,
+                contentColor = CardDefaults.cardColors().contentColor,
+                disabledContainerColor = CardDefaults.cardColors().disabledContainerColor,
+                disabledContentColor = CardDefaults.cardColors().disabledContentColor,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .offset {
-                        val offsetY = sheetState.requireOffset()
-                        IntOffset(
-                            x = 0,
-                            y = -offsetY.toInt() + 100
-                        )
-                    }
-                    .background(Color.White)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                ) {
+            ){
+                Text("Checkout Completed", fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                Icon(
+                    Icons.Filled.CheckCircle,
+                    contentDescription = "Check Symbol",
+                    tint = PrimaryGreen,
+                    modifier = Modifier.size(64.dp)
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Items", fontSize = 14.sp, color = Color.Gray)
+                    Text(
+                        "${
+                            state.checkedItems.size
+                        }",
+                        fontSize = 20.sp
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Price", fontSize = 14.sp, color = Color.Gray)
                     val converter = ConvertNumToCurrency()
                     Text(
-                        "Total",
-                        fontSize = 16.sp,
-                    )
-                    Text(
-                        converter(Currency.PHP, totalPrice, false),
-                        fontSize = 18.sp,
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = { onCheckoutClick() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(5.dp),
-                    ) {
-                        Text(
-                            "Checkout",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Icon(
-                            Icons.Default.ShoppingCartCheckout,
-                            contentDescription = "Checkout",
-                            tint = Color.White
-                        )
-                    }
+                        converter(Currency.PHP, state.checkedItems.sumOf { it.price * it.quantity }),
+                        fontSize = 20.sp,
 
+                        )
                 }
-                Spacer(Modifier.height(32.dp))
+                Button(
+                    onClick = {
+                        onEvent(NavigateChecklistScreen)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Go Back To Checklists")
+                }
             }
         }
     }
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun ChecklistStartScreenPreview() {
-    val mockState = ChecklistStartState(
-
-    )
-
-    ChecklistStartScreen(
-        state = mockState,
-        onEvent = {}
-    )
-}

@@ -1,20 +1,23 @@
 package com.example.grocerychecklist.viewmodel.auth
 
+import com.example.grocerychecklist.viewmodel.util.SubmissionState
 import java.lang.Error
 
 data class AuthRegisterState(
+    // Form fields
     val fullName: String = "",
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val isEmailValid: Boolean = true,
-    val isPasswordValid: Boolean = true,
-    val isConfirmPasswordValid: Boolean = true,
+
+    // Validation
     val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
-    val isFormValid: Boolean = false,
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isPasswordVisible: Boolean = false
-)
+
+    // Submission state
+    val submissionState: SubmissionState = SubmissionState.Idle
+) {
+    val isFormValid: Boolean
+        get() = emailError == null && passwordError == null && confirmPasswordError == null && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank()
+}
